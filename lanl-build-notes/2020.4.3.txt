@@ -1,0 +1,24 @@
+- `./process.sh -f lanl -V 2020.4.3 --spacklemore-branch lanl-updates -c -s`
+- Separate terminal
+  - `. /usr/projects/hpcsoft/tce/2020.4.3/spack/share/spack/setup-env.sh`
+  - `spack install gcc@9.3.0+binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto %gcc@4.8.5`
+  - `spack load gcc`
+  - `spack compiler find --scope=site`
+- `./process.sh -f lanl -V 2020.4.3 --spacklemore-branch lanl-updates -c -m`
+  - while running, in a separate terminal, after intel is installed
+    - `spack load intel`
+    - `spack compiler find --scope=site`
+    - edit `compilers.yaml` to set GCC and prepend_path PATH and LD_LIBRARY_PATH environment variables.
+  - Again, seeing the variable `site_packages_dir` not be recognized in the llvm package... just going to try a restart...
+    - made the `llvm` directory in spacklemore hidden again (`mv {,.}llvm`)
+- `./process.sh -f lanl -V 2020.4.3 --spacklemore-branch lanl-updates -c -m`
+  - llvm/clang compiler not found
+    - separate terminal:
+      - `. /usr/projects/hpcsoft/tce/2020.4.3/spack/share/spack/setup-env.sh`
+      - `spack load llvm@9.0.0`
+      - `spack compiler find --scope=site`
+      - edit `compilers.yaml`:
+        - copy gfortran entries from gcc@9.3.0 to FC and F77 for clang@9.0.0
+        - prepend_path for PATH to add the bin directory for `binutils` built by gcc@9.3.0 to the path for clang@9.0.0
+- `./process.sh -f lanl -V 2020.4.3 --spacklemore-branch lanl-updates -c -m`
+  - completed (with Paraview commented out)

@@ -1,0 +1,7 @@
+spack-cc-*
+inst*
+conc*
+mod*
+*.sw*
+module*.txt
+.spack-env

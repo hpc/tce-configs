@@ -1,0 +1,36 @@
+- ./process.sh -f lanl -V 2020.4.2 --spacklemore-branch global -c -m
+- Separate terminal
+  - `. /usr/projects/hpcsoft/tce/2020.4.2/spack/share/spack/setup-env.sh`
+  - `spack install gcc@9.3.0 +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto %gcc@4.8.5`
+  - `spack load gcc`
+  - `spack compiler find --scope=site`
+- `./process.sh -f lanl -V 2020.4.2 --spacklemore-branch global -c -m`
+  - Fails on finding Intel
+- Separate terminal
+  - `. /usr/projects/hpcsoft/tce/2020.4.2/spack/share/spack/setup-env.sh`
+  - `spack load intel`
+  - `spack compiler find --scope=site`
+  - `spack unload intel`
+  - `spack load llvm@9.0.0`
+  - `spack compiler find --scope=site`
+  - Edit `compilers.yaml` file indicated by the output of `spack compiler find --scope=site`
+    - Under the `intel` entry, modify the `environment` section to read:
+```
+  environment:
+    set:
+      GCC: <path to GCC prefix>
+    prepend_path:
+      PATH: <path to GCC bin directory>
+      LD_LIBRARY_PATH: <path to GCC lib64 directory>
+```
+    - Under the `clang` entry, copy the gfortran paths from GCC to the `FC` and `F77` entries, which should be empty
+    - Under the `clang` entry, modify the `environment` section to read:
+```
+  environment:
+    prepend_path:
+      PATH: <path to binutils bin directory (e.g. - /usr/projects/hpcsoft/tce/<stack version>/linux-rhel7-broadwell/binutils/gcc-9.3.0/binutils-<hash>/bin)>
+```
+    - Final file should have 4 entries: `gcc@4.8.5`, `gcc@9.3.0`, `intel@19.0.4`, and `clang@9.0.0`
+- `./process.sh -f lanl -V 2020.4.2 --spacklemore-branch global -c -m`
+  - both git installations failed because of the `install_tree()` line in the spacklemore package.  This needs to be removed in the repos as well
+- `./process.sh -f lanl -V 2020.4.2 --spacklemore-branch global -c -m`

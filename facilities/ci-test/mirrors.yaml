@@ -1,0 +1,4 @@
+mirrors:
+    lanl: https://pe-serve.lanl.gov/spack-mirror
+    buildcache: https://pe-serve.lanl.gov/spack-mirror-buildcache
+    preteam-exclusive: /usr/projects/hpcsoft/spack-mirror/spack-mirror-2020-04-14

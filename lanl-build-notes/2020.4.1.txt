@@ -1,0 +1,57 @@
+Spack steps:
+1/4/21
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates -c`
+ - `. /usr/projects/hpcsoft/tce/2020.4.1/spack/share/spack/setup-env.sh`
+ - `spack install gcc@9.3.0`
+ - `spack load gcc`
+ - `spack compiler find`
+   - Damnit... should have used `--scope=site`
+ - `spack unload -a`
+New terminal session to get rid of spack
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates -c`
+   - fails on not being able to find icc for rpathing
+   - actual problem: an old instance of the intel installer was found running, so it had to be killed with `kill -9 <pid>` and the installation completed
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates`
+   - Cancelled after it was spotted trying to install GCC again
+   - installation of GCC added as an external using the path and set as `buildable: false`
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates`
+   - Installed quite a bit.  First error found was with the openblas package.  Not sure why I made that change anymore.  Maybe PGI, maybe Cray.
+   - moved spacklemore `openblas` directory to `.openblas`
+   - requires a cache flush with `spack clean -a`
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates -c`
+   - OpenSSH has a setuid issue
+   - Adding OpenSSH as a non-buildable external using the TOSS-provided instance
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates -c`
+   - `install_tree('', self.prefix.bin)` error in spacklemore Git package
+   - commented that line out
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates`
+   - Doxygen fails when being built by Intel because it doesn't know `make_unique`
+   - Have to add GCC@9.3.0 to PATH for intel compiler in `spack.yaml` for this stack
+     - set GCC to the install prefix, prepend GCC/bin to PATH and GCC/lib64 to LD_LIBRARY_PATH
+     - moved compiler configurations to the compilers.yaml file instead of spack.yaml
+   - llvm package doesn't recognize the `site_packages_dir` variable anymore...
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates -c`
+   - no compiler for clang@9.0.0
+   - in new terminal, activate spack and activate the toss3 environment that we're building with
+   - run `spack load llvm@9.0.0`
+   - run `spack compiler find --scope=site`
+   - modify the file that it points to in the output to copy the gfortran compiler from gcc@9.3.0 to clang@9.0.0 for `fc` and `f77`
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates -c`
+   - Looks like it might be an issue having to do with using system `ld` rather than the binutils that was built with GCC@9.3.0
+   - prepend path to binutils bin directory to the PATH under the clang configuration in `compilers.yaml` for this spack instance
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates -c`
+   - only failures are the 2 paraview installations
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates -s -m`
+   - Failed with two python@3.7.4 specs conflicting with each other
+   - Adding a constraint for uuid to be provided by the `libuuid` package for the entire stack
+   - Uninstalled all packages, recursively, that depend on `linux-util-uuid`
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates -c`
+   - Failed to install fontconfig, but just running the install again worked.... idk
+ - `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates -s -m`
+   - Worked
+   - Well... you know... mostly
+   - Apparently not creating a module for gcc@9.3.0 because it was installed externally and used as an external package, so you can't load anything that depends on that compiler being loaded... Great...
+ - Added newer versions of Charliecloud to `spack.yaml` and reran `./process.sh -f lanl -V 2020.4.1 --spacklemore-branch lanl-updates -c -m`
+   - Still failing with the paraview builds, so this is taking a while
+   - Paraview failures seem to by failing to find a symbol reference to a pugixml function.  Investigating...
+   - module creation output logic isn't incrementing the number for the filename

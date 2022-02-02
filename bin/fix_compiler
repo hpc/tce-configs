@@ -1,0 +1,218 @@
+#!/usr/bin/python3
+
+import argparse
+from pathlib import Path
+import sys
+import yaml
+import pprint
+import datetime
+import shutil
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Fixs compiler information in spack "
+                                                 "compiler configs.")
+
+    parser.add_argument(
+        'config_path',
+        help="Path to the config to alter.")
+    parser.add_argument(
+        'mode', choices=['add', 'edit', 'delete'], default='edit',
+        help="The action to take regarding the given compiler. "
+             "\nAdd - Add the compiler if it doesn't exist."
+             "\nEdit - Alter the compiler."
+             "\nDelete - Remove the compiler.")
+    parser.add_argument(
+        'spec', help='Compiler spec to add. Typically something like gcc@5.9.0.')
+    parser.add_argument(
+        'os', help='Operating system')
+    parser.add_argument(
+        'target', help='Target architecture')
+    parser.add_argument(
+        '--cc', help='CC compiler path')
+    parser.add_argument(
+        '--cxx', help='CXX compiler path')
+    parser.add_argument(
+        '--f77', help='Fortran 77 compiler path')
+    parser.add_argument(
+        '--fc', help='Fortran compiler path')
+    parser.add_argument(
+        '--flags', action='append',
+        help='Compiler flags, in the form "key=value"')
+    parser.add_argument(
+        '--modules', action='append',
+        help='Modules to load to access this compiler. When editing, clear with an empty value.')
+    parser.add_argument(
+        '--env', '-e', action='append', dest='environment',
+        help='Environment variables to set, in the form "key=value". An empty value will remove '
+             'the given environment variable. To add a key/value such that it prepends your value '
+             "to an existing path list, add a + to the key: 'foo+=bar'")
+    parser.add_argument(
+        '--extra-rpaths', '-r', action='append',
+        help='Additional rpaths to use with this compiler. An empty argument will clear '
+             'the paths when editing.')    
+    parser.add_argument(
+        '--dry-run', action='store_true',
+        help="Instead of writing back to the original file, print to stdout.")
+
+    return parser.parse_args()
+
+
+def make_settings(args):
+    """Make the compiler settings structure given the arguments."""
+    
+    settings = {
+        'spec': args.spec,
+        'operating_system': args.os,
+        'target': args.target,
+    }
+
+    paths = {}
+    for path in 'cc', 'cxx', 'f77', 'fc':
+        value = getattr(args, path)
+        if value is not None:
+            paths[path] = value
+    settings['paths'] = paths
+    
+    # Handle Key-value arguments.
+    flags = {}
+    env = {}
+    for kv_attr, dest in (('flags', flags), ('environment', env)):
+        values = getattr(args, kv_attr, [])
+        if values is None:
+            continue
+
+        for arg in values:
+            parts = arg.split('=', 2)
+            if len(parts) != 2:
+                error("Invalid dest. Must be in the form 'key=value'")
+            key, value = parts
+            value=value.strip()
+            key=key.strip()
+
+            if not value: 
+                value = None
+
+            if kv_attr == 'environment':
+                if key.endswith('+'):
+                    key = key.strip('+')
+                    dest['prepend_path'] = dest.get('prepend_path', {})
+                    dest['prepend_path'][key] = value
+                else:
+                    dest['set'] = dest.get('set', {})
+                    dest['set'][key] = value
+            else:
+                dest[key] = value
+
+        settings[kv_attr] = dest
+
+    for list_arg in 'extra_rpaths', 'modules':
+        values = getattr(args, list_arg)
+        if values is not None:
+            values = [val.strip() for val in values]
+            settings[list_arg] = values
+
+    return settings
+
+def error(*msg):
+    print(*msg)
+    sys.exit(1)
+
+
+def update_with_delete(base, update):
+    """Update the base dictionary with the values in update, but delete
+    any keys that end up with a None value. Recursively process 
+    any contained dictionaries the same way."""
+
+    for key, upd_val in update.items():
+        if upd_val is None:
+            del base[key]
+        elif isinstance(upd_val, dict):
+            # Recursively update dictionaries.
+            base[key] = base.get(key, {})
+            if not isinstance(base[key], dict):
+                base[key] = upd_val
+            else:
+                update_with_delete(base[key], upd_val)
+        elif isinstance(upd_val, list):
+            # Wipe the list where indicated.
+            if value == ['']:
+                base[key] = []
+            else:
+                base[key] = upd_val
+        else:
+            base[key] = upd_val
+
+def fix_compiler(args):
+    config_path = Path(args.config_path)
+
+    if not config_path.exists():
+        error("Config file '{}' does not exist".format(config))
+
+    try:
+        with config_path.open() as config_file:
+            data = yaml.load(config_file)
+    except OSError as err:
+        error("Could not read config file '{}'.".format(config_path))
+
+    if 'compilers' not in data:
+        error("Missing top level 'compilers' key.")
+
+    comp_settings = make_settings(args)
+
+    found = None
+    found_idx = None
+    for i in range(len(data['compilers'])):
+        entry = data['compilers'][i]
+        compiler = entry.get('compiler', {})
+        if (compiler.get('spec') == args.spec 
+                and compiler.get('operating_system') == args.os
+                and compiler.get('target') == args.target):
+            found = compiler 
+            found_idx = i
+            break
+
+    if args.mode == 'add':
+        comp_settings = {'compiler': comp_settings}
+        if found is not None:
+            data['compilers'][found_idx] = comp_settings
+        else:
+            data['compilers'].append(comp_settings)
+    elif args.mode == 'edit': 
+        if not found:
+            error('Could not find compiler matching {a.spec}, {a.os}, {a.target}'
+                  .format(a=args))
+        update_with_delete(found, comp_settings)
+    elif args.mode == 'delete':
+        if found:
+            del data['compilers'][found_idx]
+        else:
+            error('Could not find compiler matching {a.spec}, {a.os}, {a.target}'
+                  .format(a=args))
+    else:
+        error("Invalid mode '{}'".format(args.mode))
+
+    if args.dry_run:
+        pprint.pprint(data)
+    else:
+        try:
+            backup_dir = config_path.parent/'.backup'
+            backup_dir.mkdir(exist_ok=True)
+            bkp_date = datetime.datetime.now().isoformat()
+            bkp_name = backup_dir/config_path.name
+            bkp_name = bkp_name.with_suffix(bkp_name.suffix + '.' + bkp_date)
+            shutil.copy(config_path, bkp_name)
+            
+            tmp_path = config_path.with_suffix(config_path.suffix + '.tmp')
+            with tmp_path.open('w') as tmp_file:
+                yaml.dump(data, tmp_file)
+            tmp_path.rename(config_path)
+
+        except OSError as err:
+            error("Could not write to config file '{}': {}".format(config_path, err))
+
+
+if __name__ == '__main__':
+    
+    args = parse_args()
+    fix_compiler(args)

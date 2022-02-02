@@ -1,0 +1,16 @@
+packages:
+  all:
+    permissions:
+      write: group
+      group: hpcsoft
+  mpich:
+    buildable: false
+    externals:
+    - spec: mpich@7.7.18 os=cnl7
+      modules:
+      - cray-mpich/7.7.18
+  openssh:
+    buildable: false
+    externals:
+    - spec: openssh@7.4p1
+      prefix: /usr

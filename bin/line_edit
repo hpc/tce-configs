@@ -1,0 +1,80 @@
+#!/usr/bin/python3
+
+import argparse
+import re
+import sys
+import pathlib
+import io
+
+
+def error(*args, **kwargs):
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
+    sys.exit(1)
+
+
+def main():
+    
+    parser = argparse.ArgumentParser("Perform a regex find/replace without needing to "
+                                     "escape the replacement text.")
+    parser.add_argument("-i", "--infile", action="store", default="-",
+                        help="input file to process. Default, and '-' use stdin.")
+    parser.add_argument("-o", "--outfile", action="store", default="-",
+                        help="Output file to process. Default, and '-' use stdout. If "
+                             "the input and output file are the same, will work in place.")
+    parser.add_argument("regex", action="store", 
+                        help="Regex to search for. Uses python/perl regex syntax.")
+    parser.add_argument("repl", action="store", 
+                        help="Replacement text. Can include escapes and backreferences.")
+
+
+    args = parser.parse_args()
+
+    try:
+        regex = re.compile(args.regex)
+    except re.error as err:
+        error("Invalid regex '{}': {}".format(args.regex, err.args[0]))
+
+    if args.infile == '-':
+        infile = sys.stdin
+    else:
+        infile_path = pathlib.Path(args.infile)
+        if not infile_path.exists():
+            error("No such file: '{}'".format(infile_path))
+
+        try:
+            raw_infile = infile_path.open()
+        except OSError as err:
+            error("Could not open file '{}' for reading: {}.".format(infile_path, err.args[0]))
+            
+
+        if args.infile == args.outfile:
+            infile = io.StringIO()
+            infile.write(raw_infile.read())
+            infile.seek(0)
+        else:
+            infile = raw_infile
+
+    if args.outfile == '-':
+        outfile = sys.stdout
+    else:
+        outfile_path = pathlib.Path(args.infile)
+        try:
+            outfile = outfile_path.open('w')
+        except OSError as err:
+            error("Could not open output file '{}' for writing: {}"
+                  .format(outfile.path, err.args[0]))
+
+    return replace(infile, outfile, regex, args.repl)        
+
+def replace(infile, outfile, regex, repl):
+
+    for line in infile:
+        outline = regex.sub(repl, line)
+        outfile.write(outline)
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as err:
+        error("Unexpected error: {}".format(err.args[0]))    

@@ -1,0 +1,1478 @@
+# 'when' clause takes a string of python code.
+# Available 'when' clause variables are:
+#   spack_platform: platform string from spack
+#   spack_os: os string of the default Spack architecture on the system
+#   spack_target: target string of the default Spack architecture on the system
+#   spack_architecture/spack_arch: full string of default Spack architecture
+#   re: standard regex module in python
+#   env: user environment (os.environ in python)
+#   hostname: hostname of the system if 'hostname' in an executable in user path
+#
+#
+spack:
+  definitions:
+# Toss compilers
+    - base-compiler:
+      - gcc@10.3.0
+    - base-compiler-to-install:
+      - gcc@10.3.0%gcc@4.8.5 ^binutils+gold+ld+gas
+    - toolchain-compilers-non-base:
+      - intel-oneapi-compilers@2021.2.0
+      - llvm@12.0.0
+    - toolchain-compiler-constraints:
+      - $%base-compiler
+      - '%intel@2021.2.0'
+      - '%clang@12.0.0'
+# Toss MPIs
+    - toolchain-mpi-constraints:
+      - ^intel-parallel-studio@cluster.2020.4
+      - ^openmpi@4.1.1
+      - ^mvapich2@2.3.6
+    - toolchain-mpi:
+      - intel-parallel-studio@cluster.2020.4+mpi+ilp64+newdtags
+      - openmpi@4.1.1
+      - mvapich2@2.3.6
+# Packages built only once
+    - base:
+      - arm-forge@21.0
+      - charliecloud@0.23
+      - cmake@3.20.3
+      - emacs@27.2+X ^mesa18+glx
+      - git@2.31.1
+      - gnuplot@5.2.8+X~cairo
+      - hpcviewer@2021.05
+      - htop@3.0.5
+      - idl@8.7
+      # Tools installation for intel products.
+      - intel-parallel-studio@cluster.2020.4+vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
+      # Separate mkl installation.
+      - intel-parallel-studio@cluster.2020.4~mpi~ipp~daal~tbb~ilp64~newdtags
+      - julia_binary@1.5.3
+      - libyogrt@1.24
+      - mercurial@5.8
+      - numactl@2.0.14
+      - openjdk@11.0.8_10
+      - papi@6.0.0.1
+      - patchelf@0.12
+      - python@2.7.18
+      - python@3.8.10
+      - python@3.9.5
+      - py-pint@0.17
+      - qt@5.15.2
+      - subversion@1.14.0
+      - totalview@2021.1.16
+      - tmux@3.1b
+    - base_matrix:
+      - exclude: []
+        matrix:
+        - [$base]
+        - [$%base-compiler]
+# Define base deps to reuse
+    - autoconf-dep:
+      - ^autoconf%gcc
+    - automake-dep:
+      - ^automake%gcc
+    - binutils-dep:
+      - ^binutils%gcc@10.3.0
+    - bison-dep:
+      - ^bison%gcc
+    - bzip2-dep:
+      - ^bzip2%gcc
+    - cmake-dep:
+      - ^cmake%gcc
+    - cubelib-dep:
+      - ^cubelib%gcc
+    - diffutils-dep:
+      - ^diffutils%gcc
+    - double-conversion-dep:
+      - ^double-conversion%gcc
+    - doxygen-dep:
+      - ^doxygen%gcc
+    - eigen-dep:
+      - ^eigen%gcc
+    - expat-dep:
+      - ^expat%gcc
+    - findutils-dep:
+      - ^findutils%gcc
+    - flex-dep:
+      - ^flex%gcc
+    - freetype-dep:
+      - ^freetype%gcc
+    - gdbm-dep:
+      - ^gdbm%gcc
+    - gettext-dep:
+      - ^gettext%gcc
+    - glproto-dep:
+      - ^glproto%gcc
+    - hdf5-dep:
+      - ^hdf5@1.12.0~mpi+cxx+fortran+hl+pic+shared+threadsafe api=v18
+    - hdf5-parallel-dep:
+      - ^hdf5@1.12.0+cxx+fortran+hl+mpi+pic+shared+threadsafe api=v18
+    - help2man-dep:
+      - ^help2man%gcc
+    - hwloc-dep:
+      - ^hwloc%gcc
+    - inputproto-dep:
+      - ^inputproto%gcc
+    - jsoncpp-dep:
+      - ^jsoncpp%gcc
+    - kbproto-dep:
+      - ^kbproto%gcc
+    - libbsd-dep:
+      - ^libbsd%gcc
+    - libevent-dep:
+      - ^libevent%gcc
+    - libext-dep:
+      - ^libext%gcc
+    - libffi-dep:
+      - ^libffi%gcc
+    - libice-dep:
+      - ^libice%gcc
+    - libiconv-dep:
+      - ^libiconv%gcc
+    - libjpeg-turbo-dep:
+      - ^libjpeg-turbo%gcc
+    - libnl-dep:
+      - ^libnl%gcc
+    - libogg-dep:
+      - ^libogg%gcc
+    - libpciaccess-dep:
+      - ^libpciaccess@0.13.5%gcc
+    - libpng-dep:
+      - ^libpng%gcc
+    - libpthread-stubs-dep:
+      - ^libpthread-stubs%gcc
+    - libsigsegv-dep:
+      - ^libsigsegv%gcc
+    - libsm-dep:
+      - ^libsm%gcc
+    - libtheora-dep:
+      - ^libtheora%gcc
+    - libtiff-dep:
+      - ^libtiff%gcc
+    - libtirpc-dep:
+      - ^libtirpc%gcc
+    - libtool-dep:
+      - ^libtool%gcc
+    - libuuid-dep:
+      - ^libuuid%gcc
+    - libx11-dep:
+      - ^libx11%gcc
+    - libxau-dep:
+      - ^libxau%gcc
+    - libxcb-dep:
+      - ^libxcb%gcc
+    - libxdmcp-dep:
+      - ^libxdmcp%gcc
+    - libxext-dep:
+      - ^libxext%gcc
+    - libxml2-dep:
+      - ^libxml2%gcc
+    - libxt-dep:
+      - ^libxt%gcc
+    - llvm-dep:
+      - ^llvm@7.0.1%gcc
+    - lz4-dep:
+      - ^lz4%gcc
+    - lzma-dep:
+      - ^lzma%gcc
+    - m4-dep:
+      - ^m4%gcc
+    - mesa-dep:
+      - ^mesa18
+    - nasm-dep:
+      - ^nasm%gcc
+    - ncurses-dep:
+      - ^ncurses%gcc
+    - netcdf-c-dep:
+      - ^netcdf-c@4.8.0~mpi~parallel-netcdf+hdf4+pic+shared
+    - netcdf-c-parallel-dep:
+      - ^netcdf-c@4.8.0+hdf4+mpi+parallel-netcdf+pic+shared
+    - ninja-dep:
+      - ^ninja%gcc
+    - numactl-dep:
+      - ^numactl%gcc
+    - opa-psm2-dep:
+      - ^opa-psm2%gcc
+    - openssh-dep:
+      - ^openssh%gcc
+    - openssl-dep:
+      - ^openssl%gcc
+    - parallel-netcdf-dep:
+      - ^parallel-netcdf@1.12.2
+    - pegtl-dep:
+      - ^pegtl%gcc
+    - perl-dep:
+      - ^perl%gcc
+    - pkg-config-dep:
+      - ^pkg-config%gcc
+    - protobuf-dep:
+      - ^protobuf%gcc
+    - pugixml-dep:
+      - ^pugixml%gcc
+    - py-cftime-dep:
+      - ^py-cftime%gcc
+    - py-cycler-dep:
+      - ^py-cycler%gcc
+    - py-cython-dep:
+      - ^py-cython%gcc
+    - py-kiwisolver-dep:
+      - ^py-kiwisolver%gcc
+    - py-mako-dep:
+      - ^py-mako%gcc
+    - py-markupsafe-dep:
+      - ^py-markupsafe%gcc
+    - py-matplotlib-dep:
+      - ^py-matplotlib%gcc
+    - py-numpy-dep:
+      - ^py-numpy%gcc
+    - py-pillow-dep:
+      - ^py-pillow%gcc
+    - py-pyparsing-dep:
+      - ^py-pyparsing%gcc
+    - py-python-dateutil-dep:
+      - ^py-python-dateutil%gcc
+    - py-setuptools-dep:
+      - ^py-setuptools%gcc
+    - py-setuptools-scm-dep:
+      - ^py-setuptools-scm%gcc
+    - py-six-dep:
+      - ^py-six%gcc
+    - python-dep:
+      - ^python%gcc
+    - rdma-core-dep:
+      - ^rdma-core%gcc
+    - readline-dep:
+      - ^readline%gcc
+    - slurm-dep:
+      - ^slurm%gcc
+    - sqlite-dep:
+      - ^sqlite%gcc
+    - tar-dep:
+      - ^tar%gcc
+    - texinfo-dep:
+      - ^texinfo%gcc
+    - util-macros-dep:
+      - ^util-macros%gcc
+    - xcb-proto-dep:
+      - ^xcb-proto%gcc
+    - xextproto-dep:
+      - ^xextproto%gcc
+    - xproto-dep:
+      - ^xproto%gcc
+    - xtrans-dep:
+      - ^xtrans%gcc
+    - xz-dep:
+      - ^xz%gcc
+    - zlib-dep:
+      - ^zlib%gcc
+# Packages built out across the all compilers
+    - compiler-packages:
+      - $toolchain-mpi
+      - hdf5@1.12.0~mpi+cxx+fortran+hl+pic+shared+threadsafe api=v18
+      - intel-oneapi-mkl@2021.2.0
+      - intel-oneapi-dal@2021.2.0
+      - intel-oneapi-tbb@2021.2.0
+      - mesa18
+# Defines a matrix to populate with Spack Stacks
+    - install-comp:
+      - exclude:
+        - intel-parallel-studio %gcc
+        - intel-parallel-studio %clang
+        - intel-parallel-studio %oneapi
+        - intel-oneapi-dal%gcc
+        - intel-oneapi-dal%clang
+        - intel-oneapi-dal%intel
+        - intel-oneapi-mkl%gcc
+        - intel-oneapi-mkl%clang
+        - intel-oneapi-mkl%intel
+        - intel-oneapi-tbb%gcc
+        - intel-oneapi-tbb%clang
+        - intel-oneapi-tbb%intel
+        - mesa18%clang
+        matrix:
+        - [$compiler-packages]
+        - [$toolchain-compiler-constraints]
+        # Base dependency constraints
+        - [$autoconf-dep]
+        - [$automake-dep]
+        - [$binutils-dep]
+        - [$bison-dep]
+        - [$bzip2-dep]
+        - [$cmake-dep]
+        - [$cubelib-dep]
+        - [$diffutils-dep]
+        - [$double-conversion-dep]
+        - [$doxygen-dep]
+        - [$eigen-dep]
+        - [$expat-dep]
+        - [$findutils-dep]
+        - [$flex-dep]
+        - [$freetype-dep]
+        - [$gdbm-dep]
+        - [$gettext-dep]
+        - [$glproto-dep]
+        - [$help2man-dep]
+        - [$hwloc-dep]
+        - [$inputproto-dep]
+        - [$jsoncpp-dep]
+        - [$kbproto-dep]
+        - [$libbsd-dep]
+        - [$libevent-dep]
+        - [$libext-dep]
+        - [$libffi-dep]
+        - [$libice-dep]
+        - [$libiconv-dep]
+        - [$libjpeg-turbo-dep]
+        - [$libnl-dep]
+        - [$libogg-dep]
+        - [$libpciaccess-dep]
+        - [$libpng-dep]
+        - [$libpthread-stubs-dep]
+        - [$libsigsegv-dep]
+        - [$libsm-dep]
+        - [$libtheora-dep]
+        - [$libtiff-dep]
+        - [$libtirpc-dep]
+        - [$libtool-dep]
+        - [$libuuid-dep]
+        - [$libx11-dep]
+        - [$libxau-dep]
+        - [$libxcb-dep]
+        - [$libxdmcp-dep]
+        - [$libxext-dep]
+        - [$libxml2-dep]
+        - [$libxt-dep]
+        - [$llvm-dep]
+        - [$lz4-dep]
+        - [$lzma-dep]
+        - [$m4-dep]
+        - [$nasm-dep]
+        - [$ncurses-dep]
+        - [$ninja-dep]
+        - [$numactl-dep]
+        - [$opa-psm2-dep]
+        - [$openssh-dep]
+        - [$openssl-dep]
+        - [$pegtl-dep]
+        - [$perl-dep]
+        - [$pkg-config-dep]
+        - [$protobuf-dep]
+        - [$pugixml-dep]
+        - [$py-cycler-dep]
+        - [$py-cython-dep]
+        - [$py-kiwisolver-dep]
+        - [$py-mako-dep]
+        - [$py-markupsafe-dep]
+        - [$py-matplotlib-dep]
+        - [$py-numpy-dep]
+        - [$py-pillow-dep]
+        - [$py-pyparsing-dep]
+        - [$py-python-dateutil-dep]
+        - [$py-setuptools-dep]
+        - [$py-setuptools-scm-dep]
+        - [$py-six-dep]
+        - [$python-dep]
+        - [$rdma-core-dep]
+        - [$readline-dep]
+        - [$slurm-dep]
+        - [$sqlite-dep]
+        - [$tar-dep]
+        - [$texinfo-dep]
+        - [$util-macros-dep]
+        - [$xcb-proto-dep]
+        - [$xextproto-dep]
+        - [$xproto-dep]
+        - [$xtrans-dep]
+        - [$xz-dep]
+        - [$zlib-dep]
+    - compiler-packages-1:
+      - netcdf-c@4.8.0~mpi~parallel-netcdf+hdf4+pic+shared
+# Defines a matrix to populate with Spack Stacks
+    - install-comp-1:
+      - exclude: []
+        matrix:
+        - [$compiler-packages-1]
+        - [$toolchain-compiler-constraints]
+        # Base dependency constraints
+        - [$autoconf-dep]
+        - [$automake-dep]
+        - [$binutils-dep]
+        - [$bison-dep]
+        - [$bzip2-dep]
+        - [$cmake-dep]
+        - [$cubelib-dep]
+        - [$diffutils-dep]
+        - [$double-conversion-dep]
+        - [$doxygen-dep]
+        - [$eigen-dep]
+        - [$expat-dep]
+        - [$findutils-dep]
+        - [$flex-dep]
+        - [$freetype-dep]
+        - [$gdbm-dep]
+        - [$gettext-dep]
+        - [$glproto-dep]
+        - [$help2man-dep]
+        - [$hwloc-dep]
+        - [$inputproto-dep]
+        - [$jsoncpp-dep]
+        - [$kbproto-dep]
+        - [$libbsd-dep]
+        - [$libevent-dep]
+        - [$libext-dep]
+        - [$libffi-dep]
+        - [$libice-dep]
+        - [$libiconv-dep]
+        - [$libjpeg-turbo-dep]
+        - [$libnl-dep]
+        - [$libogg-dep]
+        - [$libpciaccess-dep]
+        - [$libpng-dep]
+        - [$libpthread-stubs-dep]
+        - [$libsigsegv-dep]
+        - [$libsm-dep]
+        - [$libtheora-dep]
+        - [$libtiff-dep]
+        - [$libtirpc-dep]
+        - [$libtool-dep]
+        - [$libuuid-dep]
+        - [$libx11-dep]
+        - [$libxau-dep]
+        - [$libxcb-dep]
+        - [$libxdmcp-dep]
+        - [$libxext-dep]
+        - [$libxml2-dep]
+        - [$libxt-dep]
+        - [$llvm-dep]
+        - [$lz4-dep]
+        - [$lzma-dep]
+        - [$m4-dep]
+        - [$nasm-dep]
+        - [$ncurses-dep]
+        - [$ninja-dep]
+        - [$numactl-dep]
+        - [$opa-psm2-dep]
+        - [$openssh-dep]
+        - [$openssl-dep]
+        - [$pegtl-dep]
+        - [$perl-dep]
+        - [$pkg-config-dep]
+        - [$protobuf-dep]
+        - [$pugixml-dep]
+        - [$py-cycler-dep]
+        - [$py-cython-dep]
+        - [$py-kiwisolver-dep]
+        - [$py-mako-dep]
+        - [$py-markupsafe-dep]
+        - [$py-matplotlib-dep]
+        - [$py-numpy-dep]
+        - [$py-pillow-dep]
+        - [$py-pyparsing-dep]
+        - [$py-python-dateutil-dep]
+        - [$py-setuptools-dep]
+        - [$py-setuptools-scm-dep]
+        - [$py-six-dep]
+        - [$python-dep]
+        - [$rdma-core-dep]
+        - [$readline-dep]
+        - [$slurm-dep]
+        - [$sqlite-dep]
+        - [$tar-dep]
+        - [$texinfo-dep]
+        - [$util-macros-dep]
+        - [$xcb-proto-dep]
+        - [$xextproto-dep]
+        - [$xproto-dep]
+        - [$xtrans-dep]
+        - [$xz-dep]
+        - [$zlib-dep]
+        # Unique dependency constraints
+        - [$hdf5-dep]
+    - compiler-packages-2:
+      - netcdf-cxx4@4.3.1+pic
+      - netcdf-fortran@4.5.3+pic
+# Defines a matrix to populate with Spack Stacks
+    - install-comp-2:
+      - exclude: []
+        matrix:
+        - [$compiler-packages-2]
+        - [$toolchain-compiler-constraints]
+        # Base dependency constraints
+        - [$autoconf-dep]
+        - [$automake-dep]
+        - [$binutils-dep]
+        - [$bison-dep]
+        - [$bzip2-dep]
+        - [$cmake-dep]
+        - [$cubelib-dep]
+        - [$diffutils-dep]
+        - [$double-conversion-dep]
+        - [$doxygen-dep]
+        - [$eigen-dep]
+        - [$expat-dep]
+        - [$findutils-dep]
+        - [$flex-dep]
+        - [$freetype-dep]
+        - [$gdbm-dep]
+        - [$gettext-dep]
+        - [$glproto-dep]
+        - [$help2man-dep]
+        - [$hwloc-dep]
+        - [$inputproto-dep]
+        - [$jsoncpp-dep]
+        - [$kbproto-dep]
+        - [$libbsd-dep]
+        - [$libevent-dep]
+        - [$libext-dep]
+        - [$libffi-dep]
+        - [$libice-dep]
+        - [$libiconv-dep]
+        - [$libjpeg-turbo-dep]
+        - [$libnl-dep]
+        - [$libogg-dep]
+        - [$libpciaccess-dep]
+        - [$libpng-dep]
+        - [$libpthread-stubs-dep]
+        - [$libsigsegv-dep]
+        - [$libsm-dep]
+        - [$libtheora-dep]
+        - [$libtiff-dep]
+        - [$libtirpc-dep]
+        - [$libtool-dep]
+        - [$libuuid-dep]
+        - [$libx11-dep]
+        - [$libxau-dep]
+        - [$libxcb-dep]
+        - [$libxdmcp-dep]
+        - [$libxext-dep]
+        - [$libxml2-dep]
+        - [$libxt-dep]
+        - [$llvm-dep]
+        - [$lz4-dep]
+        - [$lzma-dep]
+        - [$m4-dep]
+        - [$nasm-dep]
+        - [$ncurses-dep]
+        - [$ninja-dep]
+        - [$numactl-dep]
+        - [$opa-psm2-dep]
+        - [$openssh-dep]
+        - [$openssl-dep]
+        - [$pegtl-dep]
+        - [$perl-dep]
+        - [$pkg-config-dep]
+        - [$protobuf-dep]
+        - [$pugixml-dep]
+        - [$py-cycler-dep]
+        - [$py-cython-dep]
+        - [$py-kiwisolver-dep]
+        - [$py-mako-dep]
+        - [$py-markupsafe-dep]
+        - [$py-matplotlib-dep]
+        - [$py-numpy-dep]
+        - [$py-pillow-dep]
+        - [$py-pyparsing-dep]
+        - [$py-python-dateutil-dep]
+        - [$py-setuptools-dep]
+        - [$py-setuptools-scm-dep]
+        - [$py-six-dep]
+        - [$python-dep]
+        - [$rdma-core-dep]
+        - [$readline-dep]
+        - [$slurm-dep]
+        - [$sqlite-dep]
+        - [$tar-dep]
+        - [$texinfo-dep]
+        - [$util-macros-dep]
+        - [$xcb-proto-dep]
+        - [$xextproto-dep]
+        - [$xproto-dep]
+        - [$xtrans-dep]
+        - [$xz-dep]
+        - [$zlib-dep]
+        # Unique dependency constraints
+        - [$hdf5-dep]
+        - [$netcdf-c-dep]
+# Packages built out across the all compilers and MPIs
+    - toolchain-packages:
+      - hdf5@1.12.0+cxx+fortran+hl+mpi+pic+shared+threadsafe api=v18
+      - hpctoolkit@2021.05.15
+      - libquo@1.3.1
+      - parallel-netcdf@1.12.2
+      - valgrind@3.17.0
+# Defines a matrix to populate with Spack Stacks
+    - install-comp-mpi:
+      - exclude:
+        - '%clang'
+        # intel-mpi not built out for other compilers
+        - '%gcc ^intel-parallel-studio'
+        - '%gcc ^intel-oneapi-mpi'
+        - '%clang ^intel-parallel-studio'
+        # Only one installation of HPCToolkit required to work with any code
+        # put in the core_specs anyways, so appears at top-level
+        - hpctoolkit %clang
+        - hpctoolkit %intel
+        - hpctoolkit %oneapi
+        - hpctoolkit ^mvapich2
+        - libquo %clang
+        - libquo %oneapi ^intel-parallel-studio
+        - valgrind %intel # https://github.com/spack/spack/issues/16328 Boost C++11/Intel issue.
+        - valgrind %oneapi ^intel-parallel-studio
+        - valgrind %clang
+        matrix:
+        - [$toolchain-packages]
+        - [$toolchain-mpi-constraints]
+        - [$toolchain-compiler-constraints]
+        # Base dependency constraints
+        - [$autoconf-dep]
+        - [$automake-dep]
+        - [$binutils-dep]
+        - [$bison-dep]
+        - [$bzip2-dep]
+        - [$cmake-dep]
+        - [$cubelib-dep]
+        - [$diffutils-dep]
+        - [$double-conversion-dep]
+        - [$doxygen-dep]
+        - [$eigen-dep]
+        - [$expat-dep]
+        - [$findutils-dep]
+        - [$flex-dep]
+        - [$freetype-dep]
+        - [$gdbm-dep]
+        - [$gettext-dep]
+        - [$glproto-dep]
+        - [$help2man-dep]
+        - [$hwloc-dep]
+        - [$inputproto-dep]
+        - [$jsoncpp-dep]
+        - [$kbproto-dep]
+        - [$libbsd-dep]
+        - [$libevent-dep]
+        - [$libext-dep]
+        - [$libffi-dep]
+        - [$libice-dep]
+        - [$libiconv-dep]
+        - [$libjpeg-turbo-dep]
+        - [$libnl-dep]
+        - [$libogg-dep]
+        - [$libpciaccess-dep]
+        - [$libpng-dep]
+        - [$libpthread-stubs-dep]
+        - [$libsigsegv-dep]
+        - [$libsm-dep]
+        - [$libtheora-dep]
+        - [$libtiff-dep]
+        - [$libtirpc-dep]
+        - [$libtool-dep]
+        - [$libuuid-dep]
+        - [$libx11-dep]
+        - [$libxau-dep]
+        - [$libxcb-dep]
+        - [$libxdmcp-dep]
+        - [$libxext-dep]
+        - [$libxml2-dep]
+        - [$libxt-dep]
+        - [$llvm-dep]
+        - [$lz4-dep]
+        - [$lzma-dep]
+        - [$m4-dep]
+        - [$nasm-dep]
+        - [$ncurses-dep]
+        - [$ninja-dep]
+        - [$numactl-dep]
+        - [$opa-psm2-dep]
+        - [$openssh-dep]
+        - [$openssl-dep]
+        - [$pegtl-dep]
+        - [$perl-dep]
+        - [$pkg-config-dep]
+        - [$protobuf-dep]
+        - [$pugixml-dep]
+        - [$py-cycler-dep]
+        - [$py-cython-dep]
+        - [$py-kiwisolver-dep]
+        - [$py-mako-dep]
+        - [$py-markupsafe-dep]
+        - [$py-matplotlib-dep]
+        - [$py-numpy-dep]
+        - [$py-pillow-dep]
+        - [$py-pyparsing-dep]
+        - [$py-python-dateutil-dep]
+        - [$py-setuptools-dep]
+        - [$py-setuptools-scm-dep]
+        - [$py-six-dep]
+        - [$python-dep]
+        - [$rdma-core-dep]
+        - [$readline-dep]
+        - [$slurm-dep]
+        - [$sqlite-dep]
+        - [$tar-dep]
+        - [$texinfo-dep]
+        - [$util-macros-dep]
+        - [$xcb-proto-dep]
+        - [$xextproto-dep]
+        - [$xproto-dep]
+        - [$xtrans-dep]
+        - [$xz-dep]
+        - [$zlib-dep]
+        # Unique dependency constraints
+        - [$mesa-dep]
+    - toolchain-packages-1:
+      - netcdf-c@4.8.0+hdf4+mpi+parallel-netcdf+pic+shared
+# Defines a matrix to populate with Spack Stacks
+    - install-comp-mpi-1:
+      - exclude:
+        - '%clang'
+        # intel-mpi not built out for other compilers
+        - '%gcc ^intel-parallel-studio'
+        - '%gcc ^intel-oneapi-mpi'
+        - '%clang ^intel-parallel-studio'
+        matrix:
+        - [$toolchain-packages-1]
+        - [$toolchain-mpi-constraints]
+        - [$toolchain-compiler-constraints]
+        # Base dependency constraints
+        - [$autoconf-dep]
+        - [$automake-dep]
+        - [$binutils-dep]
+        - [$bison-dep]
+        - [$bzip2-dep]
+        - [$cmake-dep]
+        - [$cubelib-dep]
+        - [$diffutils-dep]
+        - [$double-conversion-dep]
+        - [$doxygen-dep]
+        - [$eigen-dep]
+        - [$expat-dep]
+        - [$findutils-dep]
+        - [$flex-dep]
+        - [$freetype-dep]
+        - [$gdbm-dep]
+        - [$gettext-dep]
+        - [$glproto-dep]
+        - [$help2man-dep]
+        - [$hwloc-dep]
+        - [$inputproto-dep]
+        - [$jsoncpp-dep]
+        - [$kbproto-dep]
+        - [$libbsd-dep]
+        - [$libevent-dep]
+        - [$libext-dep]
+        - [$libffi-dep]
+        - [$libice-dep]
+        - [$libiconv-dep]
+        - [$libjpeg-turbo-dep]
+        - [$libnl-dep]
+        - [$libogg-dep]
+        - [$libpciaccess-dep]
+        - [$libpng-dep]
+        - [$libpthread-stubs-dep]
+        - [$libsigsegv-dep]
+        - [$libsm-dep]
+        - [$libtheora-dep]
+        - [$libtiff-dep]
+        - [$libtirpc-dep]
+        - [$libtool-dep]
+        - [$libuuid-dep]
+        - [$libx11-dep]
+        - [$libxau-dep]
+        - [$libxcb-dep]
+        - [$libxdmcp-dep]
+        - [$libxext-dep]
+        - [$libxml2-dep]
+        - [$libxt-dep]
+        - [$llvm-dep]
+        - [$lz4-dep]
+        - [$lzma-dep]
+        - [$m4-dep]
+        - [$nasm-dep]
+        - [$ncurses-dep]
+        - [$ninja-dep]
+        - [$numactl-dep]
+        - [$opa-psm2-dep]
+        - [$openssh-dep]
+        - [$openssl-dep]
+        - [$pegtl-dep]
+        - [$perl-dep]
+        - [$pkg-config-dep]
+        - [$protobuf-dep]
+        - [$pugixml-dep]
+        - [$py-cycler-dep]
+        - [$py-cython-dep]
+        - [$py-kiwisolver-dep]
+        - [$py-mako-dep]
+        - [$py-markupsafe-dep]
+        - [$py-matplotlib-dep]
+        - [$py-numpy-dep]
+        - [$py-pillow-dep]
+        - [$py-pyparsing-dep]
+        - [$py-python-dateutil-dep]
+        - [$py-setuptools-dep]
+        - [$py-setuptools-scm-dep]
+        - [$py-six-dep]
+        - [$python-dep]
+        - [$rdma-core-dep]
+        - [$readline-dep]
+        - [$slurm-dep]
+        - [$sqlite-dep]
+        - [$tar-dep]
+        - [$texinfo-dep]
+        - [$util-macros-dep]
+        - [$xcb-proto-dep]
+        - [$xextproto-dep]
+        - [$xproto-dep]
+        - [$xtrans-dep]
+        - [$xz-dep]
+        - [$zlib-dep]
+        # Unique dependency constraints
+        - [$hdf5-parallel-dep]
+        - [$mesa-dep]
+        - [$parallel-netcdf-dep]
+    - toolchain-packages-2:
+      - netcdf-cxx4@4.3.1+pic
+      - netcdf-fortran@4.5.3+pic
+      - paraview@5.9.1~vtkm+hdf5+python3+shared+mpi+osmesa+fortran+eyedomelighting+pagosa
+# Defines a matrix to populate with Spack Stacks
+    - install-comp-mpi-2:
+      - exclude:
+        - '%clang'
+        # intel-mpi not built out for other compilers
+        - '%gcc ^intel-parallel-studio'
+        - '%gcc ^intel-oneapi-mpi'
+        - '%clang ^intel-parallel-studio'
+        # Only one installation of HPCToolkit required to work with any code
+        # put in the core_specs anyways, so appears at top-level
+        - netcdf-cxx4 ^intel-parallel-studio
+        - netcdf-cxx4 %clang
+        - netcdf-fortran ^intel-parallel-studio
+        - netcdf-fortran %clang
+        - paraview %clang
+        - paraview ^intel-parallel-studio
+        - paraview ^mvapich2
+        matrix:
+        - [$toolchain-packages-2]
+        - [$toolchain-mpi-constraints]
+        - [$toolchain-compiler-constraints]
+        # Base dependency constraints
+        - [$autoconf-dep]
+        - [$automake-dep]
+        - [$binutils-dep]
+        - [$bison-dep]
+        - [$bzip2-dep]
+        - [$cmake-dep]
+        - [$cubelib-dep]
+        - [$diffutils-dep]
+        - [$double-conversion-dep]
+        - [$doxygen-dep]
+        - [$eigen-dep]
+        - [$expat-dep]
+        - [$findutils-dep]
+        - [$flex-dep]
+        - [$freetype-dep]
+        - [$gdbm-dep]
+        - [$gettext-dep]
+        - [$glproto-dep]
+        - [$help2man-dep]
+        - [$hwloc-dep]
+        - [$inputproto-dep]
+        - [$jsoncpp-dep]
+        - [$kbproto-dep]
+        - [$libbsd-dep]
+        - [$libevent-dep]
+        - [$libext-dep]
+        - [$libffi-dep]
+        - [$libice-dep]
+        - [$libiconv-dep]
+        - [$libjpeg-turbo-dep]
+        - [$libnl-dep]
+        - [$libogg-dep]
+        - [$libpciaccess-dep]
+        - [$libpng-dep]
+        - [$libpthread-stubs-dep]
+        - [$libsigsegv-dep]
+        - [$libsm-dep]
+        - [$libtheora-dep]
+        - [$libtiff-dep]
+        - [$libtirpc-dep]
+        - [$libtool-dep]
+        - [$libuuid-dep]
+        - [$libx11-dep]
+        - [$libxau-dep]
+        - [$libxcb-dep]
+        - [$libxdmcp-dep]
+        - [$libxext-dep]
+        - [$libxml2-dep]
+        - [$libxt-dep]
+        - [$llvm-dep]
+        - [$lz4-dep]
+        - [$lzma-dep]
+        - [$m4-dep]
+        - [$nasm-dep]
+        - [$ncurses-dep]
+        - [$ninja-dep]
+        - [$numactl-dep]
+        - [$opa-psm2-dep]
+        - [$openssh-dep]
+        - [$openssl-dep]
+        - [$pegtl-dep]
+        - [$perl-dep]
+        - [$pkg-config-dep]
+        - [$protobuf-dep]
+        - [$pugixml-dep]
+        - [$py-cycler-dep]
+        - [$py-cython-dep]
+        - [$py-kiwisolver-dep]
+        - [$py-mako-dep]
+        - [$py-markupsafe-dep]
+        - [$py-matplotlib-dep]
+        - [$py-numpy-dep]
+        - [$py-pillow-dep]
+        - [$py-pyparsing-dep]
+        - [$py-python-dateutil-dep]
+        - [$py-setuptools-dep]
+        - [$py-setuptools-scm-dep]
+        - [$py-six-dep]
+        - [$python-dep]
+        - [$rdma-core-dep]
+        - [$readline-dep]
+        - [$slurm-dep]
+        - [$sqlite-dep]
+        - [$tar-dep]
+        - [$texinfo-dep]
+        - [$util-macros-dep]
+        - [$xcb-proto-dep]
+        - [$xextproto-dep]
+        - [$xproto-dep]
+        - [$xtrans-dep]
+        - [$xz-dep]
+        - [$zlib-dep]
+        # Unique dependency constraints
+        - [$hdf5-parallel-dep]
+        - [$mesa-dep]
+        - [$netcdf-c-parallel-dep]
+        - [$parallel-netcdf-dep]
+    # Allows for the definition of build matrices for multiple quarters to be
+    # built all at once (e.g. - with a new machine)
+    - install:
+      - $base_matrix
+      - $install-comp
+      - $install-comp-1
+      - $install-comp-2
+      - $install-comp-mpi
+      - $install-comp-mpi-1
+      - $install-comp-mpi-2
+# Final definition
+  specs:
+  - $install
+  packages:
+    all:
+      compiler: [gcc@10.3.0]
+      version: []
+      target: []
+      modules: {}
+      providers:
+        gl: [mesa18]
+        glx: [mesa18+glx]
+        osmesa: [mesa18+osmesa swr=avx,avx2]
+        pkgconfig: [pkgconf]
+        tbb: [intel-tbb+shared]
+        uuid: [libuuid]
+      paths: {}
+    intel:
+      variants: +open
+      modules: {}
+      compiler: []
+      buildable: true
+      target: []
+      providers: {}
+      version: []
+      paths: {}
+    gcc:
+      variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
+      providers: {}
+      modules: {}
+      version: []
+      paths: {}
+      compiler: []
+      buildable: true
+      target: [haswell]
+    pgi:
+      variants: +amd+java+nvidia+mpi+mpi_gpu
+      providers: {}
+      modules: {}
+      version: []
+      paths: {}
+      compiler: []
+      buildable: true
+      target: []
+    intel-parallel-studio:
+      variants: ~tbb+mpi+ilp64+newdtags
+      providers: {}
+      modules: {}
+      version: []
+      paths: {}
+      compiler: []
+      buildable: true
+      target: []
+    openmpi:
+      variants: +legacylaunchers+pmi+thread_multiple fabrics=cma,psm,psm2,verbs schedulers=slurm
+      providers: {}
+      modules: {}
+      version: []
+      paths: {}
+      compiler: []
+      buildable: true
+      target: []
+    mvapich2:
+      variants: +debug fabrics=psm2 file_systems=lustre,ufs,nfs process_managers=slurm
+        threads=multiple ~regcache ~wrapperrpath ch3_rank_bits=32
+      providers: {}
+      modules: {}
+      version: []
+      paths: {}
+      compiler: []
+      buildable: true
+      target: []
+    slurm:
+      paths:
+        slurm@21.08.3%gcc: /usr
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    rdma-core:
+      paths:
+        rdma-core@22.4%gcc: /usr
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    llvm:
+      variants: +all_targets+clang+compiler-rt+omp_tsan+python+lldb+gold+libcxx+polly+internal_unwind
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    binutils:
+      variants: +gold+libiberty~nls+ld+gas
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    charliecloud:
+      variants: ~docs
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    git:
+      variants: +subtree+svn
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    hdf5:
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    hpctoolkit:
+      variants: +mpi+papi
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    hwloc:
+      paths: {}
+      buildable: true
+      version: [2.4.1]
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    libpciaccess:
+      paths: {}
+      buildable: true
+      version: [0.13.5]
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    libyogrt:
+      variants: scheduler=slurm
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    mesa18:
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    netcdf-c:
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    netcdf-cxx4:
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    netcdf-fortran:
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    opa-psm2:
+      paths:
+        opa-psm2@11.2.78%gcc: /usr
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    perl:
+      paths:
+        perl@5.16.3%gcc: /usr
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    python:
+      variants: ~uuid
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    scorep:
+      variants: +pdt
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    subversion:
+      variants: ~apxs+lz4_internal+perl+utf8proc_internal
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    tau:
+      variants: +comm+mpi+ompt+python+scorep+shmem+x86_64
+      paths: {}
+      buildable: true
+      version: [2.28.2]
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    valgrind:
+      variants: +lto~ubsan
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    xz:
+      variants: +pic
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+  upstreams: {}
+  mirrors: {}
+  repos: []
+  view:
+    tce:
+      root: $spack/../packages
+      link: roots
+      exclude:
+        - paraview
+        - py-mpi4py
+      projections:
+        hdf5~mpi: hdf5/hdf5-serial-{version}-{compiler.name}-{compiler.version}
+        hdf5+mpi: hdf5/hdf5-parallel-{version}-{compiler.name}-{compiler.version}-{^mpi.name}-{^mpi.version}
+        intel-parallel-studio+mpi: intel-mpi/intel-mpi-{version}
+        intel-parallel-studio+mkl: mkl/mkl-{version}
+        intel-parallel-studio+vtune: intel-tools/intel-tools-{version}
+        # All of the 'core' software should be built once per version and not need qualification
+        arm-forge: '{name}/{name}-{version}'
+        charliecloud: '{name}/{name}-{version}'
+        cmake: '{name}/{name}-{version}'
+        emacs: '{name}/{name}-{version}'
+        git: '{name}/{name}-{version}'
+        gnuplot: '{name}/{name}-{version}'
+        hpctoolkit: '{name}/{name}-{version}'
+        hpcviewer: '{name}/{name}-{version}'
+        htop: '{name}/{name}-{version}'
+        idl: '{name}/{name}-{version}'
+        julia_binary: 'julia/julia-{version}'
+        libyogrt: '{name}/{name}-{version}'
+        llvm: clang/clang-{version}
+        mercurial: '{name}/{name}-{version}'
+        numactl: '{name}/{name}-{version}'
+        openjdk: '{name}/{name}-{version}'
+        papi: '{name}/{name}-{version}'
+        patchelf: '{name}/{name}-{version}'
+        python: '{name}/{name}-{version}'
+        py-pint: '{name}/{name}-{version}'
+        qt: '{name}/{name}-{version}'
+        subversion: '{name}/{name}-{version}'
+        totalview: '{name}/{name}-{version}'
+        tmux: '{name}/{name}-{version}'
+        ^mpi: '{name}/{name}-{version}-{compiler.name}-{compiler.version}-{^mpi.name}-{^mpi.version}'
+        all: '{name}/{name}-{version}-{compiler.name}-{compiler.version}'
+  modules:
+    'default:':
+      enable: []
+    utils:
+      roots:
+        lmod: $spack/../modulefiles
+      use_view: tce
+      enable:
+        - lmod
+      lmod:
+        hierarchy:
+          - mpi
+        hash_length: 0
+        blacklist_implicits: true
+        blacklist:
+          - platform=cray
+          - platform=linux
+        whitelist:
+          - arm-forge
+          - charliecloud
+          - cmake
+          - emacs
+          - git
+          - gnuplot
+          - hpctoolkit
+          - hpcviewer
+          - htop
+          - idl
+          - intel-oneapi-mkl
+          - intel-oneapi-dal
+          - intel-oneapi-tbb
+          - intel-oneapi-mpi
+          - intel-parallel-studio~mpi
+          - java
+          - julia_binary
+          - libyogrt
+          - llvm@7.0.1
+          - mercurial
+          - numactl
+          - openjdk
+          - papi
+          - patchelf
+          - py-pint
+          - python
+          - qt
+          - subversion
+          - tmux
+          - totalview
+        core_compilers:
+          - gcc@10.3.0
+        core_specs:
+          - arm-forge
+          - charliecloud
+          - cmake
+          - emacs
+          - git
+          - gnuplot
+          - hpctoolkit
+          - hpcviewer
+          - htop
+          - idl
+          - intel-oneapi-mkl
+          - intel-oneapi-dal
+          - intel-oneapi-tbb
+          - intel-oneapi-mpi
+          - intel-parallel-studio~mpi
+          - java
+          - julia_binary
+          - libyogrt
+          - llvm@7.0.1
+          - mercurial
+          - numactl
+          - openjdk
+          - papi
+          - patchelf
+          - py-pint
+          - python
+          - qt
+          - subversion
+          - tmux
+          - totalview
+        projections:
+          intel-parallel-studio+mkl: 'mkl/{version}'
+          intel-parallel-studio+vtune: 'intel-tools/{version}'
+          julia_binary: 'julia/{version}'
+          py-pint: 'pint/{version}'
+          all: '{name}/{version}'
+        arm-forge:
+          environment:
+            set:
+               # In SLURM versions 20+ they changed default behavior that makes
+               # Forge require the following environment variable. This kludge
+               # is expected to be addressed in later Forge versions
+               ALLINEA_DEBUG_SRUN_ARGS: '%jobid% --mem-per-cpu=0 -I -W0 -G 0 --overlap'
+               ALLINEA_NO_TIMEOUT: '1'
+        idl:
+          environment:
+            prepend_path:
+              PATH: /usr/tce/packages/idl/idl-8.7/idl87/bin
+            set:
+              IDL_DIR: /usr/tce/packages/idl/idl-8.7/idl87
+        libyogrt:
+          environment:
+            set:
+              YOGRT: /usr/tce/packages/libyogrt/libyogrt-1.24
+    toolchains:
+      roots:
+        lmod: $spack/../modulefiles/toolchains
+      use_view: tce
+      enable:
+        - lmod
+      lmod:
+        hierarchy:
+          - mpi
+        hash_length: 0
+        blacklist_implicits: true
+        blacklist:
+          - platform=cray
+          - platform=linux
+        whitelist:
+          - gcc
+          - hdf5
+          - intel-oneapi-compilers
+          - intel-parallel-studio+mpi
+          - libquo
+          - llvm@12.0.0
+          - mesa18 +osmesa swr=avx,avx2
+          - mvapich2
+          - netcdf-c
+          - netcdf-cxx4
+          - netcdf-fortran
+          - openmpi
+          - parallel-netcdf
+          - valgrind
+        core_compilers:
+          - gcc@4.8.5
+        core_specs:
+          - gcc
+          - intel-oneapi-compilers
+          - llvm@12.0.0
+        projections:
+          gcc: '{name}/{version}'
+          hdf5~mpi: '{name}-serial/{version}'
+          hdf5+mpi: '{name}-parallel/{version}'
+          ^hdf5~mpi: '{name}-serial/{version}'
+          ^hdf5+mpi: '{name}-parallel/{version}'
+          intel-oneapi-compilers: 'intel/{version}'
+          intel-parallel-studio+mpi: 'intel-mpi/{version}'
+          llvm: 'clang/{version}'
+          all: '{name}/{version}'
+        intel-oneapi-compilers@2021.2.0:
+          environment:
+            prepend_path:
+              MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2021.2.0
+        intel-parallel-studio+mpi:
+          environment:
+            prepend_path:
+              PATH: /usr/tce/packages/intel-mpi/intel-mpi-cluster.2020.4/compilers_and_libraries_2020.4.304/linux/mpi/intel64/bin
+            set:
+              MANPATH: /usr/tce/packages/intel-mpi/intel-mpi-cluster.2020.4/compilers_and_libraries_2020.4.304/linux/mpi/man
+        openmpi:
+          environment:
+            set:
+              SLURM_MPI_TYPE: pmix_v3
+              HWLOC_ROOT: '{^hwloc.prefix}'
+              HWLOC_HOME: '{^hwloc.prefix}'
+        mvapich2:
+          environment:
+            prepend_path:
+              PATH: /usr/tce/packages/binutils/binutils-2.36.1-gcc-10.3.0/bin
+    # modules that use the root installation rather than pointing to the view
+    toolchains-root:
+      roots:
+        lmod: $spack/../modulefiles/toolchains
+      enable:
+        - lmod
+      lmod:
+        hierarchy:
+          - mpi
+        hash_length: 0
+        blacklist_implicits: true
+        blacklist:
+          - platform=cray
+          - platform=linux
+        whitelist:
+          - paraview
+          - py-mpi4py
+        core_compilers:
+          - gcc@4.8.5
+        projections:
+          py-mpi4py: 'mpi4py/{version}'
+          all: '{name}/{version}'
+    prefix_inspections:
+      lib:
+      - LD_LIBRARY_PATH
+      lib64:
+      - LD_LIBRARY_PATH
+  concretization: separately

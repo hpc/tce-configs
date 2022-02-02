@@ -1,0 +1,44 @@
+
+spack:
+  definitions:
+    - base-compiler:
+      - 'gcc@10.2.0 ^binutils+ld+gold~nls+gas'
+
+    - base:
+      - cmake
+      - htop
+
+    - base-deps:
+        - ^openssl
+
+    - base_matrix:
+        - matrix:
+          - [$base]
+          - [$%base-compiler]
+          - [$base-deps]
+
+    - install:
+      - $base_matrix
+
+  specs:
+    - $install
+
+  packages:
+    binutils:
+      variants: +ld+gold+libiberty~nls+gas
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    gcc:
+      variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
+      providers: {}
+      modules: {}
+      version: []
+      paths: {}
+      compiler: [gcc@4.8.5]
+      buildable: true
+      target: [haswell]
