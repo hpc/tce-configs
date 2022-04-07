@@ -2,7 +2,7 @@
 set -o pipefail
 set -e
 
-# Set umask so that groups have read/write access 
+# Set umask so that groups have read/write access
 umask 0002
 
 # Declare a list of signals to trap so cleanup functionality can be performed if the script is interrupted
@@ -32,7 +32,7 @@ num_nodes_def=0 # Number of nodes to use when building in parallel
 time_limit_def='01:00:00' # Time limit of jobs when building in parallel
 shared_group_def="" # The group that will own the files built
 delete_tree_def=false # If true the --delete-tree flag will be used when refreshing modules
-delete_tree="" # This will be set to --delete-tree and used as a flag in the spack module refresh command 
+delete_tree="" # This will be set to --delete-tree and used as a flag in the spack module refresh command
 
 usage () {
     echo ""
@@ -232,6 +232,7 @@ function error() {
 
 function error_exit() {
     error "$1"
+    check_perms "$install_dir" "$shared_group"
     exit 1
 }
 
@@ -262,12 +263,13 @@ function backup_copy() {
 
     mkdir -p "${backup_dir}"
     echo "Backup copying $src to $dst"
-    if [[ -e "$dst" ]] && ! diff -r "$src" "$dst" > /dev/null; then
+    if [[ -e "$dst" ]] && diff -r "$src" "$dst" > /dev/null; then
         echo "Diff."
-        cp -R "$dst" "${backup_dir}/${dst##*/}-$(date +'%Y-%m-%dT%H:%M:%S%z')"
+        cp -RL  "$dst" "${backup_dir}/${dst##*/}-$(date +'%Y-%m-%dT%H:%M:%S%z')"
     fi
 
-    cp -R "$src" "$dst"
+    rm -rf "$dst"
+    cp -RL --remove-destination "$src" "$dst"
 }
 
 function make_log() {
@@ -363,23 +365,25 @@ function check_perms () {
     local target_dir=$1
     local group=$2
 
+    status "Running: check_perms $target_dir $group"
     shopt -s dotglob
     if [[ -n $group ]]; then
-        chgrp -Rf "$group" "$target_dir"
-        find "$target_dir" -type d -exec chmod -Rf g+s {} +
-        chmod -Rf g+wrX,a+rX "$target_dir"
+        chgrp -Rf "$group" "$target_dir" &>/dev/null &
+        find "$target_dir" -type d -exec chmod g+s {} + &>/dev/null &
+        chmod -Rf g+wrX,a+rX "$target_dir" &>/dev/null &
     else
-        chmod -Rf a+rX "$target_dir"
+        chmod -Rf a+rX "$target_dir" &>/dev/null &
     fi
+    wait
 }
 
 # This will create a signal trap that will run a specified command and exit with the number specified by the signal
-# Usage: cmd cmd_args... 
+# Usage: cmd cmd_args...
 # - arg1: The command to be executed
 # - arg2: List of arguments to be passed to the command specified in arg1
 #
 # NOTE: When trapping a signal the normal signal behavior is CHANGED
-#       For example, if you trap a SIGILL it will not core dump!     
+#       For example, if you trap a SIGILL it will not core dump!
 function trap_with_exit () {
     local cmd=$1; shift
     local cmd_args=$*
@@ -390,7 +394,7 @@ function trap_with_exit () {
     for signal in "${TRAP_SIGNALS[@]}"; do
         sig_num=$(kill -l "$signal")
         sig_exit=$(( base_err + sig_num ))
-        trap '${cmd} ${cmd_args[*]}; exit ${sig_exit}' "$signal"
+        trap '${cmd} ${cmd_args[*]}; wait ; exit ${sig_exit}' "$signal"
 
     done
 }
@@ -461,7 +465,7 @@ case $key in
     -D|--delete-module-tree)
         echo "Module Tree Deletion=True (Module Generation=True)"
         module=true
-        delete_tree="--delete-tree" 
+        delete_tree="--delete-tree"
         shift # past argument
         ;;
     # Set to greater than zero to use compute nodes in an allocation to
@@ -744,10 +748,10 @@ fi
 
 # Check for user spack config files
 if find "$HOME/.spack/" -name "*.yaml" &>/dev/null && [[ "$user_spack_ok" != true ]]; then
-    error_exit "A ~/.spack directory containing configs was found. This can really
-bork things up. Like seriously, having this will make your life miserable in
-unpredictable ways. Either delete any configs in there, or at your own peril,
-use the '--user-spack-ok' option."
+    msg "$yellow" "A ~/.spack directory was detected. Using a temp directory as \$HOME instead. 
+If you want to use your ~/.spack directory, use the '--user-spack-ok' option."
+    HOME=$(mktemp -d)
+    export HOME
 fi
 
 # Check for hugepages modulefiles
@@ -772,12 +776,12 @@ else
     inst_env_name=${environment_name}
 fi
 install_dir="${install_dir}/${inst_env_name}"
- 
+
 # At this point, configuration for this script is done. It is time to start
 # doing work.
 
 # Set up traps in case a signal is sent at this point
-trap_with_exit "check_perms" "$install_dir" "$shared_group" 
+trap_with_exit "check_perms" "$install_dir" "$shared_group"
 
 status "Set up install directory at ${install_dir}"
 
@@ -858,6 +862,7 @@ release_env=${spack_root}/var/spack/environments/${release_name}
 # Copy the release environment
 echo "Release $release"
 echo "Release_env $release_env"
+echo "Copying $environment to $release_env"
 backup_copy "$environment" "$release_env"
 
 pushd "$facility" &>/dev/null
@@ -880,7 +885,7 @@ if [[ -z "$license_dir" ]]; then
     if [[ -d "$license_dest" ]] && [[ -L "$license_dest" ]]; then
         error_exit "Refusing to copy licenses into a symbolic link dir to avoid overwriting system
         wide licenses"
-    fi 
+    fi
 
     if [[ -d licenses ]]; then
         status "Copying license files"
@@ -896,8 +901,8 @@ if [[ -z "$license_dir" ]]; then
     fi
 else
     status "Symlinking to specified license dir."
-    
-    if [[ -d "$license_dest" ]] && ! [[ -L "$license_dest" ]]; then 
+
+    if [[ -d "$license_dest" ]] && ! [[ -L "$license_dest" ]]; then
         error_exit "Refusing to replace license dir with a symbolic link."
     fi
 
@@ -936,7 +941,7 @@ else
 fi
 
 if [ "$cacheonly" = true ]; then
-    SPACK_CACHING=--cache-only 
+    SPACK_CACHING=--cache-only
 fi
 
 # no matter what SPACK_CACHING is set to, export it.
@@ -972,6 +977,7 @@ if [[ $stage = true ]]; then
     echo "  Release version: $release_name"
     echo "  Installation directory: $install_dir"
     echo ""
+    check_perms "$install_dir" "$shared_group"
     exit 0
 fi
 
@@ -1203,8 +1209,17 @@ if [[ $build_continue = true ]]; then
             else
                 mod_log_list="$mod_log_list $make_log_path"
             fi
-            if ! /usr/bin/time spack "${SPACK_VERBOSE[@]}" module "${mod_type}" \
-                -n "$mod_name" refresh -y "${delete_tree}" |& tee "${make_log_path}" ; then
+            #only call --delete-tree once for utils, will delete and regenerate utils lmod: $spack/../modulefiles
+            if [[ -n ${delete_tree} ]] && [[ "${mod_name}" == "utils" ]] ; then
+                if ! /usr/bin/time spack "${SPACK_VERBOSE[@]}" module "${mod_type}" \
+                   -n "$mod_name" refresh -y "${delete_tree}" |& tee "${make_log_path}" ; then
+                    error "Module generation failed for $mod_name. See $make_log_path."
+                    module_stat=${valid_statuses[2]}
+                    build_continue=false
+                    break
+                fi
+            elif ! /usr/bin/time spack "${SPACK_VERBOSE[@]}" module "${mod_type}" \
+                 -n "$mod_name" refresh -y |& tee "${make_log_path}" ; then
                 error "Module generation failed for $mod_name. See $make_log_path."
                 module_stat=${valid_statuses[2]}
                 build_continue=false
@@ -1259,10 +1274,11 @@ if [[ $module_stat == "${valid_statuses[1]}" || \
 fi
 echo ""
 
+check_perms "$install_dir" "$shared_group"
+
 if [[ $build_continue = true ]]; then
     exit 0
 else
     exit 1
 fi
 
-check_perms "$install_dir" "$shared_group"

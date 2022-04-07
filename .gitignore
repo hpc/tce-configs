@@ -3,5 +3,8 @@ inst*
 conc*
 mod*
 *.sw*
+*.pyc
 module*.txt
 .spack-env
+facilities/lanl*
+*/__pycache__

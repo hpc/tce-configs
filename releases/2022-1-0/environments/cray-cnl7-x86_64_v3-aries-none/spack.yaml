@@ -32,7 +32,7 @@ spack:
       - arm-forge@21.0
       - charliecloud@0.23
       - cmake@3.20.3
-      - emacs@27.2+X ^mesa18+glx ^gtkplus+cups buildtype=release
+      - emacs@27.2
       - git@2.31.1
       - gnuplot@5.2.8+X~cairo
       - hpcviewer@2021.05
@@ -357,15 +357,21 @@ spack:
 # Defines a matrix to populate with Spack Stacks
     - install-comp-mpi:
       - exclude:
+        - hpctoolkit%gcc@10.3.0 ^mpich@7.7.17
+        - hpctoolkit%gcc@11.2.0
         - hpctoolkit%intel
         - hpctoolkit%cce
+        - paraview%gcc@11.2.0 ^mpich@7.7.17
+        - paraview%gcc@10.3.0 ^mpich@7.7.18
         - paraview%cce
+        - valgrind%gcc@11.2.0 ^mpich@7.7.17
+        - valgrind%gcc@10.3.0 ^mpich@7.7.18
         - valgrind%cce
         - valgrind%intel
-        - ^mpich@7.7.17 %gcc@11.2.0
-        - ^mpich@7.7.17 %cce@12.0.3
-        - ^mpich@7.7.18 %gcc@10.3.0
-        - ^mpich@7.7.18 %cce@11.0.4
+        - libquo%gcc@11.2.0 ^mpich@7.7.17
+        - libquo%cce@12.0.3 ^mpich@7.7.17
+        - libquo%gcc@10.3.0 ^mpich@7.7.18
+        - libquo%cce@11.0.4 ^mpich@7.7.18
         matrix:
         - [$toolchain-packages]
         - [$toolchain-compiler-constraints]
@@ -500,6 +506,15 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    botan:
+      paths: {}
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
     cce:
       modules:
         cce@12.0.3: cce/12.0.3
@@ -527,6 +542,15 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    cryptopp:
+      paths: {}
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
     gcc:
       providers: {}
       modules:
@@ -546,6 +570,20 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    gnutls:
+      paths: {}
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    gtkplus:
+        variants: ^meson@0.56.2
+        paths: {}
+        buildable: true
+        version: []
     hdf5:
       paths: {}
       buildable: false
@@ -582,10 +620,23 @@ spack:
       providers: {}
       version: []
       paths: {}
+    libgcrypt:
+      paths:
+        libgcrypt20@1.8.2%gcc: /usr/
+      buildable: false
     libpciaccess:
       paths: {}
       buildable: true
       version: [0.13.5]
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    libsodium:
+      paths: {}
+      buildable: false
+      version: []
       target: []
       compiler: []
       modules: {}
@@ -608,6 +659,15 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    mbedtls:
+      paths: {}
+      version: []
+      buildable: true
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
     mesa18:
       paths: {}
       buildable: true
@@ -616,11 +676,6 @@ spack:
       compiler: []
       modules: {}
       providers: {}
-    gtkplus:
-        variants: ^meson@0.56.2
-        paths: {}
-        buildable: true
-        version: []
     mpich:
       modules:
         mpich@7.7.18 platform=cray: cray-mpich/7.7.18
@@ -658,6 +713,24 @@ spack:
       modules:
         netcdf-fortran@4.7.4+pic: cray-netcdf-hdf5parallel/4.7.4.4
       providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    nettle:
+      paths: {}
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    nss:
+      paths: {}
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
     openmpi:
       variants: +legacylaunchers+pmi+thread_multiple fabrics=auto schedulers=slurm
       providers: {}
@@ -667,6 +740,16 @@ spack:
       compiler: []
       buildable: true
       target: []
+    # Don't build cryptographic libraries, especially openssl; define an external path when needed
+    openssl:
+      paths:
+        openssl@1.1.1d-sles15%gcc@10.3.0: /usr
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
     parallel-netcdf:
       paths: {}
       buildable: false

@@ -25,7 +25,7 @@ lanl-paths:
   script:
     - which grep
     # Find any files that contain an hpcsoft path that isn't in a comment.
-    - if grep -RE '^[^#]*/hpcsoft' environments/*; then exit 1; fi
+    - if grep -RE '^[^#]*/hpcsoft' releases/*; then exit 1; fi
     - if grep -RE '^[^#]*/hpcsoft' bin/*; then exit 1; fi
 
 # No environment should have a 'config:' section. That should all
@@ -34,7 +34,7 @@ config-in-env:
   stage:
     syntax_and_style
   script:
-    - if grep -ER ' +config:' environments/*/spack.yaml; then exit 1; fi
+    - if grep -ER ' +config:' releases/*/environments/*/spack.yaml; then exit 1; fi
 
 bash-syntax:
   image: bash

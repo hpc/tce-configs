@@ -167,7 +167,7 @@ spack:
     - libxext-dep:
       - ^libxext%gcc
     - libxml2-dep:
-      - ^libxml2%gcc
+      - ^libxml2@2.9.10%gcc@10.3.0
     - libxt-dep:
       - ^libxt%gcc
     - llvm-dep:
@@ -609,8 +609,6 @@ spack:
         - '%gcc ^intel-parallel-studio'
         - '%gcc ^intel-oneapi-mpi'
         - '%clang ^intel-parallel-studio'
-        # Only one installation of HPCToolkit required to work with any code
-        # put in the core_specs anyways, so appears at top-level
         - hpctoolkit %clang
         - hpctoolkit %intel
         - hpctoolkit %oneapi
@@ -980,92 +978,19 @@ spack:
         tbb: [intel-tbb+shared]
         uuid: [libuuid]
       paths: {}
-    intel:
-      variants: +open
-      modules: {}
-      compiler: []
-      buildable: true
-      target: []
-      providers: {}
-      version: []
-      paths: {}
-    gcc:
-      variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
-      providers: {}
-      modules: {}
-      version: []
-      paths: {}
-      compiler: []
-      buildable: true
-      target: [haswell]
-    pgi:
-      variants: +amd+java+nvidia+mpi+mpi_gpu
-      providers: {}
-      modules: {}
-      version: []
-      paths: {}
-      compiler: []
-      buildable: true
-      target: []
-    intel-parallel-studio:
-      variants: ~tbb+mpi+ilp64+newdtags
-      providers: {}
-      modules: {}
-      version: []
-      paths: {}
-      compiler: []
-      buildable: true
-      target: []
-    openmpi:
-      variants: +legacylaunchers+pmi+thread_multiple fabrics=cma,psm,psm2,verbs schedulers=slurm
-      providers: {}
-      modules: {}
-      version: []
-      paths: {}
-      compiler: []
-      buildable: true
-      target: []
-    mvapich2:
-      variants: +debug fabrics=psm2 file_systems=lustre,ufs,nfs process_managers=slurm
-        threads=multiple ~regcache ~wrapperrpath ch3_rank_bits=32
-      providers: {}
-      modules: {}
-      version: []
-      paths: {}
-      compiler: []
-      buildable: true
-      target: []
-    slurm:
-      paths:
-        slurm@21.08.3%gcc: /usr
-      buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    rdma-core:
-      paths:
-        rdma-core@22.4%gcc: /usr
-      buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    llvm:
-      variants: +all_targets+clang+compiler-rt+omp_tsan+python+lldb+gold+libcxx+polly+internal_unwind
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
     binutils:
       variants: +gold+libiberty~nls+ld+gas
       paths: {}
       buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    botan:
+      paths: {}
+      buildable: false
       version: []
       target: []
       compiler: []
@@ -1080,10 +1005,41 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    cryptopp:
+      paths: {}
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    gcc:
+      variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
+      providers: {}
+      modules: {}
+      version: []
+      paths: {}
+      compiler: []
+      buildable: true
+      target: [haswell]
+    gettext:
+      variants: +bzip2+curses+git~libunistring~libxml2+tar+xz
+      buildable: true
+      version: [0.21]
     git:
       variants: +subtree+svn
       paths: {}
       buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    gnutls:
+      paths: {}
+      buildable: false
       version: []
       target: []
       compiler: []
@@ -1114,6 +1070,28 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    intel:
+      variants: +open
+      modules: {}
+      compiler: []
+      buildable: true
+      target: []
+      providers: {}
+      version: []
+      paths: {}
+    intel-parallel-studio:
+      variants: ~tbb+mpi+ilp64+newdtags
+      providers: {}
+      modules: {}
+      version: []
+      paths: {}
+      compiler: []
+      buildable: true
+      target: []
+    libgcrypt:
+      paths:
+        libgcrypt@1.5.3%gcc: /usr/
+      buildable: false
     libpciaccess:
       paths: {}
       buildable: true
@@ -1122,8 +1100,44 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    libsodium:
+      paths: {}
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    libxml2:
+      variants: +python
+      paths: {}
+      buildable: true
+      version: [2.9.10]
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
     libyogrt:
       variants: scheduler=slurm
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    llvm:
+      variants: +all_targets+clang+compiler-rt+omp_tsan+python+lldb+gold+libcxx+polly+internal_unwind
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    mbedtls:
       paths: {}
       buildable: true
       version: []
@@ -1139,6 +1153,16 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    mvapich2:
+      variants: +debug fabrics=psm2 file_systems=lustre,ufs,nfs process_managers=slurm
+        threads=multiple ~regcache ~wrapperrpath ch3_rank_bits=32
+      providers: {}
+      modules: {}
+      version: []
+      paths: {}
+      compiler: []
+      buildable: true
+      target: []
     netcdf-c:
       paths: {}
       buildable: true
@@ -1163,9 +1187,46 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    nettle:
+      paths: {}
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    # Don't build cryptographic libraries; define an external path when needed
+    nss:
+      paths: {}
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
     opa-psm2:
       paths:
         opa-psm2@11.2.78%gcc: /usr
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    openmpi:
+      variants: +legacylaunchers+pmi+thread_multiple fabrics=cma,psm,psm2,verbs schedulers=slurm
+      providers: {}
+      modules: {}
+      version: []
+      paths: {}
+      compiler: []
+      buildable: true
+      target: []
+    # Don't build cryptographic libraries, especially openssl; define an external path when needed
+    openssl:
+      paths:
+        openssl@1.0.2k-rhel%gcc~docs+systemcerts: /usr
       buildable: false
       version: []
       target: []
@@ -1181,10 +1242,55 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    pgi:
+      variants: +amd+java+nvidia+mpi+mpi_gpu
+      providers: {}
+      modules: {}
+      version: []
+      paths: {}
+      compiler: []
+      buildable: true
+      target: []
+    pkg-config:
+      paths:
+        pkg-config@0.27.1%gcc: /usr
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
     python:
-      variants: ~uuid
+      variants: ~uuid~libxml2
       paths: {}
       buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    qt:
+      variants: ~ssl
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    rdma-core:
+      paths:
+        rdma-core@22.4%gcc: /usr
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
+    slurm:
+      paths:
+        slurm@21.08.3%gcc: /usr
+      buildable: false
       version: []
       target: []
       compiler: []
@@ -1428,10 +1534,22 @@ spack:
           intel-parallel-studio+mpi: 'intel-mpi/{version}'
           llvm: 'clang/{version}'
           all: '{name}/{version}'
-        intel-oneapi-compilers@2021.2.0:
+        llvm@12.0.0:
+          environment:
+            prepend_path:
+              PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin
+              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/lib64
+            set:
+              FC:  /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin/gfortran
+              F90:  /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin/gfortran
+        intel-oneapi-compilers:
           environment:
             prepend_path:
               MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2021.2.0
+              PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin
+              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/lib64
+            set:
+              GCC: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5
         intel-parallel-studio+mpi:
           environment:
             prepend_path:
