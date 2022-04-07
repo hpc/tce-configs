@@ -1,0 +1,6 @@
+# A standard spack mirrors file. In LANL's case, we keep separate source and binary cache mirrors.
+
+mirrors:
+  source: https://our-local-mirror.blah.gov/mirror
+  buildcache: https://our-local-mirror.blah.gov/binary-mirror
+  local: /local/mirror/path

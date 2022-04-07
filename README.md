@@ -3,18 +3,57 @@ These are the Spack Stacks configurations used at the Tri-Labs. They are set up 
 you to recreate the TCE Spack stacks on the fly, hopefully with consistent 
 concretized hashes across the environment given the same inputs. 
 
+# Organization Overview
+
+## bin
+
+ - TCE installation scripts 
+ - `process.sh` sets up Spack and the installation area, bootstraps compilers, and installs
+   TCE to a given location.
+
+## facilities
+
+ - Holds site-specific Spack configurations
+ - process.cfg is a shell script that gets sourced to provide site defaults for 
+   `./bin/process.sh` (the TCE stack install script
+ - `facilities/example` provides and example
+
+## releases
+
+ - Holds the various TCE releases, which should contain architecture/hardware specific 
+   configurations in the `releases/<release>/environments` directory. 
+ - Currently only single release installs are supported, but 'stacked' multi-release installs 
+   are intended.
+
+## spacklemore
+
+ - Customized Spack package repo for TCE
+ - Subsequent to each release, all changes are expected to move into Spack mainline
+
+## tests
+
+ - CI sub-test scripts
+
 # Usage
 
-The `./bin/process.sh` command will set up your stack deployment, given a `facility`,
-`environment`, and install location. Multiple environments may be placed in the same 
-install location, but facility installs should be separated.
 
-It will then try to concretize that Spack environment and, if successful, try to build and install
-it. Most of the spack defaults are facility dependent, and should be set in the facilities `process.cfg` file. Almost all of the information about what gets built lives in the environment directory.
+The `./bin/process.sh` script:
+ 
+  - Sets up installation directories (according to the `-i` argument)
+  - Clones Spack into that area, and checks out the appropriate branch.
+  - Sets up Spack, including adding the `spacklemore` repo
+  - Installs `release/<version>/environment/<env_name>` as env `<release>` under Spack.
+    - release is specified with `-r`, `-e` for environment
+  - Bootstraps compilers by running the `bootstrap_compilers.sh` script for the environment
+  - Activates and installs the TCE environment
+  - Generates a view
+  - Generates modulefiles
+  - Generates a binary cache
+  - Uploads the binary cache (LANL only)
 
 ```bash
 # Build out the lanl, toss3 spack stack from scratch in /usr/projects/hpctools/production
-./bin/process.sh -f lanl -e toss3 -i /usr/projects/hpctools/production
+./bin/process.sh -f lanl -r 2021.3.0 -e toss3 -i /usr/projects/hpctools/production
 # The environment will be built under /usr/projects/hpctools/production/toss3
 ```
 
@@ -130,30 +169,3 @@ python3 fix_compiler.py $SPACK_ROOT/etc/spack/compilers.yaml edit gcc@10.2.0 rhe
         --environment='LD=$binutils_path/ld
 ```
 
-# Environments
-
-### `kodiak`
-This Stack is used to build out our software for a TOSS3, Nvidia GPU, Mellanox
-cluster at LANL.  Kodiak is the only machine of this kind at LANL, so it has
-been named to be that specific.  The `spack.yaml` configuration file is in this
-directory along with the LANL lockfile `spack.lock.lanl` as well as the basic
-`process.sh` script used to concretize and install the stacks while capturing
-the output and as much information as possible for debugging purposes.  As the
-Totalview source code is not able to be downloaded by Spack installs, it is
-included in the repository and symlinked into this directory.
-
-## `toss`
-The relevant configs for building out the Stack for Infiniband-connected TOSS3
-cluster.  The respective files have similar descriptions as those in the
-`kodiak` directory.
-
-## `xc40`
-The relevant configs for building out the Stack for XC40 systems including
-Trinity and Trinitite.  These configs use the Cray-provided compilers and
-MPI (cray-mpich) and build the stacks on those.  For now, that excludes the
-cray compiler, so only GCC and Intel are used.
-
-## `xc50`
-The relevant configs for building out the Stack for XC50 systems include
-Capulin and Thunder.  These configs use the Cray-provided GCC compiler and
-cray-mpich MPI.

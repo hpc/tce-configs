@@ -1,0 +1,28 @@
+# Typical Spack packages.yaml
+# Mainly used to set site specific externals
+
+packages:
+  all:
+    permissions:
+      write: group
+      group: hpcsoft
+  mpich:
+    externals:
+    - spec: mpich@7.7.14 os=cnl7
+      modules:
+      - cray-mpich/7.7.14
+    - spec: mpich@7.7.15 os=cnl7
+      modules:
+      - cray-mpich/7.7.15
+    - spec: mpich@7.7.16 os=cnl7
+      modules:
+      - cray-mpich/7.7.16
+    - spec: mpich@7.7.17 os=cnl7
+      modules:
+      - cray-mpich/7.7.17
+    buildable: false
+  openssh:
+    externals:
+    - spec: openssh@7.4p1%gcc
+      prefix: /usr
+    buildable: false
