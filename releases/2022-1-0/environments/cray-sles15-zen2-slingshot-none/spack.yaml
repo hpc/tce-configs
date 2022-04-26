@@ -490,7 +490,7 @@ spack:
         gl: [mesa18]
         glx: [mesa18+glx]
         osmesa: [mesa18+osmesa swr=avx,avx2]
-        pkgconfig: [pkgconf]
+        pkgconfig: [pkg-config]
         tbb: [intel-tbb+shared]
         uuid: [libuuid]
       paths: {}
@@ -674,7 +674,7 @@ spack:
       providers: {}
     mpich:
       modules:
-        mpich@8.1.2 platform=cray: cray-mpich/8.1.2
+        mpich@8.1.12: cray-mpich/8.1.12
       compiler: [cce, gcc, intel]
       buildable: false
       version: []
@@ -763,6 +763,16 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    # Use the system pkg-config so that system paths aren't returned in calls to `pkg-config`
+    pkg-config:
+      paths:
+        pkg-config@0.29.2%gcc: /usr
+      buildable: false
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
     python:
       variants: ~uuid
       paths: {}
@@ -772,9 +782,20 @@ spack:
       compiler: []
       modules: {}
       providers: {}
+    qt:
+      # The version of qt above requires openssl 1.1.1+, which this system doesn't
+      # provide. Turn off ssl support.
+      variants: ~ssl
+      paths: {}
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      modules: {}
+      providers: {}
     slurm:
       paths:
-        slurm@21.08.6a%gcc@10.3.0: /opt/slurm
+        slurm@21.08.6a%gcc@10.3.0: /usr
       buildable: false
       version: []
       target: []
