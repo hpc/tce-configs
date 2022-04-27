@@ -49,6 +49,8 @@ bash-syntax:
   tags:
     - untagged
   script:
+    - echo $http_proxy
+    - ping -c 2 w2.lanl.gov
     - apk add shellcheck
     - source tests/syntax.sh
 
