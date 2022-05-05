@@ -1128,7 +1128,7 @@ spack:
       modules: {}
       providers: {}
     llvm:
-      variants: +all_targets+clang+compiler-rt+omp_tsan+python+lldb+gold+libcxx+polly+internal_unwind
+      variants: +clang+compiler-rt+omp_tsan+python+lldb+gold+libcxx+polly+internal_unwind targets=all
       paths: {}
       buildable: true
       version: []
