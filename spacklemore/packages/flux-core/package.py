@@ -14,7 +14,7 @@ class FluxCore(BuiltinFluxCore):
         super(FluxCore, self).setup_build_environment(env)
         env.set('LUA', self.spec['lua'].prefix.bin.lua)
         env.set('LUA_INCLUDE', self.spec['lua'].prefix.include)
-        env.set('LUA_LIB', '-llua')
+        env.set('LUA_LIB', '-llua5.2')
 
     def configure_args(self):
         args = super(FluxCore, self).configure_args()

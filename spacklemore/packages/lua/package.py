@@ -15,6 +15,6 @@ class Lua(BuiltinLua):
             compver):
         """Override this function just to add a single argument."""
         args.append('-nostartfiles')
-        super(Lua, self).static_to_shared_library(path, arguments=args,
+        super(Package, self).static_to_shared_library(path, arguments=args,
                                                       version=ver,
                                                       compat_version=compver)
