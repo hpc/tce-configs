@@ -11,261 +11,88 @@
 #
 spack:
   definitions:
+    - arch:
+      - os=rhel8 target=x86_64
+    - system-compiler:
+      - gcc@4.8.5
+
 # Toss compilers
     - base-compiler:
       - gcc@10.3.0
     - base-compiler-to-install:
       - gcc@10.3.0%gcc@4.8.5 ^binutils+gold+ld+gas
+    - toolchain-compilers-non-base: []
     - toolchain-compilers-non-base:
       - intel-oneapi-compilers@2021.2.0
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
+    - toolchain-compilers-non-base:
       - llvm@12.0.0
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_CLANG'' in env'
     - toolchain-compiler-constraints:
       - $%base-compiler
+    - toolchain-compiler-constraints:
       - '%intel@2021.2.0'
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
+    - toolchain-compiler-constraints:
       - '%clang@12.0.0'
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_CLANG'' in env'
 # Toss MPIs
+    - toolchain-mpi-constraints: []
     - toolchain-mpi-constraints:
       - ^intel-parallel-studio@cluster.2020.4
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL_MPI'' in env'
+    - toolchain-mpi-constraints:
       - ^openmpi@4.1.1
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_OPENMPI'' in env'
+    - toolchain-mpi-constraints:
       - ^mvapich2@2.3.6
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_MVAPICH2'' in env'
+    - toolchain-mpi: []
     - toolchain-mpi:
       - intel-parallel-studio@cluster.2020.4+mpi+ilp64+newdtags
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL_MPI'' in env'
+    - toolchain-mpi:
       - openmpi@4.1.1
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_OPENMPI'' in env'
+    - toolchain-mpi:
       - mvapich2@2.3.6
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_MVAPICH2'' in env'
 # Packages built only once
-    - base:
+    - singleton-packages:
+      - ap@1.0
       - arm-forge@21.0
       - charliecloud@0.23
+      - cloc@1.84
       - cmake@3.20.3
       - emacs@27.2+X ^mesa18+glx
       - git@2.31.1
+      - git-lfs@2.11.0^git@2.31.1
       - gnuplot@5.2.8+X~cairo
-      - hpcviewer@2021.05
+      - go@1.17.3
       - htop@3.0.5
       - idl@8.7
       # Tools installation for intel products.
       - intel-parallel-studio@cluster.2020.4+vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
       # Separate mkl installation.
       - intel-parallel-studio@cluster.2020.4~mpi~ipp~daal~tbb~ilp64~newdtags
-      - julia_binary@1.5.3
+      - julia@1.5.3
       - libyogrt@1.24
       - mercurial@5.8
       - numactl@2.0.14
       - openjdk@11.0.8_10
       - papi@6.0.0.1
-      - patchelf@0.12
+      - patchelf@0.13
       - python@2.7.18
       - python@3.8.10
       - python@3.9.5
       - py-pint@0.17
       - qt@5.15.2
+      - setup-ssh-keys@1.0
       - subversion@1.14.0
+      - tce-utils-defaults@1.0
+      - tce-wrapper-drivers@18.0
       - totalview@2021.1.16
       - tmux@3.1b
-    - base_matrix:
-      - exclude: []
-        matrix:
-        - [$base]
-        - [$%base-compiler]
-# Define base deps to reuse
-    - autoconf-dep:
-      - ^autoconf%gcc
-    - automake-dep:
-      - ^automake%gcc
-    - binutils-dep:
-      - ^binutils%gcc@10.3.0
-    - bison-dep:
-      - ^bison%gcc
-    - bzip2-dep:
-      - ^bzip2%gcc
-    - cmake-dep:
-      - ^cmake%gcc
-    - cubelib-dep:
-      - ^cubelib%gcc
-    - diffutils-dep:
-      - ^diffutils%gcc
-    - double-conversion-dep:
-      - ^double-conversion%gcc
-    - doxygen-dep:
-      - ^doxygen%gcc
-    - eigen-dep:
-      - ^eigen%gcc
-    - expat-dep:
-      - ^expat%gcc
-    - findutils-dep:
-      - ^findutils%gcc
-    - flex-dep:
-      - ^flex%gcc
-    - freetype-dep:
-      - ^freetype%gcc
-    - gdbm-dep:
-      - ^gdbm%gcc
-    - gettext-dep:
-      - ^gettext%gcc
-    - glproto-dep:
-      - ^glproto%gcc
-    - hdf5-dep:
-      - ^hdf5@1.12.0~mpi+cxx+fortran+hl+pic+shared+threadsafe api=v18
-    - hdf5-parallel-dep:
-      - ^hdf5@1.12.0+cxx+fortran+hl+mpi+pic+shared+threadsafe api=v18
-    - help2man-dep:
-      - ^help2man%gcc
-    - hwloc-dep:
-      - ^hwloc%gcc
-    - inputproto-dep:
-      - ^inputproto%gcc
-    - jsoncpp-dep:
-      - ^jsoncpp%gcc
-    - kbproto-dep:
-      - ^kbproto%gcc
-    - libbsd-dep:
-      - ^libbsd%gcc
-    - libevent-dep:
-      - ^libevent%gcc
-    - libext-dep:
-      - ^libext%gcc
-    - libffi-dep:
-      - ^libffi%gcc
-    - libice-dep:
-      - ^libice%gcc
-    - libiconv-dep:
-      - ^libiconv%gcc
-    - libjpeg-turbo-dep:
-      - ^libjpeg-turbo%gcc
-    - libnl-dep:
-      - ^libnl%gcc
-    - libogg-dep:
-      - ^libogg%gcc
-    - libpciaccess-dep:
-      - ^libpciaccess@0.13.5%gcc
-    - libpng-dep:
-      - ^libpng%gcc
-    - libpthread-stubs-dep:
-      - ^libpthread-stubs%gcc
-    - libsigsegv-dep:
-      - ^libsigsegv%gcc
-    - libsm-dep:
-      - ^libsm%gcc
-    - libtheora-dep:
-      - ^libtheora%gcc
-    - libtiff-dep:
-      - ^libtiff%gcc
-    - libtirpc-dep:
-      - ^libtirpc%gcc
-    - libtool-dep:
-      - ^libtool%gcc
-    - libuuid-dep:
-      - ^libuuid%gcc
-    - libx11-dep:
-      - ^libx11%gcc
-    - libxau-dep:
-      - ^libxau%gcc
-    - libxcb-dep:
-      - ^libxcb%gcc
-    - libxdmcp-dep:
-      - ^libxdmcp%gcc
-    - libxext-dep:
-      - ^libxext%gcc
-    - libxml2-dep:
-      - ^libxml2@2.9.10%gcc@10.3.0
-    - libxt-dep:
-      - ^libxt%gcc
-    - llvm-dep:
-      - ^llvm@7.0.1%gcc
-    - lz4-dep:
-      - ^lz4%gcc
-    - lzma-dep:
-      - ^lzma%gcc
-    - m4-dep:
-      - ^m4%gcc
-    - mesa-dep:
-      - ^mesa18
-    - nasm-dep:
-      - ^nasm%gcc
-    - ncurses-dep:
-      - ^ncurses%gcc
-    - netcdf-c-dep:
-      - ^netcdf-c@4.8.0~mpi~parallel-netcdf+hdf4+pic+shared
-    - netcdf-c-parallel-dep:
-      - ^netcdf-c@4.8.0+hdf4+mpi+parallel-netcdf+pic+shared
-    - ninja-dep:
-      - ^ninja%gcc
-    - numactl-dep:
-      - ^numactl%gcc
-    - opa-psm2-dep:
-      - ^opa-psm2%gcc
-    - openssh-dep:
-      - ^openssh%gcc
-    - openssl-dep:
-      - ^openssl%gcc
-    - parallel-netcdf-dep:
-      - ^parallel-netcdf@1.12.2
-    - pegtl-dep:
-      - ^pegtl%gcc
-    - perl-dep:
-      - ^perl%gcc
-    - pkg-config-dep:
-      - ^pkg-config%gcc
-    - protobuf-dep:
-      - ^protobuf%gcc
-    - pugixml-dep:
-      - ^pugixml%gcc
-    - py-cftime-dep:
-      - ^py-cftime%gcc
-    - py-cycler-dep:
-      - ^py-cycler%gcc
-    - py-cython-dep:
-      - ^py-cython%gcc
-    - py-kiwisolver-dep:
-      - ^py-kiwisolver%gcc
-    - py-mako-dep:
-      - ^py-mako%gcc
-    - py-markupsafe-dep:
-      - ^py-markupsafe%gcc
-    - py-matplotlib-dep:
-      - ^py-matplotlib%gcc
-    - py-numpy-dep:
-      - ^py-numpy%gcc
-    - py-pillow-dep:
-      - ^py-pillow%gcc
-    - py-pyparsing-dep:
-      - ^py-pyparsing%gcc
-    - py-python-dateutil-dep:
-      - ^py-python-dateutil%gcc
-    - py-setuptools-dep:
-      - ^py-setuptools%gcc
-    - py-setuptools-scm-dep:
-      - ^py-setuptools-scm%gcc
-    - py-six-dep:
-      - ^py-six%gcc
-    - python-dep:
-      - ^python%gcc
-    - rdma-core-dep:
-      - ^rdma-core%gcc
-    - readline-dep:
-      - ^readline%gcc
-    - slurm-dep:
-      - ^slurm%gcc
-    - sqlite-dep:
-      - ^sqlite%gcc
-    - tar-dep:
-      - ^tar%gcc
-    - texinfo-dep:
-      - ^texinfo%gcc
-    - util-macros-dep:
-      - ^util-macros%gcc
-    - xcb-proto-dep:
-      - ^xcb-proto%gcc
-    - xextproto-dep:
-      - ^xextproto%gcc
-    - xproto-dep:
-      - ^xproto%gcc
-    - xtrans-dep:
-      - ^xtrans%gcc
-    - xz-dep:
-      - ^xz%gcc
-    - zlib-dep:
-      - ^zlib%gcc
 # Packages built out across the all compilers
     - compiler-packages:
       - $toolchain-mpi
@@ -274,9 +101,44 @@ spack:
       - intel-oneapi-dal@2021.2.0
       - intel-oneapi-tbb@2021.2.0
       - mesa18
+      - netcdf-c@4.8.0~mpi~parallel-netcdf+hdf4+pic+shared
+      - netcdf-cxx4@4.3.1+pic
+      - netcdf-fortran@4.5.3+pic
+      - openblas
+      - print-openmp-mapping@1.0
+      - tce-compiler-wrappers@3.0
+# Packages built out across the all compilers and MPIs
+    - toolchain-packages:
+      - hpctoolkit
+      - libquo
+      - netcdf-c@4.8.0+hdf4+mpi+parallel-netcdf+pic+shared
+      - netcdf-cxx4@4.3.1+pic
+      - netcdf-fortran@4.5.3+pic
+      - paraview@5.9.1~vtkm+hdf5+python3+shared+mpi+osmesa+fortran+eyedomelighting+pagosa
+      - tce-mpi-wrappers@4.0
+      - valgrind
 # Defines a matrix to populate with Spack Stacks
-    - install-comp:
-      - exclude:
+    # Allows for the definition of build matrices for multiple quarters to be
+    # built all at once (e.g. - with a new machine)
+    - install:
+      # Install the base compiler
+      - matrix:
+        - [$base-compiler]
+        - [$%system-compiler]
+        - [$arch]
+      - matrix:
+        - [$compilers]
+        - [$%base-compiler]
+        - [$arch]
+      - matrix:
+        - [$singleton-packages]
+        - [$%base-compiler]
+        - [$arch]
+      - matrix:
+        - [$compiler-packages]
+        - [$toolchain-compiler-constraints]
+        - [$arch]
+        exclude:
         - intel-parallel-studio %gcc
         - intel-parallel-studio %clang
         - intel-parallel-studio %oneapi
@@ -290,677 +152,27 @@ spack:
         - intel-oneapi-tbb%clang
         - intel-oneapi-tbb%intel
         - mesa18%clang
-        matrix:
-        - [$compiler-packages]
-        - [$toolchain-compiler-constraints]
-        # Base dependency constraints
-        - [$autoconf-dep]
-        - [$automake-dep]
-        - [$binutils-dep]
-        - [$bison-dep]
-        - [$bzip2-dep]
-        - [$cmake-dep]
-        - [$cubelib-dep]
-        - [$diffutils-dep]
-        - [$double-conversion-dep]
-        - [$doxygen-dep]
-        - [$eigen-dep]
-        - [$expat-dep]
-        - [$findutils-dep]
-        - [$flex-dep]
-        - [$freetype-dep]
-        - [$gdbm-dep]
-        - [$gettext-dep]
-        - [$glproto-dep]
-        - [$help2man-dep]
-        - [$hwloc-dep]
-        - [$inputproto-dep]
-        - [$jsoncpp-dep]
-        - [$kbproto-dep]
-        - [$libbsd-dep]
-        - [$libevent-dep]
-        - [$libext-dep]
-        - [$libffi-dep]
-        - [$libice-dep]
-        - [$libiconv-dep]
-        - [$libjpeg-turbo-dep]
-        - [$libnl-dep]
-        - [$libogg-dep]
-        - [$libpciaccess-dep]
-        - [$libpng-dep]
-        - [$libpthread-stubs-dep]
-        - [$libsigsegv-dep]
-        - [$libsm-dep]
-        - [$libtheora-dep]
-        - [$libtiff-dep]
-        - [$libtirpc-dep]
-        - [$libtool-dep]
-        - [$libuuid-dep]
-        - [$libx11-dep]
-        - [$libxau-dep]
-        - [$libxcb-dep]
-        - [$libxdmcp-dep]
-        - [$libxext-dep]
-        - [$libxml2-dep]
-        - [$libxt-dep]
-        - [$llvm-dep]
-        - [$lz4-dep]
-        - [$lzma-dep]
-        - [$m4-dep]
-        - [$nasm-dep]
-        - [$ncurses-dep]
-        - [$ninja-dep]
-        - [$numactl-dep]
-        - [$opa-psm2-dep]
-        - [$openssh-dep]
-        - [$openssl-dep]
-        - [$pegtl-dep]
-        - [$perl-dep]
-        - [$pkg-config-dep]
-        - [$protobuf-dep]
-        - [$pugixml-dep]
-        - [$py-cycler-dep]
-        - [$py-cython-dep]
-        - [$py-kiwisolver-dep]
-        - [$py-mako-dep]
-        - [$py-markupsafe-dep]
-        - [$py-matplotlib-dep]
-        - [$py-numpy-dep]
-        - [$py-pillow-dep]
-        - [$py-pyparsing-dep]
-        - [$py-python-dateutil-dep]
-        - [$py-setuptools-dep]
-        - [$py-setuptools-scm-dep]
-        - [$py-six-dep]
-        - [$python-dep]
-        - [$rdma-core-dep]
-        - [$readline-dep]
-        - [$slurm-dep]
-        - [$sqlite-dep]
-        - [$tar-dep]
-        - [$texinfo-dep]
-        - [$util-macros-dep]
-        - [$xcb-proto-dep]
-        - [$xextproto-dep]
-        - [$xproto-dep]
-        - [$xtrans-dep]
-        - [$xz-dep]
-        - [$zlib-dep]
-    - compiler-packages-1:
-      - netcdf-c@4.8.0~mpi~parallel-netcdf+hdf4+pic+shared
-# Defines a matrix to populate with Spack Stacks
-    - install-comp-1:
-      - exclude: []
-        matrix:
-        - [$compiler-packages-1]
-        - [$toolchain-compiler-constraints]
-        # Base dependency constraints
-        - [$autoconf-dep]
-        - [$automake-dep]
-        - [$binutils-dep]
-        - [$bison-dep]
-        - [$bzip2-dep]
-        - [$cmake-dep]
-        - [$cubelib-dep]
-        - [$diffutils-dep]
-        - [$double-conversion-dep]
-        - [$doxygen-dep]
-        - [$eigen-dep]
-        - [$expat-dep]
-        - [$findutils-dep]
-        - [$flex-dep]
-        - [$freetype-dep]
-        - [$gdbm-dep]
-        - [$gettext-dep]
-        - [$glproto-dep]
-        - [$help2man-dep]
-        - [$hwloc-dep]
-        - [$inputproto-dep]
-        - [$jsoncpp-dep]
-        - [$kbproto-dep]
-        - [$libbsd-dep]
-        - [$libevent-dep]
-        - [$libext-dep]
-        - [$libffi-dep]
-        - [$libice-dep]
-        - [$libiconv-dep]
-        - [$libjpeg-turbo-dep]
-        - [$libnl-dep]
-        - [$libogg-dep]
-        - [$libpciaccess-dep]
-        - [$libpng-dep]
-        - [$libpthread-stubs-dep]
-        - [$libsigsegv-dep]
-        - [$libsm-dep]
-        - [$libtheora-dep]
-        - [$libtiff-dep]
-        - [$libtirpc-dep]
-        - [$libtool-dep]
-        - [$libuuid-dep]
-        - [$libx11-dep]
-        - [$libxau-dep]
-        - [$libxcb-dep]
-        - [$libxdmcp-dep]
-        - [$libxext-dep]
-        - [$libxml2-dep]
-        - [$libxt-dep]
-        - [$llvm-dep]
-        - [$lz4-dep]
-        - [$lzma-dep]
-        - [$m4-dep]
-        - [$nasm-dep]
-        - [$ncurses-dep]
-        - [$ninja-dep]
-        - [$numactl-dep]
-        - [$opa-psm2-dep]
-        - [$openssh-dep]
-        - [$openssl-dep]
-        - [$pegtl-dep]
-        - [$perl-dep]
-        - [$pkg-config-dep]
-        - [$protobuf-dep]
-        - [$pugixml-dep]
-        - [$py-cycler-dep]
-        - [$py-cython-dep]
-        - [$py-kiwisolver-dep]
-        - [$py-mako-dep]
-        - [$py-markupsafe-dep]
-        - [$py-matplotlib-dep]
-        - [$py-numpy-dep]
-        - [$py-pillow-dep]
-        - [$py-pyparsing-dep]
-        - [$py-python-dateutil-dep]
-        - [$py-setuptools-dep]
-        - [$py-setuptools-scm-dep]
-        - [$py-six-dep]
-        - [$python-dep]
-        - [$rdma-core-dep]
-        - [$readline-dep]
-        - [$slurm-dep]
-        - [$sqlite-dep]
-        - [$tar-dep]
-        - [$texinfo-dep]
-        - [$util-macros-dep]
-        - [$xcb-proto-dep]
-        - [$xextproto-dep]
-        - [$xproto-dep]
-        - [$xtrans-dep]
-        - [$xz-dep]
-        - [$zlib-dep]
-        # Unique dependency constraints
-        - [$hdf5-dep]
-    - compiler-packages-2:
-      - netcdf-cxx4@4.3.1+pic
-      - netcdf-fortran@4.5.3+pic
-# Defines a matrix to populate with Spack Stacks
-    - install-comp-2:
-      - exclude: []
-        matrix:
-        - [$compiler-packages-2]
-        - [$toolchain-compiler-constraints]
-        # Base dependency constraints
-        - [$autoconf-dep]
-        - [$automake-dep]
-        - [$binutils-dep]
-        - [$bison-dep]
-        - [$bzip2-dep]
-        - [$cmake-dep]
-        - [$cubelib-dep]
-        - [$diffutils-dep]
-        - [$double-conversion-dep]
-        - [$doxygen-dep]
-        - [$eigen-dep]
-        - [$expat-dep]
-        - [$findutils-dep]
-        - [$flex-dep]
-        - [$freetype-dep]
-        - [$gdbm-dep]
-        - [$gettext-dep]
-        - [$glproto-dep]
-        - [$help2man-dep]
-        - [$hwloc-dep]
-        - [$inputproto-dep]
-        - [$jsoncpp-dep]
-        - [$kbproto-dep]
-        - [$libbsd-dep]
-        - [$libevent-dep]
-        - [$libext-dep]
-        - [$libffi-dep]
-        - [$libice-dep]
-        - [$libiconv-dep]
-        - [$libjpeg-turbo-dep]
-        - [$libnl-dep]
-        - [$libogg-dep]
-        - [$libpciaccess-dep]
-        - [$libpng-dep]
-        - [$libpthread-stubs-dep]
-        - [$libsigsegv-dep]
-        - [$libsm-dep]
-        - [$libtheora-dep]
-        - [$libtiff-dep]
-        - [$libtirpc-dep]
-        - [$libtool-dep]
-        - [$libuuid-dep]
-        - [$libx11-dep]
-        - [$libxau-dep]
-        - [$libxcb-dep]
-        - [$libxdmcp-dep]
-        - [$libxext-dep]
-        - [$libxml2-dep]
-        - [$libxt-dep]
-        - [$llvm-dep]
-        - [$lz4-dep]
-        - [$lzma-dep]
-        - [$m4-dep]
-        - [$nasm-dep]
-        - [$ncurses-dep]
-        - [$ninja-dep]
-        - [$numactl-dep]
-        - [$opa-psm2-dep]
-        - [$openssh-dep]
-        - [$openssl-dep]
-        - [$pegtl-dep]
-        - [$perl-dep]
-        - [$pkg-config-dep]
-        - [$protobuf-dep]
-        - [$pugixml-dep]
-        - [$py-cycler-dep]
-        - [$py-cython-dep]
-        - [$py-kiwisolver-dep]
-        - [$py-mako-dep]
-        - [$py-markupsafe-dep]
-        - [$py-matplotlib-dep]
-        - [$py-numpy-dep]
-        - [$py-pillow-dep]
-        - [$py-pyparsing-dep]
-        - [$py-python-dateutil-dep]
-        - [$py-setuptools-dep]
-        - [$py-setuptools-scm-dep]
-        - [$py-six-dep]
-        - [$python-dep]
-        - [$rdma-core-dep]
-        - [$readline-dep]
-        - [$slurm-dep]
-        - [$sqlite-dep]
-        - [$tar-dep]
-        - [$texinfo-dep]
-        - [$util-macros-dep]
-        - [$xcb-proto-dep]
-        - [$xextproto-dep]
-        - [$xproto-dep]
-        - [$xtrans-dep]
-        - [$xz-dep]
-        - [$zlib-dep]
-        # Unique dependency constraints
-        - [$hdf5-dep]
-        - [$netcdf-c-dep]
-# Packages built out across the all compilers and MPIs
-    - toolchain-packages:
-      - hdf5@1.12.0+cxx+fortran+hl+mpi+pic+shared+threadsafe api=v18
-      - hpctoolkit@2021.05.15
-      - libquo@1.3.1
-      - parallel-netcdf@1.12.2
-      - valgrind@3.17.0
-# Defines a matrix to populate with Spack Stacks
-    - install-comp-mpi:
-      - exclude:
-        - '%clang'
-        # intel-mpi not built out for other compilers
-        - '%gcc ^intel-parallel-studio'
-        - '%gcc ^intel-oneapi-mpi'
-        - '%clang ^intel-parallel-studio'
-        - hpctoolkit %clang
-        - hpctoolkit %intel
-        - hpctoolkit %oneapi
-        - hpctoolkit ^mvapich2
-        - libquo %clang
-        - libquo %oneapi ^intel-parallel-studio
-        - valgrind %intel # https://github.com/spack/spack/issues/16328 Boost C++11/Intel issue.
-        - valgrind %oneapi ^intel-parallel-studio
-        - valgrind %clang
-        matrix:
+      - matrix:
         - [$toolchain-packages]
         - [$toolchain-mpi-constraints]
         - [$toolchain-compiler-constraints]
-        # Base dependency constraints
-        - [$autoconf-dep]
-        - [$automake-dep]
-        - [$binutils-dep]
-        - [$bison-dep]
-        - [$bzip2-dep]
-        - [$cmake-dep]
-        - [$cubelib-dep]
-        - [$diffutils-dep]
-        - [$double-conversion-dep]
-        - [$doxygen-dep]
-        - [$eigen-dep]
-        - [$expat-dep]
-        - [$findutils-dep]
-        - [$flex-dep]
-        - [$freetype-dep]
-        - [$gdbm-dep]
-        - [$gettext-dep]
-        - [$glproto-dep]
-        - [$help2man-dep]
-        - [$hwloc-dep]
-        - [$inputproto-dep]
-        - [$jsoncpp-dep]
-        - [$kbproto-dep]
-        - [$libbsd-dep]
-        - [$libevent-dep]
-        - [$libext-dep]
-        - [$libffi-dep]
-        - [$libice-dep]
-        - [$libiconv-dep]
-        - [$libjpeg-turbo-dep]
-        - [$libnl-dep]
-        - [$libogg-dep]
-        - [$libpciaccess-dep]
-        - [$libpng-dep]
-        - [$libpthread-stubs-dep]
-        - [$libsigsegv-dep]
-        - [$libsm-dep]
-        - [$libtheora-dep]
-        - [$libtiff-dep]
-        - [$libtirpc-dep]
-        - [$libtool-dep]
-        - [$libuuid-dep]
-        - [$libx11-dep]
-        - [$libxau-dep]
-        - [$libxcb-dep]
-        - [$libxdmcp-dep]
-        - [$libxext-dep]
-        - [$libxml2-dep]
-        - [$libxt-dep]
-        - [$llvm-dep]
-        - [$lz4-dep]
-        - [$lzma-dep]
-        - [$m4-dep]
-        - [$nasm-dep]
-        - [$ncurses-dep]
-        - [$ninja-dep]
-        - [$numactl-dep]
-        - [$opa-psm2-dep]
-        - [$openssh-dep]
-        - [$openssl-dep]
-        - [$pegtl-dep]
-        - [$perl-dep]
-        - [$pkg-config-dep]
-        - [$protobuf-dep]
-        - [$pugixml-dep]
-        - [$py-cycler-dep]
-        - [$py-cython-dep]
-        - [$py-kiwisolver-dep]
-        - [$py-mako-dep]
-        - [$py-markupsafe-dep]
-        - [$py-matplotlib-dep]
-        - [$py-numpy-dep]
-        - [$py-pillow-dep]
-        - [$py-pyparsing-dep]
-        - [$py-python-dateutil-dep]
-        - [$py-setuptools-dep]
-        - [$py-setuptools-scm-dep]
-        - [$py-six-dep]
-        - [$python-dep]
-        - [$rdma-core-dep]
-        - [$readline-dep]
-        - [$slurm-dep]
-        - [$sqlite-dep]
-        - [$tar-dep]
-        - [$texinfo-dep]
-        - [$util-macros-dep]
-        - [$xcb-proto-dep]
-        - [$xextproto-dep]
-        - [$xproto-dep]
-        - [$xtrans-dep]
-        - [$xz-dep]
-        - [$zlib-dep]
-        # Unique dependency constraints
-        - [$mesa-dep]
-    - toolchain-packages-1:
-      - netcdf-c@4.8.0+hdf4+mpi+parallel-netcdf+pic+shared
-# Defines a matrix to populate with Spack Stacks
-    - install-comp-mpi-1:
-      - exclude:
+        - [$arch]
+        exclude:
         - '%clang'
         # intel-mpi not built out for other compilers
         - '%gcc ^intel-parallel-studio'
         - '%gcc ^intel-oneapi-mpi'
         - '%clang ^intel-parallel-studio'
-        matrix:
-        - [$toolchain-packages-1]
-        - [$toolchain-mpi-constraints]
-        - [$toolchain-compiler-constraints]
-        # Base dependency constraints
-        - [$autoconf-dep]
-        - [$automake-dep]
-        - [$binutils-dep]
-        - [$bison-dep]
-        - [$bzip2-dep]
-        - [$cmake-dep]
-        - [$cubelib-dep]
-        - [$diffutils-dep]
-        - [$double-conversion-dep]
-        - [$doxygen-dep]
-        - [$eigen-dep]
-        - [$expat-dep]
-        - [$findutils-dep]
-        - [$flex-dep]
-        - [$freetype-dep]
-        - [$gdbm-dep]
-        - [$gettext-dep]
-        - [$glproto-dep]
-        - [$help2man-dep]
-        - [$hwloc-dep]
-        - [$inputproto-dep]
-        - [$jsoncpp-dep]
-        - [$kbproto-dep]
-        - [$libbsd-dep]
-        - [$libevent-dep]
-        - [$libext-dep]
-        - [$libffi-dep]
-        - [$libice-dep]
-        - [$libiconv-dep]
-        - [$libjpeg-turbo-dep]
-        - [$libnl-dep]
-        - [$libogg-dep]
-        - [$libpciaccess-dep]
-        - [$libpng-dep]
-        - [$libpthread-stubs-dep]
-        - [$libsigsegv-dep]
-        - [$libsm-dep]
-        - [$libtheora-dep]
-        - [$libtiff-dep]
-        - [$libtirpc-dep]
-        - [$libtool-dep]
-        - [$libuuid-dep]
-        - [$libx11-dep]
-        - [$libxau-dep]
-        - [$libxcb-dep]
-        - [$libxdmcp-dep]
-        - [$libxext-dep]
-        - [$libxml2-dep]
-        - [$libxt-dep]
-        - [$llvm-dep]
-        - [$lz4-dep]
-        - [$lzma-dep]
-        - [$m4-dep]
-        - [$nasm-dep]
-        - [$ncurses-dep]
-        - [$ninja-dep]
-        - [$numactl-dep]
-        - [$opa-psm2-dep]
-        - [$openssh-dep]
-        - [$openssl-dep]
-        - [$pegtl-dep]
-        - [$perl-dep]
-        - [$pkg-config-dep]
-        - [$protobuf-dep]
-        - [$pugixml-dep]
-        - [$py-cycler-dep]
-        - [$py-cython-dep]
-        - [$py-kiwisolver-dep]
-        - [$py-mako-dep]
-        - [$py-markupsafe-dep]
-        - [$py-matplotlib-dep]
-        - [$py-numpy-dep]
-        - [$py-pillow-dep]
-        - [$py-pyparsing-dep]
-        - [$py-python-dateutil-dep]
-        - [$py-setuptools-dep]
-        - [$py-setuptools-scm-dep]
-        - [$py-six-dep]
-        - [$python-dep]
-        - [$rdma-core-dep]
-        - [$readline-dep]
-        - [$slurm-dep]
-        - [$sqlite-dep]
-        - [$tar-dep]
-        - [$texinfo-dep]
-        - [$util-macros-dep]
-        - [$xcb-proto-dep]
-        - [$xextproto-dep]
-        - [$xproto-dep]
-        - [$xtrans-dep]
-        - [$xz-dep]
-        - [$zlib-dep]
-        # Unique dependency constraints
-        - [$hdf5-parallel-dep]
-        - [$mesa-dep]
-        - [$parallel-netcdf-dep]
-    - toolchain-packages-2:
-      - netcdf-cxx4@4.3.1+pic
-      - netcdf-fortran@4.5.3+pic
-      - paraview@5.9.1~vtkm+hdf5+python3+shared+mpi+osmesa+fortran+eyedomelighting+pagosa
-# Defines a matrix to populate with Spack Stacks
-    - install-comp-mpi-2:
-      - exclude:
-        - '%clang'
-        # intel-mpi not built out for other compilers
-        - '%gcc ^intel-parallel-studio'
-        - '%gcc ^intel-oneapi-mpi'
-        - '%clang ^intel-parallel-studio'
-        # Only one installation of HPCToolkit required to work with any code
-        # put in the core_specs anyways, so appears at top-level
+        - hpctoolkit %intel
+        - hpctoolkit %oneapi
+        - hpctoolkit ^mvapich2
+        - libquo %oneapi ^intel-parallel-studio
         - netcdf-cxx4 ^intel-parallel-studio
-        - netcdf-cxx4 %clang
         - netcdf-fortran ^intel-parallel-studio
-        - netcdf-fortran %clang
-        - paraview %clang
         - paraview ^intel-parallel-studio
         - paraview ^mvapich2
-        matrix:
-        - [$toolchain-packages-2]
-        - [$toolchain-mpi-constraints]
-        - [$toolchain-compiler-constraints]
-        # Base dependency constraints
-        - [$autoconf-dep]
-        - [$automake-dep]
-        - [$binutils-dep]
-        - [$bison-dep]
-        - [$bzip2-dep]
-        - [$cmake-dep]
-        - [$cubelib-dep]
-        - [$diffutils-dep]
-        - [$double-conversion-dep]
-        - [$doxygen-dep]
-        - [$eigen-dep]
-        - [$expat-dep]
-        - [$findutils-dep]
-        - [$flex-dep]
-        - [$freetype-dep]
-        - [$gdbm-dep]
-        - [$gettext-dep]
-        - [$glproto-dep]
-        - [$help2man-dep]
-        - [$hwloc-dep]
-        - [$inputproto-dep]
-        - [$jsoncpp-dep]
-        - [$kbproto-dep]
-        - [$libbsd-dep]
-        - [$libevent-dep]
-        - [$libext-dep]
-        - [$libffi-dep]
-        - [$libice-dep]
-        - [$libiconv-dep]
-        - [$libjpeg-turbo-dep]
-        - [$libnl-dep]
-        - [$libogg-dep]
-        - [$libpciaccess-dep]
-        - [$libpng-dep]
-        - [$libpthread-stubs-dep]
-        - [$libsigsegv-dep]
-        - [$libsm-dep]
-        - [$libtheora-dep]
-        - [$libtiff-dep]
-        - [$libtirpc-dep]
-        - [$libtool-dep]
-        - [$libuuid-dep]
-        - [$libx11-dep]
-        - [$libxau-dep]
-        - [$libxcb-dep]
-        - [$libxdmcp-dep]
-        - [$libxext-dep]
-        - [$libxml2-dep]
-        - [$libxt-dep]
-        - [$llvm-dep]
-        - [$lz4-dep]
-        - [$lzma-dep]
-        - [$m4-dep]
-        - [$nasm-dep]
-        - [$ncurses-dep]
-        - [$ninja-dep]
-        - [$numactl-dep]
-        - [$opa-psm2-dep]
-        - [$openssh-dep]
-        - [$openssl-dep]
-        - [$pegtl-dep]
-        - [$perl-dep]
-        - [$pkg-config-dep]
-        - [$protobuf-dep]
-        - [$pugixml-dep]
-        - [$py-cycler-dep]
-        - [$py-cython-dep]
-        - [$py-kiwisolver-dep]
-        - [$py-mako-dep]
-        - [$py-markupsafe-dep]
-        - [$py-matplotlib-dep]
-        - [$py-numpy-dep]
-        - [$py-pillow-dep]
-        - [$py-pyparsing-dep]
-        - [$py-python-dateutil-dep]
-        - [$py-setuptools-dep]
-        - [$py-setuptools-scm-dep]
-        - [$py-six-dep]
-        - [$python-dep]
-        - [$rdma-core-dep]
-        - [$readline-dep]
-        - [$slurm-dep]
-        - [$sqlite-dep]
-        - [$tar-dep]
-        - [$texinfo-dep]
-        - [$util-macros-dep]
-        - [$xcb-proto-dep]
-        - [$xextproto-dep]
-        - [$xproto-dep]
-        - [$xtrans-dep]
-        - [$xz-dep]
-        - [$zlib-dep]
-        # Unique dependency constraints
-        - [$hdf5-parallel-dep]
-        - [$mesa-dep]
-        - [$netcdf-c-parallel-dep]
-        - [$parallel-netcdf-dep]
-    # Allows for the definition of build matrices for multiple quarters to be
-    # built all at once (e.g. - with a new machine)
-    - install:
-      - $base_matrix
-      - $install-comp
-      - $install-comp-1
-      - $install-comp-2
-      - $install-comp-mpi
-      - $install-comp-mpi-1
-      - $install-comp-mpi-2
+        - valgrind %intel # https://github.com/spack/spack/issues/16328 Boost C++11/Intel issue.
+        - valgrind %oneapi ^intel-parallel-studio
 # Final definition
   specs:
   - $install
@@ -1028,7 +240,7 @@ spack:
       buildable: true
       version: [0.21]
     git:
-      variants: +subtree+svn
+      variants: +subtree+svn+tcltk
       paths: {}
       buildable: true
       version: []
@@ -1054,7 +266,7 @@ spack:
       modules: {}
       providers: {}
     hpctoolkit:
-      variants: +mpi+papi
+      variants: +mpi+papi+viewer
       paths: {}
       buildable: true
       version: []

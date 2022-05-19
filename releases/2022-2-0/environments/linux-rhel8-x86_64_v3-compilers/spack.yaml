@@ -1,0 +1,611 @@
+# 'when' clause takes a string of python code.
+# Available 'when' clause variables are:
+#   spack_platform: platform string from spack
+#   spack_os: os string of the default Spack architecture on the system
+#   spack_target: target string of the default Spack architecture on the system
+#   spack_architecture/spack_arch: full string of default Spack architecture
+#   re: standard regex module in python
+#   env: user environment (os.environ in python)
+#   hostname: hostname of the system if 'hostname' in an executable in user path
+#
+spack:
+  definitions:
+  - arch: [os=rhel8 target=x86_64]
+  - singleton_packages:
+      - cmake@3.14.5+ownlibs+openssl
+      - cmake@3.19.2+ownlibs+openssl
+      - cmake@3.21.1+ownlibs+openssl
+      - cmake@3.22.4+ownlibs+openssl
+      - cmake@3.23.1+ownlibs+openssl
+      - ninja@1.10.2
+      - ap@1.0
+      - tce-wrapper-drivers@18.0
+      - subversion@1.14.1
+      - git@2.29.1+tcltk
+      - git@2.31.1+tcltk
+      - git-lfs@2.11.0^git@2.29.1+tcltk # Must use default git 2.29.1
+      - gcc@10.3.1 # Red Hat version
+      - xsu@1.0
+      - cloc@1.84
+      - tce-utils-defaults@1.0
+      - triwrapper@1-74
+      - ftprotate@1-62
+      - patchelf@0.10
+      - patchelf@0.12
+      - patchelf@0.13
+  - base_compiler: ['%gcc@8.3.1']
+  - no_mpi_packages: [tce-compiler-wrappers@3.0]
+  - mpi_packages: [tce-mpi-wrappers@4.0]
+  - mpis:
+      - "mvapich2@2.3.6 fabrics=mrail process_managers=slurm file_systems=nfs,ufs,lustre +wrapperrpath"
+  - compiler_packages: [intel@19.0.4, gcc@10.2.1, gcc@10.3.1, aocc@5.1.0.0] # llvm@12.0.1
+  - compiler_constraints: ['%intel@19.0.4', '%gcc@10.2.1', '%gcc@10.3.1', '%aocc@5.1.0.0'] #'%llvm@12.0.1',
+  specs:
+  - matrix:
+    - [$mpi_packages]
+    - [$^mpis]
+    - [$compiler_constraints]
+    - [$arch]
+  - matrix:
+    - [$no_mpi_packages, $mpis]
+    - [$compiler_constraints]
+    - [$arch]
+  - matrix:
+    - [$singleton_packages, $compiler_packages]
+    - [$base_compiler]
+    - [$arch]
+  packages:
+    all:
+      compiler: [gcc@8.3.1]
+      target: [x86_64]
+      providers:
+        iconv: [libc]
+    gcc:
+      externals:
+      - spec: gcc@10.2.1%gcc@8.3.1
+        prefix: /opt/rh/gcc-toolset-10/root
+      version: [10.2.1]
+      #buildable: false
+    aocc:
+      externals:
+      - spec: aocc@5.1.0.0
+        prefix: /opt/rocm-5.1.0
+      - spec: aocc@5.0.2.0
+        prefix: /opt/rocm-5.0.2
+      - spec: aocc@5.0.0.0
+        prefix: /opt/rocm-5.0.0
+      - spec: aocc@4.5.2.0
+        prefix: /opt/rocm-4.5.2
+        version: [4.5.2]
+      - spec: aocc@4.5.0.0
+        prefix: /opt/rocm-4.5.0
+      - spec: aocc@4.3.1.0
+        prefix: /opt/rocm-4.3.1
+      - spec: aocc@4.2.0.0
+        prefix: /opt/rocm-4.2.0
+      buildable: False
+    libc:
+      externals:
+      - spec: libc@2.28+iconv
+        prefix: /
+      version: [2.28]
+      variants: +iconv
+      buildable: false
+    ncurses:
+      externals:
+      - spec: ncurses@6.1~symlinks+termlib
+        prefix: /usr
+      version: [6.1]
+      variants: ~symlinks+termlib
+      buildable: false
+    pcre2:
+      externals:
+      - spec: pcre2@10.32
+        prefix: /usr
+      version: [10.32]
+      buildable: false
+    pcre:
+      externals:
+      - spec: pcre@8.42
+        prefix: /usr
+      version: [8.42]
+      buildable: false
+    perl:
+      externals:
+      - spec: perl@5.26.3+cpanm+shared+threads
+        prefix: /usr
+      version: [5.26.3]
+      variants: +cpanm+shared+threads
+      buildable: false
+    perl-data-dumper:
+      externals:
+      - spec: perl-data-dumper@2.167
+        prefix: /usr
+      version: [2.167]
+      buildable: false
+    binutils:
+      externals:
+      - spec: binutils@2.36.1
+        prefix: /usr
+      version: [2.36.1]
+      buildable: false
+    libidn2:
+      externals:
+      - spec: libidn2@2.2.0
+        prefix: /usr
+      version: [2.2.0]
+      buildable: false
+    expat:
+      externals:
+      # Use fake -release version of expat to prevent deprecation issues
+      - spec: expat@2.2.5-release~libbsd
+        prefix: /usr
+      version: [2.2.5]
+      variants: ~libbsd
+      buildable: false
+    autoconf:
+      externals:
+      - spec: autoconf@2.69
+        prefix: /usr
+      version: [2.69]
+      buildable: false
+    automake:
+      externals:
+      - spec: automake@1.16.1
+        prefix: /usr
+      version: [1.16.1]
+      buildable: false
+    m4:
+      externals:
+      - spec: m4@1.4.18
+        prefix: /usr
+      version: [1.4.18]
+      buildable: false
+    libtool:
+      externals:
+      - spec: libtool@2.4.6
+        prefix: /usr
+      version: [2.4.6]
+      buildable: false
+    gettext:
+      externals:
+      - spec: gettext@0.19.8.1+curses+libunistring+libxml2~git+xz~tar~bzip2
+        prefix: /usr
+      version: [0.19.8.1]
+      variants: +curses+libunistring+libxml2~git+xz~tar~bzip2
+      buildable: false
+    tk:
+      externals:
+      - spec: tk@8.6+xft~xss
+        prefix: /usr
+      version: [8.6]
+      variants: +xft~xss
+      buildable: false
+    openssl:
+      externals:
+      # Use fake -release version of openssl to prevent deprecation issues
+      - spec: openssl@1.1.1-release
+        prefix: /usr
+      buildable: false
+    openssh:
+      externals:
+      - spec: openssh@8.0p1
+        prefix: /usr
+      buildable: false
+    curl:
+      externals:
+      - spec: curl@7.61.1 ~libssh+libssh2+gssapi+nghttp2
+        prefix: /usr
+      buildable: false
+    findutils:
+      externals:
+      - spec: findutils@4.6.0
+        prefix: /usr
+      buildable: false
+    libxml2:
+      externals:
+      - spec: libxml2@2.9.7
+        prefix: /usr
+      buildable: false
+    libpciaccess:
+      externals:
+      - spec: libpciaccess@0.11.1
+        prefix: /usr
+      buildable: false
+    slurm:
+      externals:
+      - spec: slurm@20.11.8
+        prefix: /usr
+      buildable: false
+    libfabric:
+      externals:
+      - spec: libfabric@1.12.0 fabrics=verbs
+        prefix: /usr
+      buildable: false
+    ucx:
+      externals:
+      - spec: ucx@1.9.0
+        prefix: /usr
+      buildable: false
+    hwloc:
+      externals:
+      - spec: hwloc@2.4.1
+        prefix: /usr
+      buildable: false
+    pkgconf:
+      externals:
+      - spec: pkgconf@1.4.2
+        prefix: /usr
+      buildable: false
+    libedit:
+      externals:
+      - spec: libedit@3.1
+        prefix: /usr
+      buildable: false
+    krb5:
+      externals:
+      - spec: krb5@1.18.2
+        prefix: /usr
+      buildable: false
+    # zlib breaks builds as specified below
+    #zlib:
+    #  externals:
+    #  - spec: zlib@1.2.11
+    #    prefix: /usr
+    #  buildable: false
+    bison:
+      externals:
+      - spec: bison@3.0.4
+        prefix: /usr
+      buildable: false
+    python:
+      externals:
+      - spec: python@2.7.18+bz2+ctypes+dbm~lzma+nis+pyexpat+readline+sqlite3+ssl~tix~tkinter+uuid+zlib
+        prefix: /usr
+      - spec: python@3.6.8+bz2+ctypes+dbm+lzma+nis+pyexpat+readline+sqlite3+ssl+tix+tkinter+uuid+zlib
+        prefix: /usr
+      buildable: false
+    py-docutils:
+      externals:
+      - spec: py-docutils@0.14
+        prefix: /usr
+      buildable: false
+    rdma-core:
+      externals:
+      - spec: rdma-core@35.0
+        prefix: /usr
+      buildable: false
+    glib:
+      externals:
+      - spec: glib@2.56.4
+        prefix: /lib64
+      buildable: false
+    munge:
+      externals:
+      - spec: munge@0.5.3
+        prefix: /usr
+      buildable: false
+    go:
+      externals:
+      - spec: go@1.15.13
+        prefix: /usr
+      buildable: false
+    llvm:
+      variants: +all_targets+clang+compiler-rt+omp_tsan+python+lldb+gold+libcxx+polly+internal_unwind
+      buildable: true
+      version: []
+      target: []
+      compiler: []
+      providers: {}
+  gitlab-ci:
+    rebuild-index: false
+    mappings:
+    - match:
+      - target=x86_64
+      runner-attributes:
+        tags:
+        - quartz1916
+        - shell
+        before_script:
+
+        # clone and set up spack
+        - git clone --branch ${SPACK_CHECKOUT_VERSION} --depth 1 ssh://git@czgitlab.llnl.gov:7999/tce/spack.git
+        - . spack/share/spack/setup-env.sh
+
+
+        # clone and use additional package repo
+        - git clone ssh://git@czgitlab.llnl.gov:7999/tce/spacklemore.git
+
+
+        #- pushd spacklemore ; git checkout toss4 ; popd
+        - sed -i "s|/usr/tce/spack/var/spack/repos/spacklemore|`pwd`/spacklemore|"
+          environments/linux-rhel8-x86_64_v3-compilers/spack.yaml
+
+
+        # ensure spack caches are hot
+        - spack compiler find
+        - spack spec zlib
+        after_script:
+        - rm -rf spack
+        script:
+        - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
+        - ./custom_runner
+  upstreams: {}
+  mirrors::
+    lookaside: https://tossbuild.llnl.gov/lookaside/pkgs/spack/
+    koji: file:///repo/spack/tce2/
+    spack-public: https://mirror.spack.io
+  repos::
+  - /usr/tce/spack/var/spack/repos/spacklemore
+  - $spack/var/spack/repos/builtin
+  config:
+    misc_cache: $spack/.cache
+    install_missing_compilers: true
+  compilers::
+  - compiler:
+      spec: gcc@10.2.1
+      paths:
+        cc: /opt/rh/gcc-toolset-10/root/bin/gcc
+        cxx: /opt/rh/gcc-toolset-10/root/bin/g++
+        f77: /opt/rh/gcc-toolset-10/root/bin/gfortran
+        fc: /opt/rh/gcc-toolset-10/root/bin/gfortran
+      flags: {}
+      operating_system: rhel8
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: gcc@8.3.1
+      paths:
+        cc: /usr/bin/gcc
+        cxx: /usr/bin/g++
+        f77: /usr/bin/gfortran
+        fc: /usr/bin/gfortran
+      flags: {}
+      operating_system: rhel8
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: aocc@5.1.0.0
+      paths:
+        cc: /opt/rocm-5.1.0/bin/amdclang
+        cxx: /opt/rocm-5.1.0/bin/amdclang++
+        f77: /opt/rocm-5.1.0/bin/amdflang
+        fc: /opt/rocm-5.1.0/bin/amdflang
+      flags: {}
+      operating_system: rhel8
+      target: x86_64
+      modules: []
+      environment:
+        set:
+          HIPCC_PATH: /opt/rocm-5.1.0/bin/hipcc
+      extra_rpaths: []
+  - compiler:
+      spec: aocc@5.0.2.0
+      paths:
+        cc: /opt/rocm-5.0.2/bin/amdclang
+        cxx: /opt/rocm-5.0.2/bin/amdclang++
+        f77: /opt/rocm-5.0.2/bin/amdflang
+        fc: /opt/rocm-5.0.2/bin/amdflang
+      flags: {}
+      operating_system: rhel8
+      target: x86_64
+      modules: []
+      environment:
+        set:
+          HIPCC_PATH: /opt/rocm-5.0.2/bin/hipcc
+      extra_rpaths: []
+  - compiler:
+      spec: aocc@5.0.0.0
+      paths:
+        cc: /opt/rocm-5.0.0/bin/amdclang
+        cxx: /opt/rocm-5.0.0/bin/amdclang++
+        f77: /opt/rocm-5.0.0/bin/amdflang
+        fc: /opt/rocm-5.0.0/bin/amdflang
+      flags: {}
+      operating_system: rhel8
+      target: x86_64
+      modules: []
+      environment:
+        set:
+          HIPCC_PATH: /opt/rocm-5.0.0/bin/hipcc
+      extra_rpaths: []
+  - compiler:
+      spec: aocc@4.5.2.0
+      paths:
+        cc: /opt/rocm-4.5.2/bin/amdclang
+        cxx: /opt/rocm-4.5.2/bin/amdclang++
+        f77: /opt/rocm-4.5.2/bin/amdflang
+        fc: /opt/rocm-4.5.2/bin/amdflang
+      flags: {}
+      operating_system: rhel8
+      target: x86_64
+      modules: []
+      environment:
+        set:
+          HIPCC_PATH: /opt/rocm-4.5.2/bin/hipcc
+      extra_rpaths: []
+  - compiler:
+      spec: aocc@4.5.0.0
+      paths:
+        cc: /opt/rocm-4.5.0/bin/amdclang
+        cxx: /opt/rocm-4.5.0/bin/amdclang++
+        f77: /opt/rocm-4.5.0/bin/amdflang
+        fc: /opt/rocm-4.5.0/bin/amdflang
+      flags: {}
+      operating_system: rhel8
+      target: x86_64
+      modules: []
+      environment:
+        set:
+          HIPCC_PATH: /opt/rocm-4.5.0/bin/hipcc
+      extra_rpaths: []
+  - compiler:
+      spec: aocc@4.3.1.0
+      paths:
+        cc: /opt/rocm-4.3.1/bin/amdclang
+        cxx: /opt/rocm-4.3.1/bin/amdclang++
+        f77: /opt/rocm-4.3.1/bin/amdflang
+        fc: /opt/rocm-4.3.1/bin/amdflang
+      flags: {}
+      operating_system: rhel8
+      target: x86_64
+      modules: []
+      environment:
+        set:
+          HIPCC_PATH: /opt/rocm-4.3.1/bin/hipcc
+      extra_rpaths: []
+  - compiler:
+      spec: aocc@4.2.0.0
+      paths:
+        cc: /opt/rocm-4.2.0/llvm/bin/clang
+        cxx: /opt/rocm-4.2.0/llvm/bin/clang++
+        f77: /opt/rocm-4.2.0/llvm/bin/flang
+        fc: /opt/rocm-4.2.0/llvm/bin/flang
+      flags: {}
+      operating_system: rhel8
+      target: x86_64
+      modules: []
+      environment:
+        set:
+          HIPCC_PATH: /opt/rocm-4.2.0/hip/bin/hipcc
+      extra_rpaths: []
+  view:
+    tce:
+      root: ~/packages
+      projections:
+        gcc: gcc/gcc-{version}
+        llvm: clang/clang-{version}
+        intel: intel/intel-{version}
+        tce-utils-defaults: defaults
+        tce-gcc-defaults: defaults
+        tce-aocc-defaults: defaults
+        tce-cce-defaults: defaults
+        #cmake: '{name}/{name}-{version}'
+        #git: '{name}/{name}-{version}'
+        #git-lfs: '{name}/{name}-{version}'
+        #patchelf: '{name}/{name}-{version}'
+        #setup-ssh-keys: '{name}/{name}-{version}'
+        #ap: '{name}/{name}-{version}'
+        #xsu: '{name}/{name}-{version}'
+        #cloc: '{name}/{name}-{version}'
+        #subversion: 'svn/svn-{version}'
+        tce-wrapper-drivers: '{name}'
+        tce-compiler-wrappers%aocc@4.2.0.0: 'rocmcc-tce/rocmcc-4.2.0'
+        tce-compiler-wrappers%aocc@4.2.0.9: 'rocmcc-tce/rocmcc-4.2.0-cce-12.0.3'
+        tce-compiler-wrappers%aocc@4.3.1.0: 'rocmcc-tce/rocmcc-4.3.1'
+        tce-compiler-wrappers%aocc@4.3.1.9: 'rocmcc-tce/rocmcc-4.3.1-cce-13.0.0'
+        tce-compiler-wrappers%aocc@4.5.0.0: 'rocmcc-tce/rocmcc-4.5.0'
+        tce-compiler-wrappers%aocc@4.5.2.0: 'rocmcc-tce/rocmcc-4.5.2'
+        tce-compiler-wrappers%aocc@4.5.2.9: 'rocmcc-tce/rocmcc-4.5.2-cce-13.0.1'
+        tce-compiler-wrappers%aocc@5.0.0.0: 'rocmcc-tce/rocmcc-5.0.0'
+        tce-compiler-wrappers%aocc@5.0.2.0: 'rocmcc-tce/rocmcc-5.0.2'
+        tce-compiler-wrappers%aocc@5.1.0.0: 'rocmcc-tce/rocmcc-5.1.0'
+        tce-compiler-wrappers%aocc: 'rocmcc-tce/rocmcc-{compiler.version}'
+        tce-compiler-wrappers: '{compiler.name}-tce/{compiler.name}-{compiler.version}'
+        tce-mpi-wrappers%aocc@4.2.0.0: '{^mpi.name}-tce/{^mpi.name}-{^mpi.version}-rocmcc-4.2.0'
+        tce-mpi-wrappers%aocc@4.2.0.0: '{^mpi.name}-tce/{^mpi.name}-{^mpi.version}-rocmcc-4.2.0'
+        tce-mpi-wrappers%aocc@4.3.1.0: '{^mpi.name}-tce/{^mpi.name}-{^mpi.version}-rocmcc-4.3.1'
+        tce-mpi-wrappers%aocc@4.5.0.0: '{^mpi.name}-tce/{^mpi.name}-{^mpi.version}-rocmcc-4.5.0'
+        tce-mpi-wrappers%aocc@4.5.2.0: '{^mpi.name}-tce/{^mpi.name}-{^mpi.version}-rocmcc-4.5.2'
+        tce-mpi-wrappers: '{^mpi.name}-tce/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}'
+        triwrapper: '{name}'
+        ftprotate: '{name}'
+        ^mpi: '{name}/{name}-{version}-{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}'
+        mpi: '{name}/{name}-{version}-{compiler.name}-{compiler.version}'
+        all: '{name}/{name}-{version}'
+      link_type: symlink
+      link: roots
+  modules:
+    'default:':
+      enable: []
+    utils:
+      roots:
+        lmod: ~/modulefiles
+      use_view: tce
+      enable:
+      - lmod
+      lmod:
+        hierarchy:
+        - mpi
+        hash_length: 0
+        blacklist_implicits: true
+        blacklist:
+        - platform=cray
+        - platform=linux
+        whitelist:
+        - tce-cce-defaults  # generate StdEnv.lua
+        - git
+        - subversion
+        - cmake
+        - ninja 
+        - patchelf%gcc@8.3.1
+        - cloc
+        core_compilers:
+        - gcc@8.3.1
+        core_specs:
+        - llvm@7.0.1
+        projections:
+          py-pint: pint/{version}
+          tce-cce-defaults: StdEnv
+          all: '{name}/{version}'
+    toolchains:
+      roots:
+        lmod: ~/modulefiles/toolchains
+      use_view: tce
+      enable:
+      - lmod
+      lmod:
+        hierarchy:
+        - mpi
+        hash_length: 0
+        blacklist_implicits: true
+        blacklist:
+        - platform=cray
+        - platform=linux
+        whitelist:
+        #- gcc
+        #- llvm@12.0.1
+        - intel
+        - aocc
+        - mpi
+        core_compilers:
+        - gcc@8.3.1
+        core_specs:
+        - gcc
+        - llvm@12.0.1
+        projections:
+          gcc: '{name}/{version}'
+          llvm: clang/{version}
+          all: '{name}/{version}'
+        openmpi:
+          environment:
+            set:
+              SLURM_MPI_TYPE: pmix_v3
+    toolchains-root:
+      roots:
+        lmod: ~/modulefiles/toolchains
+      enable:
+      - lmod
+      lmod:
+        hierarchy:
+        - mpi
+        hash_length: 0
+        blacklist_implicits: true
+        blacklist:
+        - platform=cray
+        - platform=linux
+        core_compilers:
+        - gcc@8.3.1
+        projections:
+          py-mpi4py: mpi4py/{version}
+          all: '{name}/{version}'
+    prefix_inspections:
+      lib:
+      - LD_LIBRARY_PATH
+      lib64:
+      - LD_LIBRARY_PATH
+  concretization: separately
