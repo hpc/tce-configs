@@ -750,7 +750,7 @@ fi
 if find "$HOME/.spack/" -name "*.yaml" &>/dev/null && [[ "$user_spack_ok" != true ]]; then
     msg "$yellow" "A ~/.spack directory was detected. Using a temp directory as \$HOME instead. 
 If you want to use your ~/.spack directory, use the '--user-spack-ok' option."
-    HOME=$(mktemp -d)
+    HOME=$install_dir
     export HOME
 fi
 
@@ -952,7 +952,8 @@ if [ -f "./spack.yaml.bkp" ]; then
 fi
 
 status "Updating and activating the spack environment release ${release_name}"
-spack env update -y "${release_name}"
+spack --stacktrace env update -y "${release_name}"
+echo "Wooooh!"
 
 # Add the spacklemore repo for this deployment.
 if [[ ! -f "${spack_root}/etc/spack/repos.yaml" ]]; then
@@ -1112,8 +1113,8 @@ fi
 function do_install() {
     local log_path=$1
 
-    /usr/bin/time spack "${SPACK_VERBOSE[@]}" install "$SPACK_CACHING" --no-checksum --yes-to-all \
-        |& tee "$log_path"
+    /usr/bin/time spack "${SPACK_VERBOSE[@]}" install "$SPACK_CACHING" --reuse --no-checksum \
+        --yes-to-all |& tee "$log_path"
     local ret_val=$?
 
     if test "$ret_val" != 0 || grep -q "^Traceback" "$log_path"; then
