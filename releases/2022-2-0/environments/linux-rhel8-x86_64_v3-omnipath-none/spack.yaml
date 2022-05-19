@@ -18,18 +18,18 @@ spack:
 # Toss compilers
   - compilers:
     - llvm@12.0.1
-    - gcc@10.2.1
+    - gcc@11.3.0
   - compilers:
-    - intel@19.0.4
+    - intel-oneapi-compilers@2022.1.0
     when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
   - compilers:
     - aocc@4.5.2.0
     when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_AMD'' in env'
   - compiler-constraints:
     - '%clang@12.0.1'
-    - '%gcc@10.2.1'
+    - '%gcc@11.3.0'
   - compiler-constraints:
-    - '%intel@19.0.4'
+    - '%intel-oneapi-compilers@2022.1.0'
     when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
   - compiler-constraints:
     - '%aocc@4.5.2.0'
@@ -78,9 +78,9 @@ spack:
     # python2
     #- python@2.7.18
     # preferred python
-    #- python@3.8.10
+    - python@3.8.10
     # latest python
-    #- python@3.9.5
+    - python@3.9.5
     - py-pint@0.17
     - qt@5.15.2
     - setup-ssh-keys@1.0
@@ -115,8 +115,8 @@ spack:
     - netcdf-c@4.8.0+hdf4+mpi+parallel-netcdf+pic+shared
     - netcdf-cxx4@4.3.1+pic
     - netcdf-fortran@4.5.3+pic
-#    - paraview@5.8.1~vtkm+hdf5+python3+shared+mpi+osmesa+fortran+eyedomelighting+pagosa
-#    - paraview@5.9.1~vtkm+hdf5+python3+shared+mpi+osmesa+fortran+eyedomelighting+pagosa
+    - paraview@5.8.1~vtkm+hdf5+python3+shared+mpi+osmesa+fortran+eyedomelighting+pagosa
+    - paraview@5.9.1~vtkm+hdf5+python3+shared+mpi+osmesa+fortran+eyedomelighting+pagosa
 
   - cumulative_specs:
     - matrix:
@@ -144,7 +144,7 @@ spack:
   packages:
     all:
       compiler:
-      - gcc@8.3.1
+      - gcc@11.3.0
       target: [x86_64]
       providers:
         gl:
@@ -185,12 +185,12 @@ spack:
         prefix: /usr
       version:
       - 1.16.1
-    binutils:
-      variants: ~nls+ld+gas+libiberty+lto
-      version: [2.36.1]
-      externals:
-      - spec: binutils@2.36.1~nls+ld+gas+libiberty+lto
-        prefix: /usr
+#    binutils:
+#      variants: ~nls+ld+gas+libiberty+lto
+#      version: [2.36.1]
+#      externals:
+#      - spec: binutils@2.36.1~nls+ld+gas+libiberty+lto
+#        prefix: /usr
     bison:
       externals:
       - spec: bison@3.0.4
@@ -218,12 +218,12 @@ spack:
       - spec: findutils@4.6.0
         prefix: /usr
       buildable: false
-    gcc:
-      externals:
-      - spec: gcc@10.2.1%gcc@8.3.1
-        prefix: /opt/rh/gcc-toolset-10/root
-      version: []
-      variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
+#    gcc:
+#      externals:
+#      - spec: gcc@10.2.1%gcc@8.3.1
+#        prefix: /opt/rh/gcc-toolset-10/root
+#      version: []
+#      variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
     gettext:
       externals:
       - spec: gettext@0.19.8.1+curses+libunistring+libxml2~git+xz~tar~bzip2
@@ -377,13 +377,13 @@ spack:
       - spec: pkgconf@1.4.2
         prefix: /usr
       buildable: false
-    python:
-      externals:
-      - spec: python@2.7.18+bz2+ctypes+dbm~lzma+nis+pyexpat+readline+sqlite3+ssl~tix~tkinter+uuid+zlib
-        prefix: /usr
-      - spec: python@3.6.8+bz2+ctypes+dbm+lzma+nis+pyexpat+readline+sqlite3+ssl+tix+tkinter+uuid+zlib
-        prefix: /usr
-      buildable: false
+#    python:
+#      externals:
+#      - spec: python@2.7.18+bz2+ctypes+dbm~lzma+nis+pyexpat+readline+sqlite3+ssl~tix~tkinter+uuid+zlib
+#        prefix: /usr
+#      - spec: python@3.6.8+bz2+ctypes+dbm+lzma+nis+pyexpat+readline+sqlite3+ssl+tix+tkinter+uuid+zlib
+#        prefix: /usr
+#      buildable: false
     py-docutils:
       externals:
       - spec: py-docutils@0.14
@@ -580,7 +580,7 @@ spack:
         tce-mpi-wrappers: '{^mpi.name}-tce/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}'
         hpctoolkit: '{name}/{name}-{version}'
         ^mpi: '{name}/{name}-{version}-{compiler.name}-{compiler.version}-{^mpi.name}-{^mpi.version}'
-        '%gcc@8.3.1': '{name}/{name}-{version}'
+        '%gcc@11.3.0': '{name}/{name}-{version}'
         all: '{name}/{name}-{version}-{compiler.name}-{compiler.version}'
       exclude:
       - paraview
@@ -652,7 +652,7 @@ spack:
         - xsu@1.0
         - tce-cce-defaults # generate StdEnv.lua
         core_compilers:
-        - gcc@8.3.1
+        - gcc@11.3.0
         projections:
           py-pint: pint/{version}
           tce-cce-defaults: StdEnv
@@ -678,7 +678,7 @@ spack:
         - llvm
         - '%clang'
         core_compilers:
-        - gcc@8.3.1
+        - gcc@11.3.0
         core_specs:
         - tce-compiler-wrappers
         projections:
@@ -711,7 +711,7 @@ spack:
         - paraview
         - py-mpi4py
         core_compilers:
-        - gcc@8.3.1
+        - gcc@11.3.0
         projections:
           py-mpi4py: mpi4py/{version}
           all: '{name}/{version}'
