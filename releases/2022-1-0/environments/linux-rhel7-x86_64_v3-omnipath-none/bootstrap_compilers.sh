@@ -4,7 +4,7 @@ install_dir="$1"
 compilers_yaml="${install_dir}/spack/etc/spack/compilers.yaml"
 fix_compiler="${REPO_ROOT}/bin/fix_compiler" # REPO_ROOT provided by wrapper
 
-spack_install="spack ${SPACK_VERBOSE} install ${SPACK_CACHING} --no-checksum"
+spack_install="spack ${SPACK_VERBOSE} install ${SPACK_CACHING} --reuse --no-checksum"
 
 # gcc@10.3.0
 ${spack_install} gcc@10.3.0%gcc@4.8.5+binutils+cxa_atexit+nvptx+piclibs+profiledbootstrap-lean+strip languages=c,c++,fortran,lto patches=de02757db510055a149390f95c3e06f62992ff61ff65e74642f8b4d4a4438320 ^binutils@2.36.1+gas+gold~headers~interwork+ld~libiberty~lto~nls+plugins libs=shared,static

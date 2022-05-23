@@ -1,1 +1,0 @@
-../linux-rhel7-x86_64_v3-omnipath-none/bootstrap_compilers.sh

@@ -1,122 +1,137 @@
-# 'when' clause takes a string of python code.
-# Available 'when' clause variables are:
-#   spack_platform: platform string from spack
-#   spack_os: os string of the default Spack architecture on the system
-#   spack_target: target string of the default Spack architecture on the system
-#   spack_architecture/spack_arch: full string of default Spack architecture
-#   re: standard regex module in python
-#   env: user environment (os.environ in python)
-#   hostname: hostname of the system if 'hostname' in an executable in user path
-#
-#
 spack:
   definitions:
     - arch:
-      - os=rhel8 target=x86_64
+      - os=rhel7 target=x86_64
     - system-compiler:
       - gcc@4.8.5
 
 # Toss compilers
     - base-compiler:
-      - gcc@10.3.0
-    - base-compiler-to-install:
-      - gcc@10.3.0%gcc@4.8.5 ^binutils+gold+ld+gas
-    - toolchain-compilers-non-base: []
-    - toolchain-compilers-non-base:
+      - gcc@11.3.0
+    - compilers:
+      - llvm@12.0.0
+    - compilers:
       - intel-oneapi-compilers@2021.2.0
       when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
-    - toolchain-compilers-non-base:
-      - llvm@12.0.0
-      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_CLANG'' in env'
-    - toolchain-compiler-constraints:
+    - compiler-constraints:
       - $%base-compiler
-    - toolchain-compiler-constraints:
+      - '%clang@12.0.0'
+    - compiler-constraints:
       - '%intel@2021.2.0'
       when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
-    - toolchain-compiler-constraints:
-      - '%clang@12.0.0'
-      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_CLANG'' in env'
 # Toss MPIs
-    - toolchain-mpi-constraints: []
-    - toolchain-mpi-constraints:
-      - ^intel-parallel-studio@cluster.2020.4
-      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL_MPI'' in env'
-    - toolchain-mpi-constraints:
-      - ^openmpi@4.1.1
-      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_OPENMPI'' in env'
-    - toolchain-mpi-constraints:
-      - ^mvapich2@2.3.6
-      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_MVAPICH2'' in env'
-    - toolchain-mpi: []
+    - mpi-constraints:
+      - ^openmpi%gcc@11.3.0 +pmix
+        ^hwloc%gcc 
+        ^libevent%gcc 
+        ^numactl%gcc 
+        ^pkgconf%gcc
+        ^pmix%gcc 
+      - ^mvapich2%gcc@11.3.0
+        ^bison%gcc 
+        ^findutils%gcc 
+        ^libpciaccess%gcc 
+        ^libxml2%gcc 
+        ^pkgconf%gcc
+
+    - mpi-constraints:
+      - ^openmpi%intel@2021.2.0 +pmix
+        ^hwloc%gcc 
+        ^libevent%gcc 
+        ^numactl%gcc 
+        ^pkgconf%gcc
+        ^pmix%gcc 
+      - ^mvapich2%intel@2021.2.0
+        ^bison%gcc 
+        ^findutils%gcc 
+        ^libpciaccess%gcc 
+        ^libxml2%gcc 
+        ^pkgconf%gcc
+      - ^intel-parallel-studio@cluster.2020.4+mpi+ilp64+newdtags
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
+
+    - toolchain-mpi:
+      - openmpi
+        ^hwloc%gcc 
+        ^libevent%gcc 
+        ^numactl%gcc 
+        ^pkgconf%gcc
+        ^pmix%gcc 
+      - mvapich2
+        ^bison%gcc 
+        ^findutils%gcc 
+        ^libpciaccess%gcc 
+        ^libxml2%gcc 
+        ^pkgconf%gcc
+
     - toolchain-mpi:
       - intel-parallel-studio@cluster.2020.4+mpi+ilp64+newdtags
-      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL_MPI'' in env'
-    - toolchain-mpi:
-      - openmpi@4.1.1
-      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_OPENMPI'' in env'
-    - toolchain-mpi:
-      - mvapich2@2.3.6
-      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_MVAPICH2'' in env'
-# Packages built only once
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
+
+    # Packages built with the default compiler only.
     - singleton-packages:
       - ap@1.0
-      - arm-forge@21.0
-      - charliecloud@0.23
-      - cloc@1.84
-      - cmake@3.20.3
-      - emacs@27.2+X ^mesa18+glx
-      - git@2.31.1
-      - git-lfs@2.11.0^git@2.31.1
-      - gnuplot@5.2.8+X~cairo
-      - go@1.17.3
-      - htop@3.0.5
-      - idl@8.7
+      - arm-forge
+      - charliecloud
+      - cloc
+      - cmake
+      - emacs
+      - git
+      - git-lfs
+      - gnuplot
+      - go
+      - htop
+      - idl
       # Tools installation for intel products.
-      - intel-parallel-studio@cluster.2020.4+vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
+      - intel-parallel-studio +vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
       # Separate mkl installation.
-      - intel-parallel-studio@cluster.2020.4~mpi~ipp~daal~tbb~ilp64~newdtags
-      - julia@1.5.3
-      - libyogrt@1.24
-      - mercurial@5.8
-      - numactl@2.0.14
-      - openjdk@11.0.8_10
-      - papi@6.0.0.1
-      - patchelf@0.13
+      - intel-parallel-studio ~mpi~ipp~daal~tbb~ilp64~newdtags
+      - julia
+      - libyogrt
+      - mercurial
+      - numactl
+      - openjdk
+      - openssh
+      - papi
+      - patchelf
       - python@2.7.18
       - python@3.8.10
       - python@3.9.5
-      - py-pint@0.17
-      - qt@5.15.2
-      - setup-ssh-keys@1.0
-      - subversion@1.14.0
-      - tce-utils-defaults@1.0
-      - tce-wrapper-drivers@18.0
-      - totalview@2021.1.16
-      - tmux@3.1b
+      - py-pint
+      - qt
+      - setup-ssh-keys
+      - subversion
+      - tce-utils-defaults
+      - tce-wrapper-drivers
+      - totalview
+      - tmux
 # Packages built out across the all compilers
     - compiler-packages:
       - $toolchain-mpi
-      - hdf5@1.12.0~mpi+cxx+fortran+hl+pic+shared+threadsafe api=v18
+      - hdf5@1.12.0~mpi+cxx+fortran+hl+shared+threadsafe api=v18 ^zlib%gcc
       - intel-oneapi-mkl@2021.2.0
       - intel-oneapi-dal@2021.2.0
       - intel-oneapi-tbb@2021.2.0
-      - mesa18
-      - netcdf-c@4.8.0~mpi~parallel-netcdf+hdf4+pic+shared
-      - netcdf-cxx4@4.3.1+pic
-      - netcdf-fortran@4.5.3+pic
+      - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.3.0 ^llvm@7.0.1%gcc 
+        ^ncurses%gcc ^zlib%gcc
+      - netcdf-c ~mpi~parallel-netcdf+hdf4+pic+shared
+      - netcdf-cxx4 +pic
+      - netcdf-fortran +pic
       - openblas
-      - print-openmp-mapping@1.0
-      - tce-compiler-wrappers@3.0
+      - print-openmp-mapping
+      - tce-compiler-wrappers
 # Packages built out across the all compilers and MPIs
-    - toolchain-packages:
-      - hpctoolkit
+    - mpi-packages:
+      - hdf5 +mpi
+      - hdf5 +mpi
+      - hpctoolkit 
       - libquo
-      - netcdf-c@4.8.0+hdf4+mpi+parallel-netcdf+pic+shared
-      - netcdf-cxx4@4.3.1+pic
-      - netcdf-fortran@4.5.3+pic
-      - paraview@5.9.1~vtkm+hdf5+python3+shared+mpi+osmesa+fortran+eyedomelighting+pagosa
-      - tce-mpi-wrappers@4.0
+      - netcdf-cxx4 ^netcdf-c +mpi ^hdf5 +mpi ^parallel-netcdf 
+      - netcdf-fortran ^netcdf-c +mpi ^hdf5 +mpi ^parallel-netcdf
+      - paraview ^mesa18
+      - tce-mpi-wrappers
       - valgrind
+
 # Defines a matrix to populate with Spack Stacks
     # Allows for the definition of build matrices for multiple quarters to be
     # built all at once (e.g. - with a new machine)
@@ -136,7 +151,7 @@ spack:
         - [$arch]
       - matrix:
         - [$compiler-packages]
-        - [$toolchain-compiler-constraints]
+        - [$compiler-constraints]
         - [$arch]
         exclude:
         - intel-parallel-studio %gcc
@@ -153,35 +168,35 @@ spack:
         - intel-oneapi-tbb%intel
         - mesa18%clang
       - matrix:
-        - [$toolchain-packages]
-        - [$toolchain-mpi-constraints]
-        - [$toolchain-compiler-constraints]
+        - [$mpi-packages]
+        - ['%gcc@11.3.0']
+        - [$mpi-constraints]
         - [$arch]
         exclude:
-        - '%clang'
-        # intel-mpi not built out for other compilers
-        - '%gcc ^intel-parallel-studio'
-        - '%gcc ^intel-oneapi-mpi'
-        - '%clang ^intel-parallel-studio'
-        - hpctoolkit %intel
-        - hpctoolkit %oneapi
         - hpctoolkit ^mvapich2
-        - libquo %oneapi ^intel-parallel-studio
-        - netcdf-cxx4 ^intel-parallel-studio
-        - netcdf-fortran ^intel-parallel-studio
-        - paraview ^intel-parallel-studio
         - paraview ^mvapich2
-        - valgrind %intel # https://github.com/spack/spack/issues/16328 Boost C++11/Intel issue.
-        - valgrind %oneapi ^intel-parallel-studio
+        - '^intel-parallel-studio'
+
+    - install:
+      - matrix:
+        - [$mpi-packages]
+        - ['%intel@2021.2.0']
+        - [$mpi-constraints]
+        - [$arch]
+        exclude:
+        - hpctoolkit
+        - paraview ^mvapich2
+        - paraview ^intel-parallel-studio
+        - valgrind %intel
+        when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
+
 # Final definition
   specs:
   - $install
+
   packages:
     all:
-      compiler: [gcc@10.3.0]
-      version: []
-      target: []
-      modules: {}
+      compiler: [gcc@11.3.0]
       providers:
         gl: [mesa18]
         glx: [mesa18+glx]
@@ -189,370 +204,519 @@ spack:
         pkgconfig: [pkgconf]
         tbb: [intel-tbb+shared]
         uuid: [libuuid]
-      paths: {}
-    binutils:
-      variants: +gold+libiberty~nls+ld+gas
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    # Don't build cryptographic libraries; define an external path when needed
+
+    # The following crypto libraries should not be built. If needed, they should
+    # be pulled from system space. 
     botan:
-      paths: {}
       buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    charliecloud:
-      variants: ~docs
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    # Don't build cryptographic libraries; define an external path when needed
     cryptopp:
-      paths: {}
       buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+    gnutls:
+      buildable: false
+    libsodium:
+      buildable: false
+    mbedtls:
+      variants: +hash_only +pic
+      version: [2.16.9]
+    nettle:
+      buildable: false
+    nss:
+      buildable: false
+    opa-psm2:
+      paths:
+        opa-psm2@11.2.78%gcc@11.3.0: /usr
+      buildable: false
+    openssh:
+      version: [7.4p1]
+      paths:
+        openssh@7.4p1%gcc@11.3.0: /usr
+      buildable: false
+    openssl:
+      version: [1.0.2k-rhel]
+      paths:
+        openssl@1.0.2k-rhel%gcc@11.3.0~docs+systemcerts: /usr
+      buildable: false
+
+    # General Package Defaults
+    apr:
+      version: [1.7.0, 1.6.2]
+    apr-util:
+      version: [1.6.1]
+    arm-forge:
+      version: ['21.0']
+    at-spi2-atk:
+      variants: default_library=shared
+      version: [2.38.0]
+    at-spi2-core:
+      variants: default_library=shared
+      version: [2.40.1]
+    atk:
+      version: [2.36.0]
+    autoconf:
+      version: ['2.69']
+    automake:
+      version: ['1.16.3']
+    binutils:
+      version: ['2.36.1']
+      variants: +gold+libiberty~nls+ld+gas
+    bzip2:
+      version: ['1.0.8']
+    charliecloud:  # check variants
+      version: ['0.23']
+      variants: ~docs
+    cloc:
+      version: ['1.84']
+    cmake:
+      version: ['3.20.3']
+    #cubelib:   # !!!!
+    curl:
+      version: [7.76.1]
+    dbus:
+      version: [1.12.8]
+    diffutils:
+      version: ['3.7']
+    double-conversion:
+      version: ['2.0.1']
+    dyninst:
+      version: [11.0.1]
+    doxygen:
+      compiler: [gcc@11.3.0]  
+      version: ['1.9.1']
+    eigen:
+      compiler: [gcc@11.3.0]  
+      version: ['3.3.9']
+    elfutils:
+      variants: +bzip2 +xz ~nls
+      version: ['0.185']
+    emacs:
+      variants: +X
+      version: ['27.2']
+    expat:
+      version: ['2.3.0']
     gcc:
       variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
-      providers: {}
-      modules: {}
-      version: []
-      paths: {}
-      compiler: []
-      buildable: true
+      version: [11.3.0]
       target: [haswell]
     gettext:
       variants: +bzip2+curses+git~libunistring~libxml2+tar+xz
-      buildable: true
       version: [0.21]
+    gdbm:
+      version: ['1.19']
+    gdk-pixbuf:
+      version: [2.42.2]
+    gettext:
+      variants: ~libxml2
+      version: ['0.21']
+    giflib:
+      version: [5.2.1]
     git:
       variants: +subtree+svn+tcltk
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    # Don't build cryptographic libraries; define an external path when needed
-    gnutls:
-      paths: {}
-      buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      version: ['2.31.1']
+    git-lfs:
+      version: ['2.11.0']
+    glib:
+      variants: tracing=none
+      version: [2.68.2]
+    glproto:
+      version: [1.4.17]
+    gmp:
+      compiler: [gcc@4.8.5]
+      version: [6.2.1]
+    gnuplot:
+      variants: +X ~cairo
+      version: [5.2.8]
+    go:
+      version: ['1.17.3']
+    gobject-introspection:
+      version: [1.56.1]
+    gotcha:
+      version: [1.0.3]
+    gtkplus:
+      variants: default_library=shared ~cups
+      version: [3.24.29]
+    harfbuzz:
+      version: [2.6.8]
+    hdf:
+      compiler: [intel@2021.2.0, gcc@11.3.0, clang@12.0.0]
+      version: [4.2.15]
     hdf5:
-      paths: {}
-      buildable: true
-      version: []
-      target: []
+      variants: +cxx+fortran+hl~mpi+pic+shared+threadsafe api=v18
       compiler: []
-      modules: {}
-      providers: {}
+      version: [1.12.0]
     hpctoolkit:
       variants: +mpi+papi+viewer
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+    hpcviewer:
+      version: ['2021.05']
+    htop:
+      version: [3.0.5]
     hwloc:
-      paths: {}
-      buildable: true
       version: [2.4.1]
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+    idl:
+      version: ['8.7']
+    # !!!!!
     intel:
       variants: +open
-      modules: {}
-      compiler: []
-      buildable: true
-      target: []
-      providers: {}
-      version: []
-      paths: {}
+    intel-oneapi-compilers:
+      version: [2021.2.0]
     intel-parallel-studio:
       variants: ~tbb+mpi+ilp64+newdtags
-      providers: {}
-      modules: {}
-      version: []
-      paths: {}
-      compiler: []
-      buildable: true
-      target: []
+      compiler: [gcc@11.3.0, intel@2021.2.0]
+      version: [cluster.2020.4]
+    intel-tbb:
+      version: ['2020.3']
+    intel-xed:
+      version: [12.0.1]
+    isl:
+      compiler: [gcc@4.8.5]
+      version: ['0.20']
+    jsoncpp:
+      version: [1.9.4]
+    julia_binary:
+      version: [1.5.3]
+    kbproto:
+      version: [1.0.7]
+    krb5:
+      version: [1.18.2]
+    lcms:
+      version: ['2.9']
+    libbsd:
+      version: [0.11.3]
+    libcerf:
+      version: ['1.3']
+    libcroco:
+      version: [0.6.13]
+    libdwarf:
+      version: ['20180129']
+    libedit:
+      version: [3.1-20210216]
+    libepoxy:
+      version: [1.4.3]
+    libevent:
+      version: [2.1.12]
+    libffi:
+      version: ['3.3']
     libgcrypt:
       paths:
-        libgcrypt@1.5.3%gcc: /usr/
+        libgcrypt@1.5.3%gcc@11.3.0: /usr/
       buildable: false
+    libgd:
+      version: [2.2.4]
+    libiberty:
+      variants: +pic
+      version: [2.33.1]
+    libice:
+      version: [1.0.9]
+    libiconv:
+      version: ['1.16']
+    libidn2:
+      version: [2.3.0]
+    libjpeg-turbo:
+      version: [2.0.6]
+    libmd:
+      version: [1.0.3]
+    libmng:
+      version: [2.0.3]
+    libmonitor:
+      variants: +hpctoolkit ~dlopen
+      version: [2021.04.27]
+    libogg:
+      version: [1.3.4]
     libpciaccess:
-      paths: {}
-      buildable: true
       version: [0.13.5]
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    # Don't build cryptographic libraries; define an external path when needed
-    libsodium:
-      paths: {}
-      buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+    libpng:
+      version: [1.6.37]
+    libpthread-stubs:
+      version: ['0.4']
+    libquo:
+      compiler: [intel@2021.2.0, gcc@11.3.0]
+      version: [1.3.1]
+    librsvg:
+      version: [2.51.0]
+    libsigsegv:
+      version: ['2.13']
+    libsm:
+      version: [1.2.3]
+    libtheora:
+      version: [1.1.1]
+    libtiff:
+      version: [4.1.0]
+    libtirpc:
+      version: [1.2.6]
+    libtool:
+      version: [2.4.6]
+    libunistring:
+      version: [0.9.10]
+    libunwind:
+      variants: +pic +xz
+      version: [1.5.0]
+    libuuid:
+      version: [1.0.3]
+    libx11:
+      version: [1.7.0]
+    libxau:
+      version: [1.0.8]
+    libxcb:
+      version: ['1.14']
+    libxdmcp:
+      version: [1.1.2]
+    libxext:
+      version: [1.3.3]
+    libxfixes:
+      version: [5.0.2]
+    libxft:
+      version: [2.3.2]
+    libxi:
+      version: [1.7.6]
+    libxkbcommon:
+      version: [0.8.2]
     libxml2:
       variants: +python
-      paths: {}
-      buildable: true
       version: [2.9.10]
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+    libxpm:
+      version: [3.5.12]
+    libxrandr:
+      version: [1.5.0]
+    libxrender:
+      version: [0.9.10]
+    libxtst:
+      version: [1.2.2]
     libyogrt:
-      variants: scheduler=slurm
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      variants: scheduler=slurm ~static
+      version: ['1.24']
     llvm:
-      variants: +all_targets+clang+compiler-rt+omp_tsan+python+lldb+gold+libcxx+polly+internal_unwind
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    # Don't build cryptographic libraries; define an external path when needed
-    mbedtls:
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      variants: +clang+compiler-rt+omp_tsan+python+lldb+gold+libcxx+polly+internal_unwind
+        targets=all
+      version: [7.0.1, 10.0.1, 12.0.0]
+    lz4:
+      variants: libs=shared,static
+      version: [1.9.3]
+    lzma:
+      version: [4.32.7]
+    m4:
+      version: [1.4.19]
+    memkind:
+      version: [1.10.1]
+    mercurial:
+      version: ['5.8']
     mesa18:
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      compiler: [intel@2021.2.0, gcc@11.3.0]
+      variants: +osmesa swr=avx,avx2
+      version: [18.3.6]
+    mpc:
+      compiler: [gcc@4.8.5]
+      version: [1.1.0]
+    mpfr:
+      compiler: [gcc@4.8.5]
+      version: [3.1.6]
     mvapich2:
-      variants: +debug fabrics=psm2 file_systems=lustre,ufs,nfs process_managers=slurm
-        threads=multiple ~regcache ~wrapperrpath ch3_rank_bits=32
-      providers: {}
-      modules: {}
-      version: []
-      paths: {}
-      compiler: []
-      buildable: true
-      target: []
+      compiler: [intel@2021.2.0, clang@12.0.0, gcc@11.3.0]
+      variants: +debug fabrics=psm2 file_systems=lustre,nfs,ufs process_managers=slurm
+        threads=multiple ch3_rank_bits=32 ~regcache ~wrapperrpath
+      version: [2.3.6]
+    ncurses:
+      version: ['6.2']
     netcdf-c:
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      variants: ~mpi~parallel-netcdf+hdf4+pic+shared 
+      compiler: [] #[gcc@10.3.0, intel@2021.2.0, clang@12.0.0]
+      version: [4.8.0]
     netcdf-cxx4:
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      variants: +pic
+      compiler: [intel@2021.2.0, clang@12.0.0, gcc@11.3.0]
+      version: [4.3.1]
     netcdf-fortran:
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    # Don't build cryptographic libraries; define an external path when needed
-    nettle:
-      paths: {}
-      buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    # Don't build cryptographic libraries; define an external path when needed
-    nss:
-      paths: {}
-      buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    opa-psm2:
-      paths:
-        opa-psm2@11.2.78%gcc: /usr
-      buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      variants: +pic
+      compiler: [intel@2021.2.0, clang@12.0.0, gcc@11.3.0]
+      version: [4.5.3]
+    numactl:
+      version: [2.0.14]
+    openblas:
+      version: [0.3.15]
+    openjdk:
+      version: [11.0.8_10]
     openmpi:
-      variants: +legacylaunchers+pmi+thread_multiple fabrics=cma,psm,psm2,verbs schedulers=slurm
-      providers: {}
-      modules: {}
-      version: []
-      paths: {}
-      compiler: []
-      buildable: true
-      target: []
-    # Don't build cryptographic libraries, especially openssl; define an external path when needed
-    openssl:
-      paths:
-        openssl@1.0.2k-rhel%gcc~docs+systemcerts: /usr
-      buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      #compiler: [clang@12.0.0, gcc@10.3.0, intel@2021.2.0]
+      variants: +legacylaunchers +pmi +thread_multiple +gpfs 
+        fabrics=cma,psm,psm2,verbs schedulers=slurm
+      version: [4.1.1]
+    pango:
+      variants: +X
+      version: [1.41.0]
+    papi:
+      version: [6.0.0.1]
+    parallel-netcdf:
+      compiler: [intel@2021.2.0, gcc@11.3.0]
+      version: [1.12.2]
+    paraview:
+      compiler: [intel@2021.2.0, gcc@11.3.0]
+      variants: +eyedomelighting +fortran +hdf5 +osmesai +mpi +shared 
+                +pagosa +python3 ~vtkm cuda_arch=none
+      version: [5.9.1]
+    patchelf:
+      compiler: [gcc@4.8.5, gcc@11.3.0]
+      version: ['0.12']
+    pcre:
+      version: ['8.44']
+    pcre2:
+      version: ['10.36']
+    pegtl:
+      version: [3.2.0]
     perl:
       paths:
-        perl@5.16.3%gcc: /usr
+        perl@5.16.3%gcc@11.3.0: /usr
       buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    pgi:
-      variants: +amd+java+nvidia+mpi+mpi_gpu
-      providers: {}
-      modules: {}
-      version: []
-      paths: {}
-      compiler: []
-      buildable: true
-      target: []
+    perl:
+      version: [5.16.3]
+    perl-alien-svn:
+      version: [1.8.11.0]
+    perl-termreadkey:
+      version: ['2.38']
     pkg-config:
       paths:
-        pkg-config@0.27.1%gcc: /usr
+        pkg-config@0.27.1%gcc@11.3.0: /usr
       buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+    pixman:
+      version: [0.40.0]
+    protobuf:
+      version: [3.12.2]
+    print-openmp-mapping:
+      version: ['1.0']
+    pugixml:
+      version: [1.11.4]
+    py-certifi:
+      version: [2020.6.20]
+    py-chardet:
+      version: [3.0.4]
+    py-cycler:
+      version: [0.10.0]
+    py-idna:
+      version: ['2.8']
+    py-kiwisolver:
+      version: [1.1.0]
+    py-lark-parser:
+      version: [0.11.3]
+    py-matplotlib:
+      version: [3.4.2]
+    py-mpi4py:
+      compiler: [intel@2021.2.0, gcc@11.3.0]
+      version: [3.0.3]
+    py-numpy:
+      version: [1.20.3]
+    py-packaging:
+      version: ['20.9']
+    py-pillow:
+      version: [8.0.0]
+    py-pint:
+      version: ['0.17']
+    py-pygments:
+      version: [2.6.1]
+    py-pyparsing:
+      version: [2.4.7]
+    py-python-dateutil:
+      version: [2.8.1]
+    py-requests:
+      version: [2.25.1]
+    py-setuptools:
+      version: [50.3.2]
+    py-six:
+      version: [1.15.0]
+    py-urllib3:
+      version: [1.25.6]
     python:
       variants: ~uuid~libxml2
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      version: [3.9.5, 3.8.10, 2.7.18] # !!!!!
+    qhull:
+      version: ['2020.1']
     qt:
       variants: ~ssl
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      version: [5.15.2]
+    randrproto:
+      version: [1.5.0]
     rdma-core:
       paths:
-        rdma-core@22.4%gcc: /usr
+        rdma-core@22.4%gcc@11.3.0: /usr
       buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+    readline:
+      version: ['8.1']
+    recordproto:
+      version: [1.14.2]
+    renderproto:
+      version: [0.11.1]
+    scorep: # ????
+      variants: +pdt
+    serf:
+      version: [1.3.9]
+    setup-ssh-keys:
+      version: ['1.0']
+    shared-mime-info:
+      version: ['1.9']
     slurm:
       paths:
-        slurm@21.08.3%gcc: /usr
+        slurm@21.08.3%gcc@11.3.0: /usr
       buildable: false
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    scorep:
-      variants: +pdt
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+    sqlite:
+      version: [3.35.5]
     subversion:
-      variants: ~apxs+lz4_internal+perl+utf8proc_internal
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
-    tau:
+      variants: +lz4_internal +perl +utf8proc_internal ~apxs
+      version: [1.14.0]
+    swig:
+      version: [2.0.12, 4.0.2]
+    tau: # ????
       variants: +comm+mpi+ompt+python+scorep+shmem+x86_64
-      paths: {}
-      buildable: true
       version: [2.28.2]
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+    tar:
+      version: ['1.34']
+    tce-compiler-wrappers:
+      version: ['3.0']
+    tce-mpi-wrappers:
+      version: ['4.0']
+    tce-utils-defaults:
+      version: ['1.0']
+    tce-wrapper-drivers:
+      version: ['18.0']
+    tmux:
+      version: [3.1b]
+    totalview:
+      version: [2021.1.16]
+    utf8proc:
+      version: [2.4.0]
+    util-macros:
+      version: [1.19.1]
     valgrind:
       variants: +lto~ubsan
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      version: [3.17.0]
+    xcb-proto:
+      version: [1.14.1]
+    xcb-util:
+      version: [0.4.0]
+    xcb-util-image:
+      version: [0.4.0]
+    xcb-util-keysyms:
+      version: [0.4.0]
+    xcb-util-renderutil:
+      version: [0.3.9]
+    xcb-util-wm:
+      version: [0.4.1]
+    xerces-c:
+      variants: transcoder=iconv
+      version: [3.2.3]
+    xextproto:
+      version: [7.3.0]
+    xkbdata:
+      version: [1.0.1]
+    xproto:
+      version: [7.0.31]
+    xrandr:
+      version: [1.5.0]
+    xtrans:
+      version: [1.3.5]
     xz:
-      variants: +pic
-      paths: {}
-      buildable: true
-      version: []
-      target: []
-      compiler: []
-      modules: {}
-      providers: {}
+      variants: +pic libs=shared,static
+      version: [5.2.5]
+    z3:
+      version: [4.8.9]
+    zlib:
+      compiler: [gcc@11.3.0, gcc@4.8.5]
+      version: [1.2.11]
   upstreams: {}
   mirrors: {}
   repos: []
@@ -645,7 +809,7 @@ spack:
           - tmux
           - totalview
         core_compilers:
-          - gcc@10.3.0
+          - gcc@11.3.0
         core_specs:
           - arm-forge
           - charliecloud
@@ -749,19 +913,19 @@ spack:
         llvm@12.0.0:
           environment:
             prepend_path:
-              PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin
-              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/lib64
+              PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin
+              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/lib64
             set:
-              FC:  /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin/gfortran
-              F90:  /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin/gfortran
+              FC:  /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin/gfortran
+              F90:  /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin/gfortran
         intel-oneapi-compilers:
           environment:
             prepend_path:
               MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2021.2.0
-              PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin
-              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/lib64
+              PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin
+              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/lib64
             set:
-              GCC: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5
+              GCC: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5
         intel-parallel-studio+mpi:
           environment:
             prepend_path:
@@ -777,7 +941,7 @@ spack:
         mvapich2:
           environment:
             prepend_path:
-              PATH: /usr/tce/packages/binutils/binutils-2.36.1-gcc-10.3.0/bin
+              PATH: /usr/tce/packages/binutils/binutils-2.36.1-gcc-11.3.0/bin
     # modules that use the root installation rather than pointing to the view
     toolchains-root:
       roots:

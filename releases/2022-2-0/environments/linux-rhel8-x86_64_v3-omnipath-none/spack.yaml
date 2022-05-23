@@ -28,6 +28,7 @@ spack:
   - compiler-constraints:
     - '%clang@12.0.1'
     - '%gcc@11.3.0'
+    - '%gcc@10.3.1'
   - compiler-constraints:
     - '%intel-oneapi-compilers@2022.1.0'
     when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
@@ -38,85 +39,75 @@ spack:
 # Toss MPIs
   - mpis: []
   - mpis:
-    - mvapich2@2.3.6 fabrics=mrail process_managers=slurm file_systems=nfs,ufs,lustre
+    - mvapich2@2.3.7 fabrics=mrail process_managers=slurm file_systems=nfs,ufs,lustre
       +wrapperrpath
-    - openmpi@4.1.1 fabrics=auto schedulers=slurm +wrapper-rpath
+    - openmpi@4.1.3 fabrics=auto schedulers=slurm +wrapper-rpath
     when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_MRAIL'' in env'
 
 # Packages built only once
   - singleton-packages:
     - ap@1.0
-    - arm-forge@21.0
-    - charliecloud@0.27
-    - cloc@1.84
+    - arm-forge@22.0.1
+    - charliecloud@0.26
+    - cloc@1.90
     - cmake@3.14.5+ownlibs+openssl
     - cmake@3.19.2+ownlibs+openssl
     - cmake@3.21.1+ownlibs+openssl
+    - cmake@3.23.1+ownlibs+openssl
     - emacs@27.2
     - gcc@10.3.1  # redhat clone
-    - git@2.29.1+tcltk
-    - git@2.31.1+tcltk
-    - git-lfs@2.11.0^git@2.29.1+tcltk
-    - gnuplot@5.2.8+X~cairo
-    - go@1.17.3
-    - hpctoolkit@2022.05.15+mpi  # not linked against, no need to use multiple mpis
-    - hpcviewer@2022.05
-    - htop@3.0.5
+    - git@2.35.1+tcltk
+    - git-lfs@2.13.3^git@2.35.1+tcltk
+    - gnuplot@5.4.3+X~cairo
+    - go@1.17.8
+    - hpctoolkit@2022.05.15+mpi+viewer  # not linked against, no need to use multiple mpis
+    - htop@3.2.0
 #    - idl@8.7
     # Tools installation for intel products.
     # Separate mkl installation.
-    - julia@1.5.3
-    - libyogrt@1.24
+    - julia@1.7.2
+    - libyogrt@1.27
     - mercurial@5.8
     - numactl@2.0.14
-    - openjdk@11.0.8_10
-    - openjdk@1.8.0_222-b10
+    - openjdk@11.0.15_10
+    - openjdk@1.8.0_265-b01
     - papi@6.0.0.1
-    - patchelf@0.10
-    - patchelf@0.12
-    - patchelf@0.13
-    # python2
-    #- python@2.7.18
-    # preferred python
-    - python@3.8.10
-    # latest python
-    - python@3.9.5
+    - patchelf@0.14.5
+    - python@3.9.12
     - py-pint@0.17
-    - qt@5.15.2
+    - qt@5.15.4
     - setup-ssh-keys@1.0
-    - subversion@1.14.0
+    - subversion@1.14.1
     - tce-utils-defaults@1.0
- 
     - tce-wrapper-drivers@18.0
     - totalview@2022.1.16
-    - tmux@3.1b
+    - tmux@3.2a
     - xsu@1.0
 
   - compiler-specific-packages:
-    - hdf5@1.12.0~mpi+cxx+fortran+hl+shared+threadsafe api=v18
+    - hdf5@1.13.1~mpi+cxx+fortran+hl+shared+threadsafe api=v18
     - mesa18
     - print-openmp-mapping@1.0
     - tce-compiler-wrappers@3.0
-    - netcdf-c@4.8.0~mpi~parallel-netcdf+hdf4+pic+shared
+    - netcdf-c@4.8.1~mpi~parallel-netcdf+hdf4+pic+shared
     - netcdf-cxx4@4.3.1+pic
-    - netcdf-fortran@4.5.3+pic
+    - netcdf-fortran@4.5.4+pic
     - openblas
   - compiler-specific-packages:
-    - intel-oneapi-mkl@2021.2.0
-    - intel-oneapi-dal@2021.2.0
-    - intel-oneapi-tbb@2021.2.0
+    - intel-oneapi-mkl@2022.1.0
+    - intel-oneapi-dal@2022.1.0
+    - intel-oneapi-tbb@2022.1.0
     when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
   - mpi-times-compiler-packages:
-    - hdf5@1.12.0+cxx+fortran+hl+mpi+shared+threadsafe api=v18
+    - hdf5@1.13.1+cxx+fortran+hl+mpi+shared+threadsafe api=v18
     - libquo@1.3.1
     - parallel-netcdf@1.12.2
     - tce-mpi-wrappers@4.0
-    - valgrind@3.17.0
-    - netcdf-c@4.8.0+hdf4+mpi+parallel-netcdf+pic+shared
+    - valgrind@3.18.1
+    - netcdf-c@4.8.1+hdf4+mpi+parallel-netcdf+pic+shared
     - netcdf-cxx4@4.3.1+pic
-    - netcdf-fortran@4.5.3+pic
-    - paraview@5.8.1~vtkm+hdf5+python3+shared+mpi+osmesa+fortran+eyedomelighting+pagosa
-    - paraview@5.9.1~vtkm+hdf5+python3+shared+mpi+osmesa+fortran+eyedomelighting+pagosa
+    - netcdf-fortran@4.5.4+pic
+    - paraview@5.10.1~vtkm+hdf5+python3+shared+mpi+osmesa+fortran+eyedomelighting+pagosa
 
   - cumulative_specs:
     - matrix:
@@ -484,6 +475,19 @@ spack:
       extra_rpaths: []
   - compiler:
       spec: gcc@10.2.1
+      paths:
+        cc: /opt/rh/gcc-toolset-10/root/bin/gcc
+        cxx: /opt/rh/gcc-toolset-10/root/bin/g++
+        f77: /opt/rh/gcc-toolset-10/root/bin/gfortran
+        fc: /opt/rh/gcc-toolset-10/root/bin/gfortran
+      flags: {}
+      operating_system: rhel8
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: gcc@10.3.1
       paths:
         cc: /opt/rh/gcc-toolset-10/root/bin/gcc
         cxx: /opt/rh/gcc-toolset-10/root/bin/g++
