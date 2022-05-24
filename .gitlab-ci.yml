@@ -79,7 +79,7 @@ bash-syntax:
       when: manual
       allow_failure: true
   before_script:
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.lanl.gov/hpcsoft/lanl-tce-facility.git
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.hpc.lanl.gov/hpcsoft/lanl-tce-facility.git
     - pushd facilities
     - ln -s ../lanl-tce-facility/lanl lanl
     - popd
