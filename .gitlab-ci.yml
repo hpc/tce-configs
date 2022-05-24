@@ -143,7 +143,7 @@ xc40:cray-cnl7-x86_64:build:
   tags:
     - xc40
 
-toss-mlx:linux-mlx-nv6:build:
+.toss-mlx:linux-mlx-nv6:build:
   extends: .build_environment
   stage: build_first
   variables:
