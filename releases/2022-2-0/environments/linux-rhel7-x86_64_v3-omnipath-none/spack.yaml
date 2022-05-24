@@ -70,16 +70,12 @@ spack:
 
     # Packages built with the default compiler only.
     - singleton-packages:
-      - ap@1.0
       - arm-forge
       - charliecloud
-      - cloc
       - cmake
       - emacs
       - git
-      - git-lfs
       - gnuplot
-      - go
       - htop
       - idl
       # Tools installation for intel products.
@@ -91,7 +87,6 @@ spack:
       - mercurial
       - numactl
       - openjdk
-      - openssh
       - papi
       - patchelf
       - python@2.7.18
@@ -99,10 +94,7 @@ spack:
       - python@3.9.5
       - py-pint
       - qt
-      - setup-ssh-keys
       - subversion
-      - tce-utils-defaults
-      - tce-wrapper-drivers
       - totalview
       - tmux
 # Packages built out across the all compilers
@@ -118,8 +110,6 @@ spack:
       - netcdf-cxx4 +pic
       - netcdf-fortran +pic
       - openblas
-      - print-openmp-mapping
-      - tce-compiler-wrappers
 # Packages built out across the all compilers and MPIs
     - mpi-packages:
       - hdf5 +mpi
@@ -129,7 +119,6 @@ spack:
       - netcdf-cxx4 ^netcdf-c +mpi ^hdf5 +mpi ^parallel-netcdf 
       - netcdf-fortran ^netcdf-c +mpi ^hdf5 +mpi ^parallel-netcdf
       - paraview ^mesa18
-      - tce-mpi-wrappers
       - valgrind
 
 # Defines a matrix to populate with Spack Stacks
@@ -154,18 +143,10 @@ spack:
         - [$compiler-constraints]
         - [$arch]
         exclude:
-        - intel-parallel-studio %gcc
-        - intel-parallel-studio %clang
-        - intel-parallel-studio %oneapi
-        - intel-oneapi-dal%gcc
-        - intel-oneapi-dal%clang
-        - intel-oneapi-dal%intel
-        - intel-oneapi-mkl%gcc
-        - intel-oneapi-mkl%clang
-        - intel-oneapi-mkl%intel
-        - intel-oneapi-tbb%gcc
-        - intel-oneapi-tbb%clang
-        - intel-oneapi-tbb%intel
+        - intel-parallel-studio
+        - intel-oneapi-dal
+        - intel-oneapi-mkl
+        - intel-oneapi-tbb
         - mesa18%clang
       - matrix:
         - [$mpi-packages]
@@ -264,8 +245,6 @@ spack:
     charliecloud:  # check variants
       version: ['0.23']
       variants: ~docs
-    cloc:
-      version: ['1.84']
     cmake:
       version: ['3.20.3']
     #cubelib:   # !!!!
@@ -312,8 +291,6 @@ spack:
     git:
       variants: +subtree+svn+tcltk
       version: ['2.31.1']
-    git-lfs:
-      version: ['2.11.0']
     glib:
       variants: tracing=none
       version: [2.68.2]
@@ -325,8 +302,6 @@ spack:
     gnuplot:
       variants: +X ~cairo
       version: [5.2.8]
-    go:
-      version: ['1.17.3']
     gobject-introspection:
       version: [1.56.1]
     gotcha:
@@ -371,6 +346,8 @@ spack:
       version: ['0.20']
     jsoncpp:
       version: [1.9.4]
+    julia:
+      version: [1.5.3]
     julia_binary:
       version: [1.5.3]
     kbproto:
@@ -578,8 +555,6 @@ spack:
       version: [0.40.0]
     protobuf:
       version: [3.12.2]
-    print-openmp-mapping:
-      version: ['1.0']
     pugixml:
       version: [1.11.4]
     py-certifi:
@@ -645,8 +620,6 @@ spack:
       variants: +pdt
     serf:
       version: [1.3.9]
-    setup-ssh-keys:
-      version: ['1.0']
     shared-mime-info:
       version: ['1.9']
     slurm:
@@ -665,14 +638,6 @@ spack:
       version: [2.28.2]
     tar:
       version: ['1.34']
-    tce-compiler-wrappers:
-      version: ['3.0']
-    tce-mpi-wrappers:
-      version: ['4.0']
-    tce-utils-defaults:
-      version: ['1.0']
-    tce-wrapper-drivers:
-      version: ['18.0']
     tmux:
       version: [3.1b]
     totalview:
