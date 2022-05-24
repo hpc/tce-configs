@@ -209,12 +209,12 @@ spack:
       - spec: findutils@4.6.0
         prefix: /usr
       buildable: false
-#    gcc:
-#      externals:
-#      - spec: gcc@10.2.1%gcc@8.3.1
-#        prefix: /opt/rh/gcc-toolset-10/root
-#      version: []
-#      variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
+    gcc:
+      externals:
+      - spec: gcc@10.3.1%gcc@8.3.1
+        prefix: /opt/rh/gcc-toolset-10/root
+      version: []
+      variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
     gettext:
       externals:
       - spec: gettext@0.19.8.1+curses+libunistring+libxml2~git+xz~tar~bzip2
