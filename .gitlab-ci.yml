@@ -79,7 +79,7 @@ bash-syntax:
       when: manual
       allow_failure: true
   before_script:
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.lanl.gov/hpcsoft/lanl-tce-facility.git
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.hpc.lanl.gov/hpcsoft/lanl-tce-facility.git
     - pushd facilities
     - ln -s ../lanl-tce-facility/lanl lanl
     - popd
@@ -153,7 +153,7 @@ ex:cray-sles15-zen2:build:
   tags:
     - ex
 
-toss-mlx:linux-mlx-nv6:build:
+.toss-mlx:linux-mlx-nv6:build:
   extends: .build_environment
   stage: build_first
   variables:
