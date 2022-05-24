@@ -133,6 +133,16 @@ xc40:cray-cnl7-x86_64:build:
   tags:
     - xc40
 
+ex:cray-sles15-zen2:build:
+  extends: .build_environment
+  stage: build_first
+  variables:
+    TCE_FACILITY: lanl
+    TCE_RELEASE: '2022-1-0'
+    TCE_ENVIRONMENT: cray-sles15-zen2-slingshot-none
+  tags:
+    - ex
+
 toss-mlx:linux-mlx-nv6:build:
   extends: .build_environment
   stage: build_first
