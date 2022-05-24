@@ -1,31 +1,40 @@
 spack:
   definitions:
+    - arch:
+      - os=rhel7 target=x86_64
+    - system-compiler:
+      - gcc@4.8.5
+
 # Toss compilers
     - base-compiler:
-      - gcc@10.3.0
-    - toolchain-compilers-non-base:
-      - intel-oneapi-compilers@2021.2.0
+      - gcc@11.3.0
+    - compilers:
       - llvm@12.0.0
-    - toolchain-compiler-constraints:
+    - compilers:
+      - intel-oneapi-compilers@2021.2.0
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
+    - compiler-constraints:
       - $%base-compiler
-      - '%intel@2021.2.0'
       - '%clang@12.0.0'
+    - compiler-constraints:
+      - '%intel@2021.2.0'
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
 # Toss MPIs
-    - gcc-mpi-constraints:
-      - ^openmpi%gcc@10.3.0 +pmix
+    - mpi-constraints:
+      - ^openmpi%gcc@11.3.0 +pmix
         ^hwloc%gcc 
         ^libevent%gcc 
         ^numactl%gcc 
         ^pkgconf%gcc
         ^pmix%gcc 
-      - ^mvapich2%gcc@10.3.0
+      - ^mvapich2%gcc@11.3.0
         ^bison%gcc 
         ^findutils%gcc 
         ^libpciaccess%gcc 
         ^libxml2%gcc 
         ^pkgconf%gcc
 
-    - intel-mpi-constraints:
+    - mpi-constraints:
       - ^openmpi%intel@2021.2.0 +pmix
         ^hwloc%gcc 
         ^libevent%gcc 
@@ -38,9 +47,10 @@ spack:
         ^libpciaccess%gcc 
         ^libxml2%gcc 
         ^pkgconf%gcc
+      - ^intel-parallel-studio@cluster.2020.4+mpi+ilp64+newdtags
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
 
     - toolchain-mpi:
-      - intel-parallel-studio@cluster.2020.4+mpi+ilp64+newdtags
       - openmpi
         ^hwloc%gcc 
         ^libevent%gcc 
@@ -53,28 +63,30 @@ spack:
         ^libpciaccess%gcc 
         ^libxml2%gcc 
         ^pkgconf%gcc
+
+    - toolchain-mpi:
+      - intel-parallel-studio@cluster.2020.4+mpi+ilp64+newdtags
+      when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
+
     # Packages built with the default compiler only.
-    - base:
+    - singleton-packages:
       - arm-forge
       - charliecloud
       - cmake
-      # We need to specify non-default mesa
-      - emacs ^mesa18+glx
+      - emacs
       - git
       - gnuplot
-      - hpcviewer
       - htop
       - idl
       # Tools installation for intel products.
       - intel-parallel-studio +vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
       # Separate mkl installation.
       - intel-parallel-studio ~mpi~ipp~daal~tbb~ilp64~newdtags
-      - julia_binary
+      - julia
       - libyogrt
       - mercurial
       - numactl
       - openjdk
-      - openssh
       - papi
       - patchelf
       - python@2.7.18
@@ -85,12 +97,6 @@ spack:
       - subversion
       - totalview
       - tmux
-    - base_matrix:
-      - exclude: []
-        matrix:
-        - [$base]
-        - [$%base-compiler]
-# Define base deps to reuse
 # Packages built out across the all compilers
     - compiler-packages:
       - $toolchain-mpi
@@ -98,92 +104,80 @@ spack:
       - intel-oneapi-mkl@2021.2.0
       - intel-oneapi-dal@2021.2.0
       - intel-oneapi-tbb@2021.2.0
-      - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@10.3.0 ^llvm@7.0.1%gcc 
+      - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.3.0 ^llvm@7.0.1%gcc 
         ^ncurses%gcc ^zlib%gcc
-      - netcdf-c 
-      - netcdf-cxx4
-      - netcdf-fortran
-# Defines a matrix to populate with Spack Stacks
-    - install-comp:
-      - exclude:
-        - intel-parallel-studio %gcc
-        - intel-parallel-studio %clang
-        - intel-parallel-studio %oneapi
-        - intel-oneapi-dal%gcc
-        - intel-oneapi-dal%clang
-        - intel-oneapi-dal%intel
-        - intel-oneapi-mkl%gcc
-        - intel-oneapi-mkl%clang
-        - intel-oneapi-mkl%intel
-        - intel-oneapi-tbb%gcc
-        - intel-oneapi-tbb%clang
-        - intel-oneapi-tbb%intel
-        - mesa18%clang
-        matrix:
-        - [$compiler-packages]
-        - [$toolchain-compiler-constraints]
-        # Base dependency constraints
+      - netcdf-c ~mpi~parallel-netcdf+hdf4+pic+shared
+      - netcdf-cxx4 +pic
+      - netcdf-fortran +pic
+      - openblas
 # Packages built out across the all compilers and MPIs
-      - intel-oneapi-compilers@2021.2.0
-      - llvm@12.0.0
-
     - mpi-packages:
       - hdf5 +mpi
       - hdf5 +mpi
       - hpctoolkit 
       - libquo
-      - valgrind
-      - netcdf-cxx4 ^hdf5 +mpi ^parallel-netcdf 
-      - netcdf-fortran ^hdf5 +mpi ^parallel-netcdf
+      - netcdf-cxx4 ^netcdf-c +mpi ^hdf5 +mpi ^parallel-netcdf 
+      - netcdf-fortran ^netcdf-c +mpi ^hdf5 +mpi ^parallel-netcdf
       - paraview ^mesa18
+      - valgrind
 
-    - toolchain-mpi-gcc:
+# Defines a matrix to populate with Spack Stacks
+    # Allows for the definition of build matrices for multiple quarters to be
+    # built all at once (e.g. - with a new machine)
+    - install:
+      # Install the base compiler
+      - matrix:
+        - [$base-compiler]
+        - [$%system-compiler]
+        - [$arch]
+      - matrix:
+        - [$compilers]
+        - [$%base-compiler]
+        - [$arch]
+      - matrix:
+        - [$singleton-packages]
+        - [$%base-compiler]
+        - [$arch]
+      - matrix:
+        - [$compiler-packages]
+        - [$compiler-constraints]
+        - [$arch]
+        exclude:
+        - intel-parallel-studio
+        - intel-oneapi-dal
+        - intel-oneapi-mkl
+        - intel-oneapi-tbb
+        - mesa18%clang
       - matrix:
         - [$mpi-packages]
-        - ['%gcc@10.3.0']
-        - [$gcc-mpi-constraints]
+        - ['%gcc@11.3.0']
+        - [$mpi-constraints]
+        - [$arch]
         exclude:
         - hpctoolkit ^mvapich2
+        - paraview ^mvapich2
+        - '^intel-parallel-studio'
 
-    - toolchain-mpi-intel:
+    - install:
       - matrix:
         - [$mpi-packages]
         - ['%intel@2021.2.0']
-        - [$intel-mpi-constraints]
+        - [$mpi-constraints]
+        - [$arch]
         exclude:
         - hpctoolkit
+        - paraview ^mvapich2
+        - paraview ^intel-parallel-studio
         - valgrind %intel
-
-# Defines a matrix to populate with Spack Stacks
-    #- install-comp-mpi:
-    #  - exclude:
-    #    - '%clang'
-    #    # intel-mpi not built out for other compilers
-    #    - '%gcc ^intel-parallel-studio'
-    #    - '%gcc ^intel-oneapi-mpi'
-    #    - '%clang ^intel-parallel-studio'
-    #    - hpctoolkit %clang
-    #    - hpctoolkit %intel
-    #    - hpctoolkit %oneapi
-    #    - hpctoolkit ^mvapich2
-    #    - libquo %clang
-    #    - libquo %oneapi ^intel-parallel-studio
-    #    - valgrind %intel # https://github.com/spack/spack/issues/16328 Boost C++11/Intel issue.
-    #    - valgrind %oneapi ^intel-parallel-studio
-    #    - valgrind %clang
-    
-    - install:
-      - $base_matrix
-      - $install-comp
-      - $toolchain-mpi-gcc
-      - $toolchain-mpi-intel
+        when: '''TCE_BUILD_ALL'' in env or ''TCE_BUILD_INTEL'' in env'
 
 # Final definition
   specs:
   - $install
+
   packages:
     all:
-      compiler: [gcc@10.3.0]
+      compiler: [gcc@11.3.0]
       providers:
         gl: [mesa18]
         glx: [mesa18+glx]
@@ -211,17 +205,17 @@ spack:
       buildable: false
     opa-psm2:
       paths:
-        opa-psm2@11.2.78%gcc@10.3.0: /usr
+        opa-psm2@11.2.78%gcc@11.3.0: /usr
       buildable: false
     openssh:
       version: [7.4p1]
       paths:
-        openssh@7.4p1%gcc@10.3.0: /usr
+        openssh@7.4p1%gcc@11.3.0: /usr
       buildable: false
     openssl:
       version: [1.0.2k-rhel]
       paths:
-        openssl@1.0.2k-rhel%gcc@10.3.0~docs+systemcerts: /usr
+        openssl@1.0.2k-rhel%gcc@11.3.0~docs+systemcerts: /usr
       buildable: false
 
     # General Package Defaults
@@ -265,10 +259,10 @@ spack:
     dyninst:
       version: [11.0.1]
     doxygen:
-      compiler: [gcc@10.3.0]  
+      compiler: [gcc@11.3.0]  
       version: ['1.9.1']
     eigen:
-      compiler: [gcc@10.3.0]  
+      compiler: [gcc@11.3.0]  
       version: ['3.3.9']
     elfutils:
       variants: +bzip2 +xz ~nls
@@ -280,7 +274,7 @@ spack:
       version: ['2.3.0']
     gcc:
       variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
-      version: [10.3.0]
+      version: [11.3.0]
       target: [haswell]
     gettext:
       variants: +bzip2+curses+git~libunistring~libxml2+tar+xz
@@ -295,7 +289,7 @@ spack:
     giflib:
       version: [5.2.1]
     git:
-      variants: +subtree+svn
+      variants: +subtree+svn+tcltk
       version: ['2.31.1']
     glib:
       variants: tracing=none
@@ -318,14 +312,14 @@ spack:
     harfbuzz:
       version: [2.6.8]
     hdf:
-      compiler: [intel@2021.2.0, gcc@10.3.0, clang@12.0.0]
+      compiler: [intel@2021.2.0, gcc@11.3.0, clang@12.0.0]
       version: [4.2.15]
     hdf5:
       variants: +cxx+fortran+hl~mpi+pic+shared+threadsafe api=v18
       compiler: []
       version: [1.12.0]
     hpctoolkit:
-      variants: +mpi+papi
+      variants: +mpi+papi+viewer
     hpcviewer:
       version: ['2021.05']
     htop:
@@ -341,7 +335,7 @@ spack:
       version: [2021.2.0]
     intel-parallel-studio:
       variants: ~tbb+mpi+ilp64+newdtags
-      compiler: [gcc@10.3.0, intel@2021.2.0]
+      compiler: [gcc@11.3.0, intel@2021.2.0]
       version: [cluster.2020.4]
     intel-tbb:
       version: ['2020.3']
@@ -352,6 +346,8 @@ spack:
       version: ['0.20']
     jsoncpp:
       version: [1.9.4]
+    julia:
+      version: [1.5.3]
     julia_binary:
       version: [1.5.3]
     kbproto:
@@ -378,7 +374,7 @@ spack:
       version: ['3.3']
     libgcrypt:
       paths:
-        libgcrypt@1.5.3%gcc@10.3.0: /usr/
+        libgcrypt@1.5.3%gcc@11.3.0: /usr/
       buildable: false
     libgd:
       version: [2.2.4]
@@ -409,7 +405,7 @@ spack:
     libpthread-stubs:
       version: ['0.4']
     libquo:
-      compiler: [intel@2021.2.0, gcc@10.3.0]
+      compiler: [intel@2021.2.0, gcc@11.3.0]
       version: [1.3.1]
     librsvg:
       version: [2.51.0]
@@ -480,7 +476,7 @@ spack:
     mercurial:
       version: ['5.8']
     mesa18:
-      compiler: [intel@2021.2.0, gcc@10.3.0]
+      compiler: [intel@2021.2.0, gcc@11.3.0]
       variants: +osmesa swr=avx,avx2
       version: [18.3.6]
     mpc:
@@ -490,7 +486,7 @@ spack:
       compiler: [gcc@4.8.5]
       version: [3.1.6]
     mvapich2:
-      compiler: [intel@2021.2.0, clang@12.0.0, gcc@10.3.0]
+      compiler: [intel@2021.2.0, clang@12.0.0, gcc@11.3.0]
       variants: +debug fabrics=psm2 file_systems=lustre,nfs,ufs process_managers=slurm
         threads=multiple ch3_rank_bits=32 ~regcache ~wrapperrpath
       version: [2.3.6]
@@ -502,11 +498,11 @@ spack:
       version: [4.8.0]
     netcdf-cxx4:
       variants: +pic
-      compiler: [intel@2021.2.0, clang@12.0.0, gcc@10.3.0]
+      compiler: [intel@2021.2.0, clang@12.0.0, gcc@11.3.0]
       version: [4.3.1]
     netcdf-fortran:
       variants: +pic
-      compiler: [intel@2021.2.0, clang@12.0.0, gcc@10.3.0]
+      compiler: [intel@2021.2.0, clang@12.0.0, gcc@11.3.0]
       version: [4.5.3]
     numactl:
       version: [2.0.14]
@@ -525,15 +521,15 @@ spack:
     papi:
       version: [6.0.0.1]
     parallel-netcdf:
-      compiler: [intel@2021.2.0, gcc@10.3.0]
+      compiler: [intel@2021.2.0, gcc@11.3.0]
       version: [1.12.2]
     paraview:
-      compiler: [intel@2021.2.0, gcc@10.3.0]
+      compiler: [intel@2021.2.0, gcc@11.3.0]
       variants: +eyedomelighting +fortran +hdf5 +osmesai +mpi +shared 
                 +pagosa +python3 ~vtkm cuda_arch=none
       version: [5.9.1]
     patchelf:
-      compiler: [gcc@4.8.5, gcc@10.3.0]
+      compiler: [gcc@4.8.5, gcc@11.3.0]
       version: ['0.12']
     pcre:
       version: ['8.44']
@@ -543,7 +539,7 @@ spack:
       version: [3.2.0]
     perl:
       paths:
-        perl@5.16.3%gcc@10.3.0: /usr
+        perl@5.16.3%gcc@11.3.0: /usr
       buildable: false
     perl:
       version: [5.16.3]
@@ -553,7 +549,7 @@ spack:
       version: ['2.38']
     pkg-config:
       paths:
-        pkg-config@0.27.1%gcc@10.3.0: /usr
+        pkg-config@0.27.1%gcc@11.3.0: /usr
       buildable: false
     pixman:
       version: [0.40.0]
@@ -576,7 +572,7 @@ spack:
     py-matplotlib:
       version: [3.4.2]
     py-mpi4py:
-      compiler: [intel@2021.2.0, gcc@10.3.0]
+      compiler: [intel@2021.2.0, gcc@11.3.0]
       version: [3.0.3]
     py-numpy:
       version: [1.20.3]
@@ -612,7 +608,7 @@ spack:
       version: [1.5.0]
     rdma-core:
       paths:
-        rdma-core@22.4%gcc@10.3.0: /usr
+        rdma-core@22.4%gcc@11.3.0: /usr
       buildable: false
     readline:
       version: ['8.1']
@@ -628,7 +624,7 @@ spack:
       version: ['1.9']
     slurm:
       paths:
-        slurm@21.08.3%gcc@10.3.0: /usr
+        slurm@21.08.3%gcc@11.3.0: /usr
       buildable: false
     sqlite:
       version: [3.35.5]
@@ -684,7 +680,7 @@ spack:
     z3:
       version: [4.8.9]
     zlib:
-      compiler: [gcc@10.3.0, gcc@4.8.5]
+      compiler: [gcc@11.3.0, gcc@4.8.5]
       version: [1.2.11]
   upstreams: {}
   mirrors: {}
@@ -778,7 +774,7 @@ spack:
           - tmux
           - totalview
         core_compilers:
-          - gcc@10.3.0
+          - gcc@11.3.0
         core_specs:
           - arm-forge
           - charliecloud
@@ -882,19 +878,19 @@ spack:
         llvm@12.0.0:
           environment:
             prepend_path:
-              PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin
-              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/lib64
+              PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin
+              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/lib64
             set:
-              FC:  /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin/gfortran
-              F90:  /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin/gfortran
+              FC:  /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin/gfortran
+              F90:  /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin/gfortran
         intel-oneapi-compilers:
           environment:
             prepend_path:
               MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2021.2.0
-              PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin
-              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/lib64
+              PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin
+              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/lib64
             set:
-              GCC: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5
+              GCC: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5
         intel-parallel-studio+mpi:
           environment:
             prepend_path:
@@ -910,7 +906,7 @@ spack:
         mvapich2:
           environment:
             prepend_path:
-              PATH: /usr/tce/packages/binutils/binutils-2.36.1-gcc-10.3.0/bin
+              PATH: /usr/tce/packages/binutils/binutils-2.36.1-gcc-11.3.0/bin
     # modules that use the root installation rather than pointing to the view
     toolchains-root:
       roots:
