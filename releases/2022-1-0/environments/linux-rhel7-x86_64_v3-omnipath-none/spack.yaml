@@ -34,7 +34,7 @@ spack:
     # that will break if that happens. So we have to force the builds of some software
     # to use an mpi built against the matching compiler.
     - gcc-mpi-constraints:
-      - ^openmpi%gcc@10.3.0 +pmix
+      - ^openmpi%gcc@10.3.0 
         ^hwloc%gcc 
         ^libevent%gcc 
         ^numactl%gcc 
@@ -49,7 +49,7 @@ spack:
 
     # The same, for intel.
     - intel-mpi-constraints:
-      - ^openmpi%intel@2021.2.0 +pmix
+      - ^openmpi%intel@2021.2.0 
         ^hwloc%gcc 
         ^libevent%gcc 
         ^numactl%gcc 
@@ -86,7 +86,6 @@ spack:
       - mercurial
       - numactl
       - openjdk
-      - openssh
       - papi
       - patchelf
       # !!!! We shouldn't need 3 pythons. This is silly.
@@ -147,13 +146,13 @@ spack:
     # Packages to build against all compiler/mpi combinations
     - mpi-packages:
       - hdf5 +mpi
-      - hdf5 +mpi
       - hpctoolkit 
       - libquo
       - valgrind
       - netcdf-cxx4 ^hdf5 +mpi ^parallel-netcdf 
       - netcdf-fortran ^hdf5 +mpi ^parallel-netcdf
-      - paraview ^mesa18
+      - paraview ^mesa18 ^bzip2%gcc@10.3.0 ^cmake%gcc ^double-conversion%gcc ^eigen%gcc ^expat%gcc 
+        ^freetype%gcc ^libtiff%gcc ^lz4%gcc ^lzma%gcc 
 
     # Build the above with gcc and all gcc relevant MPI's
     - toolchain-mpi-gcc:
