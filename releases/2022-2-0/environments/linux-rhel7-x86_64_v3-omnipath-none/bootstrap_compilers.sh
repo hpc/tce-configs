@@ -21,6 +21,21 @@ ${fix_compiler} "$compilers_yaml" edit gcc@10.3.0 rhel7 x86_64\
     --env="PATH+=${binutils_path}"
 spack unload -a
 
+# gcc@9.3.0
+${spack_install} gcc@9.3.0%gcc@4.8.5+binutils+cxa_atexit+nvptx+piclibs+profiledbootstrap-lean+strip languages=c,c++,fortran,lto patches=de02757db510055a149390f95c3e06f62992ff61ff65e74642f8b4d4a4438320 ^binutils@2.36.1+gas+gold~headers~interwork+ld~libiberty~lto~nls+plugins libs=shared,static
+
+spack load gcc@9.3.0
+spack compiler find --scope=site
+gfortran_path="$(which gfortran)"
+gcc_path="$(dirname "$(dirname "$(readlink -f "$(which gcc)")")")"
+# Set the binutils for this compiler to the one we built.
+${spack_install} binutils@2.36.1+gas+gold~headers~interwork+ld~libiberty~lto~nls+plugins libs=shared,static %gcc@9.3.0
+spack load binutils@2.36.1+gas+gold~headers~interwork+ld~libiberty~lto~nls+plugins libs=shared,static %gcc@9.3.0
+binutils_path="$(dirname "$(which ld)")"
+${fix_compiler} "$compilers_yaml" edit gcc@9.3.0 rhel7 x86_64\
+    --env="PATH+=${binutils_path}"
+spack unload -a
+
 # intel@2021.2.0
 ${spack_install} intel-oneapi-compilers@2021.2.0 %gcc@10.3.0
 spack load intel-oneapi-compilers
