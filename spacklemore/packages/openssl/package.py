@@ -14,3 +14,6 @@ class Openssl(BuiltinOpenssl):
     # somewhat dummy version string to track using openssl provided by RedHat
     # in RHEL 7 (taken from RHEL 7.9)
     version('1.0.2k-rhel7')
+    # somewhat dummy version string to track using openssl provided by SUSE
+    # in SLES 15 (taken from SLES 15 Service Pack 1 (15.1))
+    version('1.1.0i-sles15')
