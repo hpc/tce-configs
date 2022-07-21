@@ -1,0 +1,59 @@
+#!/bin/python3
+
+import collections
+import io
+import os
+import sys
+import re
+import string
+import subprocess
+
+# Spacks we compare.
+new_spack  = '/home/jogas/git/spack/bin/spack' # Your upstream develop spack
+old_spack  = '/path/to/production/spack/bin/spack' # Your current production snap.
+
+# Package, fields, and related regexs.
+packages   = []
+pkg_fields = ['Preferred version', 'Variants', 'Virtual Packages']
+pkg_re     = {'Preferred version': 'Preferred version:$\n(.*)Safe',
+              'Variants':          'Variants:$\n(.*)Installation',
+              'Virtual Packages':  'Virtual Packages:$\n(.*)'}
+
+# Extract uniform output of the target spack's info <pkg> output.
+def extract(out, regex):
+    m = re.finditer(regex, out, re.MULTILINE | re.DOTALL)
+    for num, match in enumerate(m, start=1):
+        # should be exactly one group
+        assert(len(match.groups()) == 1)
+        return match.group(1)
+
+# Run target Spack info <pkg>.
+def cmd_info(bin_spack, pkg):
+    cp = subprocess.run([bin_spack, 'info', pkg], encoding="utf-8",
+                       stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                       stderr=subprocess.STDOUT)
+    if (cp.returncode != 0):
+       print('error executing %s info %s' % (bin_spack, pkg))
+       print('error was:\n%s' % cp.stdout)
+       sys.exit(1)
+    # spack info has inconsistent spurious white space after some info headers,
+    # e.g., 'Preferred version', 'Safe versions', 'Tags', and 'Virtual Packages'
+    # noted thus far. Clean before regex.
+    return re.sub(':\ +\n', ':\n', cp.stdout.rstrip())
+
+# Your list of packages to Check.
+with open('./packagelist.txt', mode='r') as fp:
+    packages = fp.readlines()
+
+old_info = {}
+new_info = {}
+for p in packages:
+    old = cmd_info(old_spack, p)
+    new = cmd_info(new_spack, p)
+    for f in pkg_fields:
+        old_info[f] = extract(old, pkg_re[f])
+        new_info[f] = extract(new, pkg_re[f])
+        print(p)
+        if (old_info[f] != new_info[f]):
+            print('%s:' % f)
+            print('-%s\n+%s' % (old_info[f], new_info[f]))
