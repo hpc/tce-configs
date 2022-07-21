@@ -673,8 +673,11 @@ spack:
       modules: {}
       providers: {}
     mpich:
-      modules:
-        mpich@8.1.12: cray-mpich/8.1.12
+      externals:
+        - spec: mpich@8.1.12 os=sles15 +slurm
+          modules:
+            - cray-mpich/8.1.12
+            - cray-pmi/6.1.0
       compiler: [cce, gcc, intel]
       buildable: false
       version: []
