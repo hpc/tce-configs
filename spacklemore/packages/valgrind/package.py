@@ -19,15 +19,20 @@ class Valgrind(BuiltinValgrind):
         options = super(Valgrind, self).configure_args()
         spec = self.spec
 
-        if self.spec.platform == 'cray':
-            env['SPACK_CC'] = "/opt/gcc/9.3.0/bin/gcc"
+        # Don't use Cray wrappers as they will pull in all sorts of compile and link
+        # flags from Cray-packaged software that is not needed for building valgrind.
+        # Those flags can potentially cause issues for building components of valgrind,
+        # some of which are static. Instead, use the underlying compiler directly.
+        if spec.platform == 'cray':
+            if spec.satisfies('%gcc'):
+                env['SPACK_CC'] = "gcc"
 
         if spec.satisfies('+lto'):
             options.append('--enable-lto')
 
         if spec.satisfies('+mpi'):
-            if self.spec.platform != 'cray':
-                options.append('--with-mpicc={0}'.format(self.spec['mpi'].mpicc))
+            if spec.platform != 'cray':
+                options.append('--with-mpicc={0}'.format(spec['mpi'].mpicc))
             else:
                 options.append("--with-mpicc=env['CC']")
 
