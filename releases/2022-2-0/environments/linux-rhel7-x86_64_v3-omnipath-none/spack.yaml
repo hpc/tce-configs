@@ -2,16 +2,16 @@ spack:
   definitions:
 # Toss compilers
     - base-compiler:
-      - gcc@10.3.0
+      - gcc@11.3.0
     - toolchain-compilers-non-base:
       - intel-oneapi-compilers@2021.2.0
       - gcc@9.3.0
-      - llvm@12.0.0
+      - llvm@13.0.1
     - toolchain-compiler-constraints:
       - $%base-compiler
       - '%gcc@9.3.0'
       - '%intel@2021.2.0'
-      - '%clang@12.0.0'
+      - '%clang@13.0.1'
 
     # Exact definitiions for the mpi packages, including which 
     # gcc built deps it's ok to use.
@@ -36,8 +36,8 @@ spack:
     # that will break if that happens. So we have to force the builds of some software
     # to use an mpi built against the matching compiler.
     - gcc-10-mpi-constraints:
-      - ^openmpi%gcc@10.3.0 
-      - ^mvapich2%gcc@10.3.0
+      - ^openmpi%gcc@11.3.0 
+      - ^mvapich2%gcc@11.3.0
 
     - gcc-9-mpi-constraints:
       - ^openmpi%gcc@9.3.0 
@@ -106,7 +106,7 @@ spack:
       - intel-oneapi-mkl@2021.2.0
       - intel-oneapi-dal@2021.2.0
       - intel-oneapi-tbb@2021.2.0
-      - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@10.3.0 ^llvm@7.0.1%gcc 
+      - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.3.0 ^llvm@13.0.1%gcc 
         ^ncurses%gcc ^zlib%gcc
       - netcdf-c 
       - netcdf-cxx4
@@ -115,7 +115,7 @@ spack:
     #
     - install-comp:
       - intel-oneapi-compilers@2021.2.0
-      - llvm@12.0.0
+      - llvm@13.0.1
 
       - matrix:
         - [$compiler-packages]
@@ -147,14 +147,14 @@ spack:
       - valgrind
       - netcdf-cxx4 ^hdf5 +mpi ^parallel-netcdf 
       - netcdf-fortran ^hdf5 +mpi ^parallel-netcdf
-      - paraview ^mesa18 ^bzip2%gcc@10.3.0@10.3.0 ^cmake%gcc@10.3.0@10.3.0 ^double-conversion%gcc@10.3.0 
-        ^eigen%gcc@10.3.0 ^expat%gcc@10.3.0 ^freetype%gcc@10.3.0 ^libtiff%gcc@10.3.0 ^lz4%gcc@10.3.0 ^lzma%gcc@10.3.0 
+      - paraview ^mesa18 ^bzip2%gcc@11.3.0 ^cmake%gcc@11.3.0 ^double-conversion%gcc@11.3.0 
+        ^eigen%gcc@11.3.0 ^expat%gcc@11.3.0 ^freetype%gcc@11.3.0 ^libtiff%gcc@11.3.0 ^lz4%gcc@11.3.0 ^lzma%gcc@11.3.0 
 
     # Build the above with gcc and all gcc relevant MPI's
     - toolchain-mpi-gcc-10:
       - matrix:
         - [$mpi-packages]
-        - ['%gcc@10.3.0']
+        - ['%gcc@11.3.0']
         - [$gcc-10-mpi-constraints]
         exclude:
         - hpctoolkit ^mvapich2
@@ -196,7 +196,7 @@ spack:
 
     all:
       # Unless otherwise specified, build with gcc
-      compiler: [gcc@10.3.0]
+      compiler: [gcc@11.3.0]
 
       # Virtual packages and which specs provide that functionality.
       providers:
@@ -225,18 +225,21 @@ spack:
     nss:
       buildable: false
     opa-psm2:
-      paths:
-        opa-psm2@11.2.78%gcc@10.3.0: /usr
+      externals:
+        - spec: opa-psm2@11.2.78%gcc@11.3.0
+          prefix: /usr
       buildable: false
     openssh:
       version: [7.4p1]
-      paths:
-        openssh@7.4p1%gcc@10.3.0: /usr
+      externals:
+        - spec: openssh@7.4p1%gcc@11.3.0
+          prefix: /usr
       buildable: false
     openssl:
       version: [1.0.2k-rhel]
-      paths:
-        openssl@1.0.2k-rhel%gcc@10.3.0~docs+systemcerts: /usr
+      externals:
+        - spec: openssl@1.0.2k-rhel%gcc@11.3.0~docs+systemcerts
+          prefix: /usr
       buildable: false
 
     # General Package Defaults
@@ -299,7 +302,7 @@ spack:
       version: ['2.3.0']
     gcc:
       variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
-      version: [10.3.0]
+      version: [11.3.0]
       target: [haswell]
     gettext:
       variants: +bzip2+curses+git~libunistring~libxml2+tar+xz
@@ -391,8 +394,9 @@ spack:
     libffi:
       version: ['3.3']
     libgcrypt:
-      paths:
-        libgcrypt@1.5.3%gcc@10.3.0: /usr/
+      externals:
+        - spec: libgcrypt@1.5.3%gcc@11.3.0
+          prefix: /usr
       buildable: false
     libgd:
       version: [2.2.4]
@@ -465,7 +469,7 @@ spack:
       version: [0.8.2]
     libxml2:
       variants: +python
-      version: [2.9.10]
+      version: [2.9.13]
     libxpm:
       version: [3.5.12]
     libxrandr:
@@ -480,7 +484,7 @@ spack:
     llvm:
       variants: +clang+compiler-rt+omp_tsan+python+lldb+gold+libcxx+polly+internal_unwind
         targets=all
-      version: [7.0.1, 10.0.1, 12.0.0]
+      version: [13.0.1]
     lz4:
       variants: libs=shared,static
       version: [1.9.3]
@@ -544,8 +548,9 @@ spack:
     pegtl:
       version: [3.2.0]
     perl:
-      paths:
-        perl@5.16.3%gcc@10.3.0: /usr
+      externals:
+        - spec: perl@5.16.3%gcc@11.3.0
+        - prefix: /usr
       buildable: false
     perl:
       version: [5.16.3]
@@ -554,8 +559,9 @@ spack:
     perl-termreadkey:
       version: ['2.38']
     pkg-config:
-      paths:
-        pkg-config@0.27.1%gcc@10.3.0: /usr
+      externals:
+        - spec: pkg-config@0.27.1%gcc@11.3.0
+          prefix: /usr
       buildable: false
     pixman:
       version: [0.40.0]
@@ -612,8 +618,9 @@ spack:
     randrproto:
       version: [1.5.0]
     rdma-core:
-      paths:
-        rdma-core@22.4%gcc@10.3.0: /usr
+      externals:
+        - spec: rdma-core@22.4%gcc@11.3.0
+          prefix: /usr
       buildable: false
     readline:
       version: ['8.1']
@@ -628,8 +635,9 @@ spack:
     shared-mime-info:
       version: ['1.9']
     slurm:
-      paths:
-        slurm@21.08.3%gcc@10.3.0: /usr
+      externals:
+        - spec: slurm@21.08.3%gcc@11.3.0
+          prefix: /usr
       buildable: false
     sqlite:
       version: [3.35.5]
@@ -765,7 +773,7 @@ spack:
           - java
           - julia_binary
           - libyogrt
-          - llvm@7.0.1
+          - llvm@13.0.1
           - mercurial
           - numactl
           - openjdk
@@ -778,7 +786,7 @@ spack:
           - tmux
           - totalview
         core_compilers:
-          - gcc@10.3.0
+          - gcc@11.3.0
         core_specs:
           - arm-forge
           - charliecloud
@@ -798,7 +806,7 @@ spack:
           - java
           - julia_binary
           - libyogrt
-          - llvm@7.0.1
+          - llvm@13.0.1
           - mercurial
           - numactl
           - openjdk
@@ -854,7 +862,7 @@ spack:
           - intel-oneapi-compilers
           - intel-parallel-studio+mpi
           - libquo
-          - llvm@12.0.0
+          - llvm@13.0.1
           - mesa18 +osmesa swr=avx,avx2
           - mvapich2
           - netcdf-c
@@ -868,7 +876,7 @@ spack:
         core_specs:
           - gcc
           - intel-oneapi-compilers
-          - llvm@12.0.0
+          - llvm@13.0.1
         projections:
           gcc: '{name}/{version}'
           hdf5~mpi: '{name}-serial/{version}'
@@ -879,22 +887,22 @@ spack:
           intel-parallel-studio+mpi: 'intel-mpi/{version}'
           llvm: 'clang/{version}'
           all: '{name}/{version}'
-        llvm@12.0.0:
+        llvm@13.0.1:
           environment:
             prepend_path:
-              PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin
-              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/lib64
+              PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin
+              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/lib64
             set:
-              FC:  /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin/gfortran
-              F90:  /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin/gfortran
+              FC:  /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin/gfortran
+              F90:  /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin/gfortran
         intel-oneapi-compilers:
           environment:
             prepend_path:
               MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2021.2.0
-              PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/bin
-              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5/lib64
+              PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin
+              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/lib64
             set:
-              GCC: /usr/tce/packages/gcc/gcc-10.3.0-gcc-4.8.5
+              GCC: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5
         intel-parallel-studio+mpi:
           environment:
             prepend_path:
@@ -910,7 +918,7 @@ spack:
         mvapich2:
           environment:
             prepend_path:
-              PATH: /usr/tce/packages/binutils/binutils-2.36.1-gcc-10.3.0/bin
+              PATH: /usr/tce/packages/binutils/binutils-2.36.1-gcc-11.3.0/bin
     # modules that use the root installation rather than pointing to the view
     toolchains-root:
       roots:
