@@ -46,8 +46,8 @@ ${fix_compiler} "$compilers_yaml" edit intel@2021.2.0 rhel7 x86_64\
     --env="GCC=${gcc_path}"
 spack unload -a
 
-# clang@12.0.0
-${spack_install} llvm@13.0.1 targets=all +clang~code_signing+compiler-rt~cuda~flang+gold+internal_unwind~ipo+libcxx+lld+lldb~llvm_dylib~mlir~omp_debug+omp_tsan+polly+python~shared_libs~split_dwarf build_type=Release  %gcc@11.3.0 ^libxml2@2.9.13%gcc@11.3.0+python
+# clang@13.0.1
+${spack_install} llvm@13.0.1 targets=all +clang+compiler-rt~cuda~flang+gold+internal_unwind~ipo+libcxx+lld+lldb~llvm_dylib~mlir~omp_debug+omp_tsan+polly+python~split_dwarf build_type=Release  %gcc@11.3.0 ^libxml2@2.9.13%gcc@11.3.0+python
 spack load llvm@13.0.1
 spack compiler find --scope=site
 ${fix_compiler} "$compilers_yaml" edit clang@13.0.1 rhel7 x86_64\
