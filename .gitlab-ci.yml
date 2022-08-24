@@ -9,7 +9,7 @@ stages:
 yaml-lint:
   image: python:3.7
   tags:
-    untagged
+    - untagged
   stage:
     syntax_and_style
   script:
