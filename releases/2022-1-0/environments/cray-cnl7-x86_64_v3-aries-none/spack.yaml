@@ -817,7 +817,6 @@ spack:
       compiler: []
       modules: {}
       providers: {}
-  upstreams: {}
   mirrors: {}
   repos: []
   view:

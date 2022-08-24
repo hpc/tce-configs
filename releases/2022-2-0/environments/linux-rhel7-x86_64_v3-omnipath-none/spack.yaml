@@ -13,21 +13,21 @@ spack:
       - '%intel@2021.2.0'
       - '%clang@13.0.1'
 
-    # Exact definitiions for the mpi packages, including which 
+    # Exact definitiions for the mpi packages, including which
     # gcc built deps it's ok to use.
     - toolchain-mpi:
       - intel-parallel-studio@cluster.2020.4+mpi+ilp64+newdtags
       - openmpi
-        ^hwloc%gcc 
-        ^libevent%gcc 
-        ^numactl%gcc 
+        ^hwloc%gcc
+        ^libevent%gcc
+        ^numactl%gcc
         ^pkgconf%gcc
-        ^pmix%gcc 
+        ^pmix%gcc
       - mvapich2
-        ^bison%gcc 
-        ^findutils%gcc 
-        ^libpciaccess%gcc 
-        ^libxml2%gcc 
+        ^bison%gcc
+        ^findutils%gcc
+        ^libpciaccess%gcc
+        ^libxml2%gcc
         ^pkgconf%gcc
 
     # The same as above, except as a dependency and compiled against a specific compiler
@@ -36,29 +36,29 @@ spack:
     # that will break if that happens. So we have to force the builds of some software
     # to use an mpi built against the matching compiler.
     - gcc-10-mpi-constraints:
-      - ^openmpi%gcc@11.3.0 
+      - ^openmpi%gcc@11.3.0
       - ^mvapich2%gcc@11.3.0
 
     - gcc-9-mpi-constraints:
-      - ^openmpi%gcc@9.3.0 
+      - ^openmpi%gcc@9.3.0
       - ^mvapich2%gcc@9.3.0
 
     # The same, for intel.
     - intel-mpi-constraints:
-      - ^openmpi%intel@2021.2.0 
-        ^hwloc%gcc 
-        ^libevent%gcc 
-        ^numactl%gcc 
+      - ^openmpi%intel@2021.2.0
+        ^hwloc%gcc
+        ^libevent%gcc
+        ^numactl%gcc
         ^pkgconf%gcc
-        ^pmix%gcc 
+        ^pmix%gcc
       - ^mvapich2%intel@2021.2.0
-        ^bison%gcc 
-        ^findutils%gcc 
-        ^libpciaccess%gcc 
-        ^libxml2%gcc 
+        ^bison%gcc
+        ^findutils%gcc
+        ^libpciaccess%gcc
+        ^libxml2%gcc
         ^pkgconf%gcc
 
-    # Note that we don't build anything for clang/mpi combos, so a clang specific 
+    # Note that we don't build anything for clang/mpi combos, so a clang specific
     # section isn't needed currently.
 
     # Packages built with the default compiler only.
@@ -103,9 +103,9 @@ spack:
       - intel-oneapi-mkl@2021.2.0
       - intel-oneapi-dal@2021.2.0
       - intel-oneapi-tbb@2021.2.0
-      - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.3.0 ^llvm@13.0.1%gcc 
+      - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.3.0 ^llvm@13.0.1%gcc
         ^ncurses%gcc ^zlib%gcc
-      - netcdf-c 
+      - netcdf-c
       - netcdf-cxx4
       - netcdf-fortran
 
@@ -139,13 +139,13 @@ spack:
     # Packages to build against all compiler/mpi combinations
     - mpi-packages:
       - hdf5 +mpi
-      - hpctoolkit 
+      - hpctoolkit
       - libquo
       - valgrind
-      - netcdf-cxx4 ^hdf5 +mpi ^parallel-netcdf 
+      - netcdf-cxx4 ^hdf5 +mpi ^parallel-netcdf
       - netcdf-fortran ^hdf5 +mpi ^parallel-netcdf
-      - paraview ^mesa18 ^bzip2%gcc@11.3.0 ^cmake%gcc@11.3.0 ^double-conversion%gcc@11.3.0 
-        ^eigen%gcc@11.3.0 ^expat%gcc@11.3.0 ^freetype%gcc@11.3.0 ^libtiff%gcc@11.3.0 ^lz4%gcc@11.3.0 ^lzma%gcc@11.3.0 
+      - paraview ^mesa18 ^bzip2%gcc@11.3.0 ^cmake%gcc@11.3.0 ^double-conversion%gcc@11.3.0
+        ^eigen%gcc@11.3.0 ^expat%gcc@11.3.0 ^freetype%gcc@11.3.0 ^libtiff%gcc@11.3.0 ^lz4%gcc@11.3.0 ^lzma%gcc@11.3.0
 
     # Build the above with gcc and all gcc relevant MPI's
     - toolchain-mpi-gcc-10:
@@ -174,7 +174,7 @@ spack:
         exclude:
         - hpctoolkit
         - valgrind %intel
- 
+
     # This defines the actual packages to get installed
     - install:
       - $base_matrix
@@ -187,7 +187,7 @@ spack:
   specs:
   - $install
 
-  # This defines the default settings for each package. The definitions above 
+  # This defines the default settings for each package. The definitions above
   # can be sparse because we define most settings here.
   packages:
 
@@ -205,7 +205,7 @@ spack:
         uuid: [libuuid]
 
     # The following crypto libraries should not be built. If needed, they should
-    # be pulled from system space. 
+    # be pulled from system space.
     botan:
       buildable: false
     cryptopp:
@@ -301,16 +301,13 @@ spack:
       variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
       version: [11.3.0]
       target: [haswell]
-    gettext:
-      variants: +bzip2+curses+git~libunistring~libxml2+tar+xz
-      version: [0.21]
     gdbm:
       version: ['1.19']
     gdk-pixbuf:
       version: [2.42.2]
     gettext:
-      variants: ~libxml2
-      version: ['0.21']
+      variants: +bzip2+curses+git~libunistring~libxml2+tar+xz
+      version: [0.21]
     giflib:
       version: [5.2.1]
     git:
@@ -508,7 +505,7 @@ spack:
     ncurses:
       version: ['6.2']
     netcdf-c:
-      variants: ~mpi~parallel-netcdf+hdf4+pic+shared 
+      variants: ~mpi~parallel-netcdf+hdf4+pic+shared
       version: [4.8.0]
     netcdf-cxx4:
       variants: +pic
@@ -523,7 +520,7 @@ spack:
     openjdk:
       version: [11.0.8_10]
     openmpi:
-      variants: +legacylaunchers +pmi +thread_multiple +gpfs 
+      variants: +legacylaunchers +pmi +thread_multiple +gpfs
         fabrics=cma,psm,psm2,verbs schedulers=slurm
       version: [4.1.1]
     pango:
@@ -534,7 +531,7 @@ spack:
     parallel-netcdf:
       version: [1.12.2]
     paraview:
-      variants: +eyedomelighting +fortran +hdf5 +osmesai +mpi +shared 
+      variants: +eyedomelighting +fortran +hdf5 +osmesai +mpi +shared
                 +pagosa +python3 ~vtkm cuda_arch=none
       version: [5.10.1]
     patchelf:
@@ -550,7 +547,6 @@ spack:
         - spec: perl@5.16.3%gcc@11.3.0
         - prefix: /usr
       buildable: false
-    perl:
       version: [5.16.3]
     perl-alien-svn:
       version: [1.8.11.0]
@@ -608,7 +604,7 @@ spack:
       version: [1.26.6]
     python:
       variants: ~uuid~libxml2
-      version: [3.10.6] 
+      version: [3.10.6]
     qhull:
       version: ['2020.2']
     qt:

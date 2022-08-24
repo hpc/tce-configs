@@ -666,6 +666,7 @@ release_config=${release}/config.sh
 if [[ -f $release_config ]]; then
     error_exit "Could not find the release config file at ${release_config}."
 fi
+# shellcheck disable=1090
 if ! source "${release_config}"; then
     error_exit "Error in sourcing the release config file."
 fi
