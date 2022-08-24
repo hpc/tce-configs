@@ -25,7 +25,7 @@ lanl-paths:
   stage:
     syntax_and_style
   tags:
-    untagged
+    - untagged
   script:
     - which grep
     # Find any files that contain an hpcsoft path that isn't in a comment.
@@ -38,7 +38,7 @@ config-in-env:
   stage:
     syntax_and_style
   tags:
-    untagged
+    - untagged
   script:
     - if grep -ER ' +config:' releases/*/environments/*/spack.yaml; then exit 1; fi
 
@@ -47,7 +47,7 @@ bash-syntax:
   stage:
     syntax_and_style
   tags:
-    untagged
+    - untagged
   script:
     - apk add shellcheck
     - source tests/syntax.sh

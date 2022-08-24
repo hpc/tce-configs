@@ -635,15 +635,16 @@ status "Sourcing config file 'process.cfg'."
 # process_config is. So, disable that check.
 # shellcheck disable=1090
 if ! source "${process_config}"; then
-    error_exit "Error in sourcing config file $process_config."
+    error_exit "Error in sourcing the process config file $process_config."
 fi
 
-# Now, deal with the rest of the required arguments.
+
 environment_name=${environment_name:-${TCE_ENVIRONMENT}}
 release_name=${release_name:-${TCE_RELEASE}}
 release=${releases}/${release_name}
 install_dir=${install_dir:-${TCE_INSTALL_DIR}}
 
+# Now, deal with the rest of the required arguments.
 if [[ -z $release_name ]]; then
     error_exit "A release must be specified.  This can be done with the
 environment variable TCE_RELEASE or with the --release command line option."
@@ -658,6 +659,15 @@ if ! [[ -d $release ]]; then
     error "Release $release does not exist in releases dir. Available releases:"
     find "${releases}" -maxdepth 1 -mindepth 1 -type d -printf "%P\n"
     exit 1
+fi
+
+# Find the release config file. 
+release_config=${release}/config.sh
+if [[ -f $release_config ]]; then
+    error_exit "Could not find the release config file at ${release_config}."
+fi
+if ! source "${release_config}"; then
+    error_exit "Error in sourcing the release config file."
 fi
 
 environments="${release}/environments"
