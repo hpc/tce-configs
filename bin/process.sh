@@ -1026,7 +1026,7 @@ function do_concretize() {
     status "Cleaning long-lived caches."
     spack clean -m
     status "Concretizing to $log_path"
-    /usr/bin/time spack --stacktrace "${SPACK_VERBOSE[@]}" concretize -f |& tee "$log_path"
+    /usr/bin/time spack --profile --stacktrace "${SPACK_VERBOSE[@]}" concretize -f |& tee "$log_path"
     local ret_val=$?
 
     if test "$ret_val" != 0 || grep -E '(^Traceback)|(==> Error)' "$log_path"; then

@@ -152,3 +152,12 @@ toss-mlx:linux-mlx-nv6:build:
     - toss-mlx
 
 
+toss-ofi:linux-omni-none:build:2022-2-0:
+  extends: .build_environment
+  stage: build_first
+  variables:
+    TCE_FACILITY: lanl
+    TCE_RELEASE: '2022-2-0'
+    TCE_ENVIRONMENT: linux-rhel7-x86_64_v3-omnipath-none
+  tags:
+    - toss-ofi
