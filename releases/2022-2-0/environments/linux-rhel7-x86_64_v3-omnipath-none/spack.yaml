@@ -270,7 +270,7 @@ spack:
     bzip2:
       version: ['1.0.8']
     charliecloud:  # check variants
-      version: ['0.23']
+      version: ['0.27']
       variants: ~docs
     cmake:
       version: ['3.23.3']
@@ -322,7 +322,7 @@ spack:
       version: [6.2.1]
     gnuplot:
       variants: +X ~cairo
-      version: [5.2.8]
+      version: [5.4.3]
     gobject-introspection:
       version: [1.56.1]
     gotcha:
@@ -618,7 +618,7 @@ spack:
           prefix: /usr
       buildable: false
     readline:
-      version: ['8.1']
+      version: ['8.1.2']
     recordproto:
       version: [1.14.2]
     renderproto:
@@ -635,25 +635,25 @@ spack:
           prefix: /usr
       buildable: false
     sqlite:
-      version: [3.35.5]
+      version: [3.39.2]
     subversion:
       variants: +lz4_internal +perl +utf8proc_internal ~apxs
-      version: [1.14.0]
+      version: [1.14.1]
     swig:
-      version: [2.0.12, 4.0.2]
+      version: [4.0.2]
     tau: # ????
       variants: +comm+mpi+ompt+python+scorep+shmem+x86_64
       version: [2.28.2]
     tar:
       version: ['1.34']
     tmux:
-      version: [3.1b]
+      version: [3.2a]
     totalview:
       version: [2021.1.16]
     utf8proc:
-      version: [2.4.0]
+      version: [2.6.1]
     util-macros:
-      version: [1.19.1]
+      version: [1.19.3]
     valgrind:
       variants: +lto~ubsan
       version: [3.17.0]
@@ -686,9 +686,9 @@ spack:
       variants: +pic libs=shared,static
       version: [5.2.5]
     z3:
-      version: [4.8.9]
+      version: [4.8.16]
     zlib:
-      version: [1.2.11]
+      version: [1.2.12]
   upstreams: {}
   mirrors: {}
   repos: []
