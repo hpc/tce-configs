@@ -1,2 +1,2 @@
 TCE_SPACK_URL=https://github.com/spack/spack.git
-TCE_SPACK_CHECKOUT=4bb3092d35cf8cbdfc710c8cc003278c413d1ac5
+TCE_SPACK_CHECKOUT=develop

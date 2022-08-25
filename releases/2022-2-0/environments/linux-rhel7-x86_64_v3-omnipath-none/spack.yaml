@@ -545,7 +545,7 @@ spack:
     perl:
       externals:
         - spec: perl@5.16.3%gcc@11.3.0
-        - prefix: /usr
+          prefix: /usr
       buildable: false
       version: [5.16.3]
     perl-alien-svn:

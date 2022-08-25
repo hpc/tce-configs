@@ -663,7 +663,7 @@ fi
 
 # Find the release config file. 
 release_config=${release}/config.sh
-if [[ -f $release_config ]]; then
+if ! [[ -f $release_config ]]; then
     error_exit "Could not find the release config file at ${release_config}."
 fi
 # shellcheck disable=1090
@@ -1037,7 +1037,7 @@ function do_concretize() {
     status "Cleaning long-lived caches."
     spack clean -m
     status "Concretizing to $log_path"
-    /usr/bin/time spack --profile --stacktrace "${SPACK_VERBOSE[@]}" concretize -f |& tee "$log_path"
+    /usr/bin/time spack --profile --stacktrace "${SPACK_VERBOSE[@]}" concretize --fresh -f |& tee "$log_path"
     local ret_val=$?
 
     if test "$ret_val" != 0 || grep -E '(^Traceback)|(==> Error)' "$log_path"; then
