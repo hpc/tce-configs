@@ -9,8 +9,11 @@ import string
 import subprocess
 
 # Spacks we compare.
-new_spack  = '/home/jogas/git/spack/bin/spack' # Your upstream develop spack
-old_spack  = '/path/to/production/spack/bin/spack' # Your current production snap.
+new_spack  = '/tmp/jogas/tce/linux-rhel7-x86_64_v3-omnipath-none/spack/bin/spack' # Your upstream develop spack
+old_spack  = '/usr/projects/hpcsoft/tce/linux-rhel7-x86_64_v3-omnipath-none/spack/bin/spack' # Your current production snap.
+
+# Your package list
+pkg_list = '/users/jogas/scratch/packagelist.txt'
 
 # Package, fields, and related regexs.
 packages   = []
@@ -42,18 +45,20 @@ def cmd_info(bin_spack, pkg):
     return re.sub(':\ +\n', ':\n', cp.stdout.rstrip())
 
 # Your list of packages to Check.
-with open('./packagelist.txt', mode='r') as fp:
+with open(pkg_list, mode='r') as fp:
     packages = fp.readlines()
 
 old_info = {}
 new_info = {}
 for p in packages:
+    print('checking %s ...' % p.strip())
     old = cmd_info(old_spack, p)
     new = cmd_info(new_spack, p)
     for f in pkg_fields:
         old_info[f] = extract(old, pkg_re[f])
         new_info[f] = extract(new, pkg_re[f])
-        print(p)
-        if (old_info[f] != new_info[f]):
+        if (    (old_info[f] is not None and new_info[f] is not None)
+            and old_info[f] != new_info[f]):
+            print('difference detected:')
             print('%s:' % f)
             print('-%s\n+%s' % (old_info[f], new_info[f]))
