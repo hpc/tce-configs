@@ -35,7 +35,7 @@ spack:
     # compiler of the parent, but these (and many other packages) have fortran libs
     # that will break if that happens. So we have to force the builds of some software
     # to use an mpi built against the matching compiler.
-    - gcc-10-mpi-constraints:
+    - gcc-11-mpi-constraints:
       - ^openmpi%gcc@11.3.0
       - ^mvapich2%gcc@11.3.0
 
@@ -63,7 +63,7 @@ spack:
 
     # Packages built with the default compiler only.
     - base:
-      - arm-forge
+      - arm-forge +accept-eula
       - charliecloud
       - cmake
       # We need to specify non-default mesa
@@ -148,11 +148,11 @@ spack:
         ^eigen%gcc@11.3.0 ^expat%gcc@11.3.0 ^freetype%gcc@11.3.0 ^libtiff%gcc@11.3.0 ^lz4%gcc@11.3.0 ^lzma%gcc@11.3.0
 
     # Build the above with gcc and all gcc relevant MPI's
-    - toolchain-mpi-gcc-10:
+    - toolchain-mpi-gcc-11:
       - matrix:
         - [$mpi-packages]
         - ['%gcc@11.3.0']
-        - [$gcc-10-mpi-constraints]
+        - [$gcc-11-mpi-constraints]
         exclude:
         - hpctoolkit ^mvapich2
 
@@ -178,10 +178,10 @@ spack:
     # This defines the actual packages to get installed
     - install:
       - $base_matrix
-      - $install-comp
-      - $toolchain-mpi-gcc-10
-      - $toolchain-mpi-gcc-9
-      - $toolchain-mpi-intel
+      # - $install-comp
+      # - $toolchain-mpi-gcc-11
+      # - $toolchain-mpi-gcc-9
+      # - $toolchain-mpi-intel
 
 # Final definition
   specs:
@@ -247,7 +247,8 @@ spack:
     #   with only those variants that differ above.
     # Compiler - Should not be set.
     apr:
-      version: [1.7.0, 1.6.2]
+      # version: [1.7.0, 1.6.2]
+      version: [1.7.0] #ALT
     apr-util:
       version: [1.6.1]
     arm-forge:
@@ -294,7 +295,7 @@ spack:
       version: ['0.185']
     emacs:
       variants: +X
-      version: ['27.2']
+      version: ['28.1']
     expat:
       version: ['2.3.0']
     gcc:
@@ -331,21 +332,21 @@ spack:
       variants: default_library=shared ~cups
       version: [3.24.29]
     harfbuzz:
-      version: [2.6.8]
+      version: [5.1.0]
     hdf:
       version: [4.2.15]
     hdf5:
       variants: +cxx+fortran+hl~mpi+pic+shared+threadsafe api=v18
-      version: [1.12.0]
+      version: [1.12.2]
     hpctoolkit:
       version:  ['2022.05.15']
       variants: +mpi+papi
     hpcviewer:
-      version: ['2021.05']
+      version: ['2022.10']
     htop:
-      version: [3.0.5]
+      version: [3.2.0]
     hwloc:
-      version: [2.4.1]
+      version: [2.8.0]
     idl:
       version: ['8.7']
     # !!!!!
@@ -361,7 +362,7 @@ spack:
     intel-xed:
       version: [12.0.1]
     isl:
-      version: ['0.20']
+      version: ['0.24']
     jsoncpp:
       version: [1.9.4]
     julia_binary:
@@ -369,11 +370,11 @@ spack:
     kbproto:
       version: [1.0.7]
     krb5:
-      version: [1.18.2]
+      version: [1.19.3]
     lcms:
-      version: ['2.9']
+      version: [2.13.1]
     libbsd:
-      version: [0.11.3]
+      version: [0.11.5]
     libcerf:
       version: ['1.3']
     libcroco:
@@ -387,17 +388,17 @@ spack:
     libevent:
       version: [2.1.12]
     libffi:
-      version: ['3.3']
+      version: ['3.4.2']
     libgcrypt:
       externals:
-        - spec: libgcrypt@1.5.3%gcc@11.3.0
+        - spec: libgcrypt@1.10.1%gcc@11.3.0
           prefix: /usr
       buildable: false
     libgd:
       version: [2.2.4]
     libiberty:
       variants: +pic
-      version: [2.33.1]
+      version: ['2.37']
     libice:
       version: [1.0.9]
     libiconv:
@@ -405,18 +406,18 @@ spack:
     libidn2:
       version: [2.3.0]
     libjpeg-turbo:
-      version: [2.0.6]
+      version: [2.1.3]
     libmd:
-      version: [1.0.3]
+      version: [1.0.4]
     libmng:
       version: [2.0.3]
     libmonitor:
       variants: +hpctoolkit ~dlopen
-      version: [2021.04.27]
+      version: [2022.09.02]
     libogg:
-      version: [1.3.4]
+      version: [1.3.5]
     libpciaccess:
-      version: [0.13.5]
+      version: ['0.16']
     libpng:
       version: [1.6.37]
     libpthread-stubs:
@@ -506,13 +507,13 @@ spack:
       version: ['6.2']
     netcdf-c:
       variants: ~mpi~parallel-netcdf+hdf4+pic+shared
-      version: [4.8.0]
+      version: [4.8.1]
     netcdf-cxx4:
       variants: +pic
       version: [4.3.1]
     netcdf-fortran:
       variants: +pic
-      version: [4.5.3]
+      version: [4.5.4]
     numactl:
       version: [2.0.14]
     openblas:
@@ -544,7 +545,7 @@ spack:
       version: [3.2.0]
     perl:
       externals:
-        - spec: perl@5.16.3%gcc@11.3.0
+        - spec: perl@5.16.3%gcc@4.8.5
           prefix: /usr
       buildable: false
       version: [5.16.3]
@@ -554,7 +555,7 @@ spack:
       version: ['2.38']
     pkg-config:
       externals:
-        - spec: pkg-config@0.27.1%gcc@11.3.0
+        - spec: pkg-config@0.27.1%gcc@4.8.5
           prefix: /usr
       buildable: false
     pixman:
@@ -640,7 +641,8 @@ spack:
       variants: +lz4_internal +perl +utf8proc_internal ~apxs
       version: [1.14.0]
     swig:
-      version: [2.0.12, 4.0.2]
+      # version: [2.0.12, 4.0.2]
+      version: [4.0.2] #ALT
     tau: # ????
       variants: +comm+mpi+ompt+python+scorep+shmem+x86_64
       version: [2.28.2]
@@ -837,6 +839,11 @@ spack:
           environment:
             set:
               YOGRT: /usr/tce/packages/libyogrt/libyogrt-1.24
+        python:
+          environment:
+            unset: 
+              - PYTHONHOME
+              - PYTHONPATH
     toolchains:
       roots:
         lmod: $spack/../modulefiles/toolchains
