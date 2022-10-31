@@ -6,17 +6,11 @@ spack:
     - toolchain-compilers-non-base:
       - cce@13.0.0
       - intel-oneapi-compilers@2022.2.0
-      # - llvm@13.0.1
     - toolchain-compiler-constraints:
       - $%base-compiler
       - '%intel@2021.2.0'
       - '%clang@13.0.1'
       - '%cce@13.0.0'
-
-    # Exact definitiions for the mpi packages, including which
-    # gcc built deps it's ok to use.
-    - toolchain-mpi:
-      - ^mpich@8.1.14
 
     # The same as above, except as a dependency and compiled against a specific compiler
     # A 'feature' of the new concretizer' is that dependencies don't have to use the
@@ -24,27 +18,12 @@ spack:
     # that will break if that happens. So we have to force the builds of some software
     # to use an mpi built against the matching compiler.
     - gcc-10-mpi-constraints:
-      - ^openmpi%gcc@11.3.0
-      - ^mvapich2%gcc@11.3.0
-
-    - gcc-9-mpi-constraints:
-      - ^openmpi%gcc@9.3.0
-      - ^mvapich2%gcc@9.3.0
+      - ^mpich@8.1.14
 
     # The same, for intel.
     - intel-mpi-constraints:
-      - ^openmpi%intel@2021.2.0
-        ^hwloc%gcc
-        ^libevent%gcc
-        ^numactl%gcc
-        ^pkgconf%gcc
-        ^pmix%gcc
-      - ^mvapich2%intel@2021.2.0
-        ^bison%gcc
-        ^findutils%gcc
-        ^libpciaccess%gcc
-        ^libxml2%gcc
-        ^pkgconf%gcc
+      - ^mpich@8.1.14
+      
 
     # Note that we don't build anything for clang/mpi combos, so a clang specific
     # section isn't needed currently.
@@ -62,9 +41,9 @@ spack:
       - htop
       - idl
       # Tools installation for intel products.
-      - intel-parallel-studio +vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
+      #- intel-parallel-studio +vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
       # Separate mkl installation.
-      - intel-parallel-studio ~mpi~ipp~daal~tbb~ilp64~newdtags
+      #- intel-parallel-studio ~mpi~ipp~daal~tbb~ilp64~newdtags
       - julia_binary
       - libyogrt
       - mercurial
@@ -86,16 +65,8 @@ spack:
 
     # Packages built out against each compiler
     - compiler-packages:
-      - $toolchain-mpi
-      - hdf5@1.12.0~mpi+cxx+fortran+hl+shared+threadsafe api=v18 ^zlib%gcc
-      - intel-oneapi-mkl@2021.2.0
-      - intel-oneapi-dal@2021.2.0
-      - intel-oneapi-tbb@2021.2.0
       - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.3.0 ^llvm@13.0.1%gcc
         ^ncurses%gcc ^zlib%gcc
-      - netcdf-c
-      - netcdf-cxx4
-      - netcdf-fortran
 
     #
     - install-comp:
@@ -120,18 +91,13 @@ spack:
         - intel-oneapi-tbb%gcc
         - intel-oneapi-tbb%clang
         - intel-oneapi-tbb%intel
-        # We only need this for paraview, and we don't build paraview with clang
-        # (currently)
-        - mesa18%clang
+        - mesa%cce
 
     # Packages to build against all compiler/mpi combinations
     - mpi-packages:
-      - hdf5 +mpi
       - hpctoolkit
       - libquo
       - valgrind
-      - netcdf-cxx4 ^hdf5 +mpi ^parallel-netcdf
-      - netcdf-fortran ^hdf5 +mpi ^parallel-netcdf
       - paraview ^mesa18 ^bzip2%gcc@11.3.0 ^cmake%gcc@11.3.0 ^double-conversion%gcc@11.3.0
         ^eigen%gcc@11.3.0 ^expat%gcc@11.3.0 ^freetype%gcc@11.3.0 ^libtiff%gcc@11.3.0 ^lz4%gcc@11.3.0 ^lzma%gcc@11.3.0
 
@@ -141,15 +107,6 @@ spack:
         - [$mpi-packages]
         - ['%gcc@11.3.0']
         - [$gcc-10-mpi-constraints]
-        exclude:
-        - hpctoolkit ^mvapich2
-
-    # Build the above with gcc and all gcc relevant MPI's
-    - toolchain-mpi-gcc-9:
-      - matrix:
-        - [$mpi-packages]
-        - ['%gcc@9.3.0']
-        - [$gcc-9-mpi-constraints]
         exclude:
         - hpctoolkit ^mvapich2
 
@@ -168,7 +125,6 @@ spack:
       - $base_matrix
       - $install-comp
       - $toolchain-mpi-gcc-10
-      - $toolchain-mpi-gcc-9
       - $toolchain-mpi-intel
 
 # Final definition
