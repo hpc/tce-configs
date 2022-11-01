@@ -4,13 +4,13 @@ spack:
     - base-compiler:
       - gcc@11.3.0
     - toolchain-compilers-non-base:
-      - intel-oneapi-compilers@2021.2.0
+      - intel-oneapi-compilers@2022.0.2
       - gcc@9.3.0
       - llvm@13.0.1
     - toolchain-compiler-constraints:
       - $%base-compiler
       - '%gcc@9.3.0'
-      - '%intel@2021.2.0'
+      - '%intel@2022.0.2'
       - '%clang@13.0.1'
 
     # Exact definitiions for the mpi packages, including which
@@ -45,13 +45,13 @@ spack:
 
     # The same, for intel.
     - intel-mpi-constraints:
-      - ^openmpi%intel@2021.2.0
+      - ^openmpi%intel@2022.0.2
         ^hwloc%gcc
         ^libevent%gcc
         ^numactl%gcc
         ^pkgconf%gcc
         ^pmix%gcc
-      - ^mvapich2%intel@2021.2.0
+      - ^mvapich2%intel@2022.0.2
         ^bison%gcc
         ^findutils%gcc
         ^libpciaccess%gcc
@@ -100,9 +100,9 @@ spack:
     - compiler-packages:
       - $toolchain-mpi
       - hdf5@1.12.0~mpi+cxx+fortran+hl+shared+threadsafe api=v18 ^zlib%gcc
-      - intel-oneapi-mkl@2021.2.0
-      - intel-oneapi-dal@2021.2.0
-      - intel-oneapi-tbb@2021.2.0
+      - intel-oneapi-mkl@2022.0.2
+      - intel-oneapi-dal@2022.0.2
+      - intel-oneapi-tbb@2022.0.2
       - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.3.0 ^llvm@13.0.1%gcc
         ^ncurses%gcc ^zlib%gcc
       - netcdf-c
@@ -111,7 +111,7 @@ spack:
 
     #
     - install-comp:
-      - intel-oneapi-compilers@2021.2.0
+      - intel-oneapi-compilers@2022.0.2
       - llvm@13.0.1
 
       - matrix:
@@ -169,7 +169,7 @@ spack:
     - toolchain-mpi-intel:
       - matrix:
         - [$mpi-packages]
-        - ['%intel@2021.2.0']
+        - ['%intel@2022.0.2']
         - [$intel-mpi-constraints]
         exclude:
         - hpctoolkit
@@ -352,7 +352,7 @@ spack:
     intel:
       variants: +open
     intel-oneapi-compilers:
-      version: [2021.2.0]
+      version: [2022.0.2]
     intel-parallel-studio:
       variants: ~tbb+mpi+ilp64+newdtags
       version: [cluster.2020.4]
@@ -894,7 +894,7 @@ spack:
         intel-oneapi-compilers:
           environment:
             prepend_path:
-              MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2021.2.0
+              MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2022.0.2
               PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin
               LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/lib64
             set:
