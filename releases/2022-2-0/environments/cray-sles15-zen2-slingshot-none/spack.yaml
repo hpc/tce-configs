@@ -34,7 +34,7 @@ spack:
       - charliecloud
       - cmake
       # We need to specify non-default mesa
-      - emacs ^mesa18+glx
+      - emacs ^mesa+glx
       - git
       - gnuplot
       - hpcviewer
@@ -141,9 +141,9 @@ spack:
 
       # Virtual packages and which specs provide that functionality.
       providers:
-        gl: [mesa18]
-        glx: [mesa18+glx]
-        osmesa: [mesa18+osmesa swr=avx,avx2]
+        gl: [mesa]
+        glx: [mesa+glx]
+        osmesa: [mesa+osmesa swr=avx,avx2]
         pkgconfig: [pkgconf]
         tbb: [intel-tbb+shared]
         uuid: [libuuid]
@@ -191,7 +191,7 @@ spack:
     #   with only those variants that differ above.
     # Compiler - Should not be set.
     apr:
-      version: [1.7.0, 1.6.2]
+      version: [1.7.0]
     apr-util:
       version: [1.6.1]
     arm-forge:
@@ -207,48 +207,48 @@ spack:
     autoconf:
       version: ['2.69']
     automake:
-      version: ['1.16.3']
+      version: ['1.16.5']
     binutils:
       version: ['2.36.1']
       variants: +gold+libiberty~nls+ld+gas
     bzip2:
       version: ['1.0.8']
     charliecloud:  # check variants
-      version: ['0.23']
+      version: ['0.27']
       variants: ~docs
     cmake:
       version: ['3.23.3']
     #cubelib:   # !!!!
     curl:
-      version: [7.76.1]
+      version: [7.83.0]
     dbus:
       version: [1.12.8]
     diffutils:
-      version: ['3.7']
+      version: ['3.8']
     double-conversion:
-      version: ['2.0.1']
+      version: ['3.1.5']
     dyninst:
-      version: [11.0.1]
+      version: [12.1.0]
     doxygen:
-      version: ['1.9.1']
+      version: ['1.9.3']
     eigen:
-      version: ['3.3.9']
+      version: ['3.4.0']
     elfutils:
       variants: +bzip2 +xz ~nls
-      version: ['0.185']
+      version: ['0.186']
     emacs:
       variants: +X
-      version: ['27.2']
+      version: ['28.1']
     expat:
-      version: ['2.3.0']
+      version: ['2.4.8']
     gcc:
       variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
       version: [11.3.0]
       target: [haswell]
     gdbm:
-      version: ['1.19']
+      version: ['1.23']
     gdk-pixbuf:
-      version: [2.42.2]
+      version: ['2.42.6']
     gettext:
       variants: +bzip2+curses+git~libunistring~libxml2+tar+xz
       version: [0.21]
@@ -256,17 +256,17 @@ spack:
       version: [5.2.1]
     git:
       variants: +subtree+svn
-      version: ['2.31.1']
+      version: ['2.35.2']
     glib:
       variants: tracing=none
-      version: [2.68.2]
+      version: [2.72.1]
     glproto:
       version: [1.4.17]
     gmp:
       version: [6.2.1]
     gnuplot:
       variants: +X ~cairo
-      version: [5.2.8]
+      version: [5.4.3]
     gobject-introspection:
       version: [1.56.1]
     gotcha:
@@ -275,28 +275,28 @@ spack:
       variants: default_library=shared ~cups
       version: [3.24.29]
     harfbuzz:
-      version: [2.6.8]
+      version: [5.1.0]
     hdf:
       version: [4.2.15]
     hdf5:
       variants: +cxx+fortran+hl~mpi+pic+shared+threadsafe api=v18
-      version: [1.12.0]
+      version: [1.12.2]
     hpctoolkit:
       version:  ['2022.05.15']
       variants: +mpi+papi
     hpcviewer:
-      version: ['2021.05']
+      version: ['2022.10']
     htop:
-      version: [3.0.5]
+      version: [3.2.0]
     hwloc:
-      version: [2.4.1]
+      version: [2.8.0]
     idl:
       version: ['8.7']
     # !!!!!
     intel:
       variants: +open
     intel-oneapi-compilers:
-      version: [2021.2.0]
+      version: [2022.0.2]
     intel-parallel-studio:
       variants: ~tbb+mpi+ilp64+newdtags
       version: [cluster.2020.4]
@@ -305,7 +305,7 @@ spack:
     intel-xed:
       version: [12.0.1]
     isl:
-      version: ['0.20']
+      version: ['0.24']
     jsoncpp:
       version: [1.9.4]
     julia_binary:
@@ -313,11 +313,11 @@ spack:
     kbproto:
       version: [1.0.7]
     krb5:
-      version: [1.18.2]
+      version: [1.19.3]
     lcms:
-      version: ['2.9']
+      version: [2.13.1]
     libbsd:
-      version: [0.11.3]
+      version: [0.11.5]
     libcerf:
       version: ['1.3']
     libcroco:
@@ -331,17 +331,17 @@ spack:
     libevent:
       version: [2.1.12]
     libffi:
-      version: ['3.3']
+      version: ['3.4.2']
     libgcrypt:
       externals:
-        - spec: libgcrypt@1.5.3%gcc@11.3.0
+        - spec: libgcrypt@1.10.1%gcc@11.3.0
           prefix: /usr
       buildable: false
     libgd:
       version: [2.2.4]
     libiberty:
       variants: +pic
-      version: [2.33.1]
+      version: ['2.37']
     libice:
       version: [1.0.9]
     libiconv:
@@ -349,18 +349,18 @@ spack:
     libidn2:
       version: [2.3.0]
     libjpeg-turbo:
-      version: [2.0.6]
+      version: [2.1.3]
     libmd:
-      version: [1.0.3]
+      version: [1.0.4]
     libmng:
       version: [2.0.3]
     libmonitor:
       variants: +hpctoolkit ~dlopen
-      version: [2021.04.27]
+      version: [2022.09.02]
     libogg:
-      version: [1.3.4]
+      version: [1.3.5]
     libpciaccess:
-      version: [0.13.5]
+      version: ['0.16']
     libpng:
       version: [1.6.37]
     libpthread-stubs:
@@ -376,16 +376,16 @@ spack:
     libtheora:
       version: [1.1.1]
     libtiff:
-      version: [4.1.0]
+      version: [4.3.0]
     libtirpc:
       version: [1.2.6]
     libtool:
-      version: [2.4.6]
+      version: [2.4.7]
     libunistring:
       version: [0.9.10]
     libunwind:
       variants: +pic +xz
-      version: [1.5.0]
+      version: [1.6.2]
     libuuid:
       version: [1.0.3]
     libx11:
@@ -405,7 +405,7 @@ spack:
     libxi:
       version: [1.7.6]
     libxkbcommon:
-      version: [0.8.2]
+      version: [1.4.0]
     libxml2:
       variants: +python
       version: [2.9.13]
@@ -423,7 +423,7 @@ spack:
     llvm:
       variants: +clang+compiler-rt+omp_tsan+python+lldb+gold+libcxx+polly+internal_unwind
         targets=all
-      version: [13.0.1]
+      version: [14.0.2]
     lz4:
       variants: libs=shared,static
       version: [1.9.3]
@@ -432,16 +432,16 @@ spack:
     m4:
       version: [1.4.19]
     memkind:
-      version: [1.10.1]
+      version: [1.13.0]
     mercurial:
       version: ['5.8']
     mesa:
       variants: +osmesa swr=avx,avx2
       version: [22.1.2]
     mpc:
-      version: [1.1.0]
+      version: [1.2.1]
     mpfr:
-      version: [3.1.6]
+      version: [4.1.0]
     mvapich2:
       variants: +debug fabrics=psm2 file_systems=lustre,nfs,ufs process_managers=slurm
         threads=multiple ch3_rank_bits=32 ~regcache ~wrapperrpath
@@ -450,23 +450,23 @@ spack:
       version: ['6.2']
     netcdf-c:
       variants: ~mpi~parallel-netcdf+hdf4+pic+shared
-      version: [4.8.0]
+      version: [4.8.1]
     netcdf-cxx4:
       variants: +pic
       version: [4.3.1]
     netcdf-fortran:
       variants: +pic
-      version: [4.5.3]
+      version: [4.5.4]
     numactl:
       version: [2.0.14]
     openblas:
-      version: [0.3.15]
+      version: [0.3.20]
     openjdk:
-      version: [11.0.8_10]
+      version: [11.0.15_10]
     openmpi:
       variants: +legacylaunchers +pmi +thread_multiple +gpfs
         fabrics=cma,psm,psm2,verbs schedulers=slurm
-      version: [4.1.1]
+      version: [4.1.3]
     pango:
       variants: +X
       version: [1.42.4]
@@ -488,7 +488,7 @@ spack:
       version: [3.2.0]
     perl:
       externals:
-        - spec: perl@5.16.3%gcc@11.3.0
+        - spec: perl@5.16.3%gcc@4.8.5
           prefix: /usr
       buildable: false
       version: [5.16.3]
@@ -498,7 +498,7 @@ spack:
       version: ['2.38']
     pkg-config:
       externals:
-        - spec: pkg-config@0.27.1%gcc@11.3.0
+        - spec: pkg-config@0.27.1%gcc@4.8.5
           prefix: /usr
       buildable: false
     pixman:
@@ -562,12 +562,13 @@ spack:
           prefix: /usr
       buildable: false
     readline:
-      version: ['8.1']
+      version: ['8.1.2']
     recordproto:
       version: [1.14.2]
     renderproto:
       version: [0.11.1]
-    scorep: # ????
+    scorep: 
+      version: ['7.0']
       variants: +pdt
     serf:
       version: [1.3.9]
@@ -579,28 +580,28 @@ spack:
           prefix: /usr
       buildable: false
     sqlite:
-      version: [3.35.5]
+      version: [3.39.2]
     subversion:
       variants: +lz4_internal +perl +utf8proc_internal ~apxs
-      version: [1.14.0]
+      version: [1.14.1]
     swig:
-      version: [2.0.12, 4.0.2]
-    tau: # ????
+      version: [4.0.2]
+    tau:
       variants: +comm+mpi+ompt+python+scorep+shmem+x86_64
-      version: [2.28.2]
+      version: [2.31.1]
     tar:
       version: ['1.34']
     tmux:
-      version: [3.1b]
+      version: [3.2a]
     totalview:
       version: [2021.1.16]
     utf8proc:
-      version: [2.4.0]
+      version: [2.6.1]
     util-macros:
-      version: [1.19.1]
+      version: [1.19.3]
     valgrind:
       variants: +lto~ubsan
-      version: [3.17.0]
+      version: [3.18.1]
     xcb-proto:
       version: [1.14.1]
     xcb-util:
@@ -630,9 +631,10 @@ spack:
       variants: +pic libs=shared,static
       version: [5.2.5]
     z3:
-      version: [4.8.9]
+      version: [4.8.16]
     zlib:
-      version: [1.2.11]
+      version: [1.2.12]
+
   upstreams: {}
   mirrors: {}
   repos: []
@@ -802,7 +804,6 @@ spack:
           - intel-parallel-studio+mpi
           - libquo
           - llvm@13.0.1
-          - mesa18 +osmesa swr=avx,avx2
           - mvapich2
           - netcdf-c
           - netcdf-cxx4

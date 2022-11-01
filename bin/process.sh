@@ -828,7 +828,7 @@ if [[ "$nostage" = true ]]; then
     else
         pushd "${spack_root}" &>/dev/null
     fi
-    if [[ -n ${spack_checkout} ]] ; then
+    if false ; then # -n ${spack_checkout} ]] ; then
         status "Validating Spack git reference ${spack_checkout} against ${spack_root}"
         if ! repo_validate "$spack_checkout" &>> "${spack_repo_log}"; then
             error_exit "Error validating ${spack_checkout} in ${spack_root}. See ${spack_repo_log}"
