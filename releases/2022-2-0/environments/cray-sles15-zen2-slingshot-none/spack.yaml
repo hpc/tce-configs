@@ -65,7 +65,7 @@ spack:
 
     # Packages built out against each compiler
     - compiler-packages:
-      - mesa ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.3.0 ^llvm@13.0.1%gcc
+      - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.3.0
         ^ncurses%gcc ^zlib%gcc
 
     #
@@ -98,7 +98,7 @@ spack:
       - hpctoolkit
       - libquo
       - valgrind
-      - paraview ^mesa ^bzip2%gcc@11.3.0 ^double-conversion%gcc@11.3.0
+      - paraview ^mesa18 ^bzip2%gcc@11.3.0 ^double-conversion%gcc@11.3.0
         ^eigen%gcc@11.3.0 ^expat%gcc@11.3.0 ^freetype%gcc@11.3.0 ^libtiff%gcc@11.3.0 ^lz4%gcc@11.3.0 ^lzma%gcc@11.3.0
 
     # Build the above with gcc and all gcc relevant MPI's
