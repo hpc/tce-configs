@@ -51,7 +51,7 @@ spack:
       - openjdk
       - papi
       - patchelf
-      - python@3.10.6
+      - python
       - py-pint
       - qt
       - subversion
@@ -71,7 +71,7 @@ spack:
     #
     - install-comp:
       - intel-oneapi-compilers@2022.0.2
-      - llvm@13.0.1 ^swig@4.0.2
+      - llvm@14.0.2 ^swig@4.0.2
 
       - matrix:
         - [$compiler-packages]
@@ -716,7 +716,7 @@ spack:
           - java
           - julia_binary
           - libyogrt
-          - llvm@13.0.1
+          - llvm
           - mercurial
           - numactl
           - openjdk
@@ -749,7 +749,7 @@ spack:
           - java
           - julia_binary
           - libyogrt
-          - llvm@13.0.1
+          - llvm
           - mercurial
           - numactl
           - openjdk
@@ -805,7 +805,7 @@ spack:
           - intel-oneapi-compilers
           - intel-parallel-studio+mpi
           - libquo
-          - llvm@13.0.1
+          - llvm
           - mvapich2
           - netcdf-c
           - netcdf-cxx4
@@ -818,7 +818,7 @@ spack:
         core_specs:
           - gcc
           - intel-oneapi-compilers
-          - llvm@13.0.1
+          - llvm
         projections:
           gcc: '{name}/{version}'
           hdf5~mpi: '{name}-serial/{version}'
@@ -829,7 +829,7 @@ spack:
           intel-parallel-studio+mpi: 'intel-mpi/{version}'
           llvm: 'clang/{version}'
           all: '{name}/{version}'
-        llvm@13.0.1:
+        llvm:
           environment:
             prepend_path:
               PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/bin

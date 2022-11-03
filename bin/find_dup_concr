@@ -23,7 +23,11 @@ def main():
             specs = get_specs(file)
             
     except OSError:
-        print("Invalid path: {}".format(sys.argv[1]))
+        print("Invalid path: {}".format(sys.argv[1]), file=sys.stderr)
+        sys.exit(1)
+
+    if not specs:
+        print("No specs found", file=sys.stderr)
         sys.exit(1)
 
     if args.hash:
@@ -70,12 +74,38 @@ def get_specs(file):
         vers = vers_re.search(spec)
         if vers:
             vers = vers.group()
+        else:
+            print(line)
+            print(spec)
         
         specs.add((shash, pkg, vers, comp))
     
     specs = list(specs)
 
     return specs
+
+def find_version_dups(specs):
+
+    specs = [((pkg, comp), vers, shash) for shash, pkg, vers, comp in specs]
+    specs.sort()
+
+    last_vers = None
+    last_spec = None
+    last_shash = None
+    printed = []
+    
+    for spec, vers, shash in specs:
+        if last_spec and spec == last_spec and last_vers != vers:
+            if last_shash not in printed:
+                print(last_spec, last_vers, last_shash)
+                printed.append(last_shash)
+            if shash not in printed:
+                print(spec, vers, shash)
+                printed.append(shash)
+        last_shash = shash
+        last_vers = vers
+        last_spec = spec
+
 
 def find_hash_dups(specs):
 
