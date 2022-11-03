@@ -8,8 +8,8 @@ spack:
       - intel-oneapi-compilers@2022.2.0
     - toolchain-compiler-constraints:
       - $%base-compiler
-      - '%intel@2021.2.0'
-      - '%clang@13.0.1'
+      - '%intel@2022.0.2'
+      # - '%clang@13.0.1'
       - '%cce@13.0.0'
 
     # The same as above, except as a dependency and compiled against a specific compiler
@@ -65,13 +65,13 @@ spack:
 
     # Packages built out against each compiler
     - compiler-packages:
-      - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.3.0
+      - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.2.0
         ^ncurses%gcc ^zlib%gcc
 
     #
     - install-comp:
       - intel-oneapi-compilers@2021.2.0
-      - llvm@13.0.1
+      - llvm@13.0.1 ^swig@4.0.2
 
       - matrix:
         - [$compiler-packages]
@@ -80,16 +80,16 @@ spack:
         exclude:
         # Only build parallel studio against intel
         - intel-parallel-studio %gcc
-        - intel-parallel-studio %clang
+        # - intel-parallel-studio %clang
         - intel-parallel-studio %oneapi
         - intel-oneapi-dal%gcc
-        - intel-oneapi-dal%clang
+        # - intel-oneapi-dal%clang
         - intel-oneapi-dal%intel
         - intel-oneapi-mkl%gcc
-        - intel-oneapi-mkl%clang
+        # - intel-oneapi-mkl%clang
         - intel-oneapi-mkl%intel
         - intel-oneapi-tbb%gcc
-        - intel-oneapi-tbb%clang
+        # - intel-oneapi-tbb%clang
         - intel-oneapi-tbb%intel
         - mesa%cce
 
@@ -98,14 +98,14 @@ spack:
       - hpctoolkit
       - libquo
       - valgrind
-      - paraview ^mesa18 ^bzip2%gcc@11.3.0 ^double-conversion%gcc@11.3.0
-        ^eigen%gcc@11.3.0 ^expat%gcc@11.3.0 ^freetype%gcc@11.3.0 ^libtiff%gcc@11.3.0 ^lz4%gcc@11.3.0 ^lzma%gcc@11.3.0
+      - paraview ^mesa18 ^bzip2%gcc@11.2.0 ^double-conversion%gcc@11.2.0
+        ^eigen%gcc@11.2.0 ^expat%gcc@11.2.0 ^freetype%gcc@11.2.0 ^libtiff%gcc@11.2.0 ^lz4%gcc@11.2.0 ^lzma%gcc@11.2.0
 
     # Build the above with gcc and all gcc relevant MPI's
     - toolchain-mpi-gcc-10:
       - matrix:
         - [$mpi-packages]
-        - ['%gcc@11.3.0']
+        - ['%gcc@11.2.0']
         - [$gcc-10-mpi-constraints]
         exclude:
         - hpctoolkit ^mvapich2
@@ -114,7 +114,7 @@ spack:
     - toolchain-mpi-intel:
       - matrix:
         - [$mpi-packages]
-        - ['%intel@2021.2.0']
+        - ['%intel@2022.0.2']
         - [$intel-mpi-constraints]
         exclude:
         - hpctoolkit
@@ -137,7 +137,7 @@ spack:
 
     all:
       # Unless otherwise specified, build with gcc
-      compiler: [gcc@11.3.0]
+      compiler: [gcc@11.2.0]
 
       # Virtual packages and which specs provide that functionality.
       providers:
@@ -167,19 +167,19 @@ spack:
       buildable: false
     opa-psm2:
       externals:
-        - spec: opa-psm2@11.2.78%gcc@11.3.0
+        - spec: opa-psm2@11.2.78%gcc@11.2.0
           prefix: /usr
       buildable: false
     openssh:
       version: [7.4p1]
       externals:
-        - spec: openssh@7.4p1%gcc@11.3.0
+        - spec: openssh@7.4p1%gcc@11.2.0
           prefix: /usr
       buildable: false
     openssl:
       version: [1.0.2k-rhel]
       externals:
-        - spec: openssl@1.0.2k-rhel%gcc@11.3.0~docs+systemcerts
+        - spec: openssl@1.0.2k-rhel%gcc@11.2.0~docs+systemcerts
           prefix: /usr
       buildable: false
 
@@ -334,7 +334,7 @@ spack:
       version: ['3.4.2']
     libgcrypt:
       externals:
-        - spec: libgcrypt@1.10.1%gcc@11.3.0
+        - spec: libgcrypt@1.10.1%gcc@11.2.0
           prefix: /usr
       buildable: false
     libgd:
@@ -488,7 +488,7 @@ spack:
       version: [3.2.0]
     perl:
       externals:
-        - spec: perl@5.16.3%gcc@4.8.5
+        - spec: perl@5.16.3%gcc
           prefix: /usr
       buildable: false
       version: [5.16.3]
@@ -498,7 +498,7 @@ spack:
       version: ['2.38']
     pkg-config:
       externals:
-        - spec: pkg-config@0.27.1%gcc@4.8.5
+        - spec: pkg-config@0.27.1%gcc
           prefix: /usr
       buildable: false
     pixman:
@@ -541,7 +541,8 @@ spack:
     py-requests:
       version: [2.26.0]
     py-setuptools:
-      version: [63.0.0]
+      # version: [63.0.0] #ALT
+      version: [58.2.0]
     py-six:
       version: [1.16.0]
     py-urllib3:
@@ -558,7 +559,7 @@ spack:
       version: [1.5.0]
     rdma-core:
       externals:
-        - spec: rdma-core@22.4%gcc@11.3.0
+        - spec: rdma-core@22.4%gcc@11.2.0
           prefix: /usr
       buildable: false
     readline:
@@ -576,7 +577,7 @@ spack:
       version: ['1.9']
     slurm:
       externals:
-        - spec: slurm@21.08.3%gcc@11.3.0
+        - spec: slurm@21.08.3%gcc@11.2.0
           prefix: /usr
       buildable: false
     sqlite:
@@ -727,7 +728,7 @@ spack:
           - tmux
           - totalview
         core_compilers:
-          - gcc@11.3.0
+          - gcc@11.2.0
         core_specs:
           - arm-forge
           - charliecloud
@@ -812,7 +813,7 @@ spack:
           - parallel-netcdf
           - valgrind
         core_compilers:
-          - gcc@4.8.5
+          - gcc
         core_specs:
           - gcc
           - intel-oneapi-compilers
@@ -877,7 +878,7 @@ spack:
           - paraview
           - py-mpi4py
         core_compilers:
-          - gcc@4.8.5
+          - gcc
         projections:
           py-mpi4py: 'mpi4py/{version}'
           all: '{name}/{version}'
