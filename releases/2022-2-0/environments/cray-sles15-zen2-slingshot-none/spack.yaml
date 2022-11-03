@@ -70,7 +70,7 @@ spack:
 
     #
     - install-comp:
-      - intel-oneapi-compilers@2021.2.0
+      - intel-oneapi-compilers@2022.0.2
       - llvm@13.0.1 ^swig@4.0.2
 
       - matrix:
@@ -243,7 +243,7 @@ spack:
       version: ['2.4.8']
     gcc:
       variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
-      version: [11.3.0]
+      version: [11.2.0]
       target: [haswell]
     gdbm:
       version: ['1.23']
@@ -498,7 +498,7 @@ spack:
       version: ['2.38']
     pkg-config:
       externals:
-        - spec: pkg-config@0.27.1%gcc
+        - spec: pkg-config@0.29.2%gcc
           prefix: /usr
       buildable: false
     pixman:
@@ -541,7 +541,6 @@ spack:
     py-requests:
       version: [2.26.0]
     py-setuptools:
-      # version: [63.0.0] #ALT
       version: [58.2.0]
     py-six:
       version: [1.16.0]
@@ -831,19 +830,19 @@ spack:
         llvm@13.0.1:
           environment:
             prepend_path:
-              PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin
-              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/lib64
+              PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/bin
+              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/lib64
             set:
-              FC:  /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin/gfortran
-              F90:  /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin/gfortran
+              FC:  /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/bin/gfortran
+              F90:  /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/bin/gfortran
         intel-oneapi-compilers:
           environment:
             prepend_path:
-              MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2021.2.0
-              PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/bin
-              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5/lib64
+              MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2022.0.2
+              PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/bin
+              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/lib64
             set:
-              GCC: /usr/tce/packages/gcc/gcc-11.3.0-gcc-4.8.5
+              GCC: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5
         intel-parallel-studio+mpi:
           environment:
             prepend_path:
@@ -859,7 +858,7 @@ spack:
         mvapich2:
           environment:
             prepend_path:
-              PATH: /usr/tce/packages/binutils/binutils-2.36.1-gcc-11.3.0/bin
+              PATH: /usr/tce/packages/binutils/binutils-2.36.1-gcc-11.2.0/bin
     # modules that use the root installation rather than pointing to the view
     toolchains-root:
       roots:
