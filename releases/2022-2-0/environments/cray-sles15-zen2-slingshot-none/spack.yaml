@@ -144,7 +144,7 @@ spack:
         gl: [mesa]
         glx: [mesa+glx]
         osmesa: [mesa+osmesa swr=avx,avx2]
-        pkgconfig: [pkgconf]
+        pkgconfig: [pkg-config]
         tbb: [intel-tbb+shared]
         uuid: [libuuid]
 
