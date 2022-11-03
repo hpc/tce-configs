@@ -144,7 +144,7 @@ spack:
         gl: [mesa]
         glx: [mesa+glx]
         osmesa: [mesa+osmesa swr=avx,avx2]
-        pkgconfig: [pkgconf]
+        pkgconfig: [pkg-config]
         tbb: [intel-tbb+shared]
         uuid: [libuuid]
 
@@ -241,6 +241,8 @@ spack:
       version: ['28.1']
     expat:
       version: ['2.4.8']
+    freetype:
+      version: ['2.10.1']
     gcc:
       variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
       version: [11.2.0]

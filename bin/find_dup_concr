@@ -1,0 +1,101 @@
+#!/usr/bin/python3
+
+import sys
+import argparse
+import re
+
+def main():
+    
+    parser = argparse.ArgumentParser("Print duplicate packages found during concretization.")
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--hash', action='store_true', 
+        help="Show packages that are the same except for their hash")
+    group.add_argument('--version', action='store_true', 
+        help="Show packages with multiple versions.")
+    parser.add_argument('conc_log', action='store',
+        help="The install or concretization log to examine.")
+
+    args = parser.parse_args()
+
+    try:
+        with open(args.conc_log) as file:
+            specs = get_specs(file)
+            
+    except OSError:
+        print("Invalid path: {}".format(sys.argv[1]))
+        sys.exit(1)
+
+    if args.hash:
+        find_hash_dups(specs)
+    elif args.version:
+        find_version_dups(specs)
+    else:
+        for shash, pkg, vers, compiler in specs:
+            print(shash, pkg, vers, compiler)
+
+def get_specs(file):
+
+    pkg_re = re.compile(r'^[^%@]+')
+    comp_re = re.compile(r'%[^@]+')
+    vers_re = re.compile(r'@[^%]+')
+    
+    specs = set()
+    for line in file:
+        line = line.strip()
+
+        if not (line.startswith('-') or line.startswith('[+]') or line.startswith('[^]')):
+            continue
+
+        try:
+            _, shash, spec = line.split(maxsplit=2)
+        except ValueError:
+            print('bad line', line)
+            continue
+
+        for sym in ' +~':
+            sym_loc = spec.find(sym)
+            if sym_loc > 0:
+                spec = spec[:sym_loc]
+
+        if spec.startswith('^'):
+            spec = spec[1:]
+        
+        pkg = pkg_re.search(spec)
+        if pkg:
+            pkg = pkg.group()
+        comp = comp_re.search(spec)
+        if comp:
+            comp = comp.group()
+        vers = vers_re.search(spec)
+        if vers:
+            vers = vers.group()
+        
+        specs.add((shash, pkg, vers, comp))
+    
+    specs = list(specs)
+
+    return specs
+
+def find_hash_dups(specs):
+
+    specs = [((pkg, vers, comp), shash) for shash, pkg, vers, comp in specs]
+    specs.sort()
+    
+    last_shash = None
+    last_spec = None
+    printed = []
+
+    for spec, shash in specs:
+        if last_spec and spec == last_spec:
+            if last_shash not in printed:
+                print(last_shash, last_spec)
+                printed.append(last_shash)
+            if shash not in printed:
+                print(shash, spec)
+                printed.append(shash)
+        last_shash = shash
+        last_spec = spec
+
+if __name__ == '__main__':
+    main()
