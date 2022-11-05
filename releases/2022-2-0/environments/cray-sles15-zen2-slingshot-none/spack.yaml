@@ -22,7 +22,7 @@ spack:
 
     # The same, for intel.
     - intel-mpi-constraints:
-      - ^mpich@8.1.14
+      - ^mpich@8.1.14%gcc
       
 
     # Note that we don't build anything for clang/mpi combos, so a clang specific
@@ -31,14 +31,14 @@ spack:
     # Packages built with the default compiler only.
     - base:
       - arm-forge
-      - charliecloud
+      - charliecloud ^python@3.10.6
       - cmake
       # We need to specify non-default mesa
       - emacs ^mesa+glx
       - git
-      - gnuplot
+      - gnuplot ^cmake@3.23.1%gcc ^python@3.10.6
       - hpcviewer
-      - htop
+      - htop ^python@3.10.6
       - idl
       # Tools installation for intel products.
       #- intel-parallel-studio +vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
@@ -46,15 +46,15 @@ spack:
       #- intel-parallel-studio ~mpi~ipp~daal~tbb~ilp64~newdtags
       - julia_binary
       - libyogrt
-      - mercurial
+      - mercurial ^python@3.10.6
       - numactl
       - openjdk
       - papi
       - patchelf
       - python
       - py-pint
-      - qt
-      - subversion
+      - qt ^cmake@3.23.1%gcc
+      - subversion ^cmake@3.23.1%gcc
       - totalview
       - tmux
     - base_matrix:
@@ -65,13 +65,13 @@ spack:
 
     # Packages built out against each compiler
     - compiler-packages:
-      - mesa18 ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.2.0
-        ^ncurses%gcc ^zlib%gcc
+      - mesa ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.2.0
+        ^ncurses%gcc ^zlib%gcc ^python@3.10.6
 
     #
     - install-comp:
       - intel-oneapi-compilers@2022.0.2
-      - llvm@14.0.2 ^swig@4.0.2
+      - llvm@14.0.2 ^swig@4.0.2 ^cmake@3.23.1%gcc ^python@3.10.6
 
       - matrix:
         - [$compiler-packages]
@@ -95,11 +95,12 @@ spack:
 
     # Packages to build against all compiler/mpi combinations
     - mpi-packages:
-      - hpctoolkit
+      - hpctoolkit ^cmake@3.23.1%gcc ^python@3.10.6
       - libquo
       - valgrind
-      - paraview ^mesa18 ^bzip2%gcc@11.2.0 ^double-conversion%gcc@11.2.0
-        ^eigen%gcc@11.2.0 ^expat%gcc@11.2.0 ^freetype%gcc@11.2.0 ^libtiff%gcc@11.2.0 ^lz4%gcc@11.2.0 ^lzma%gcc@11.2.0
+      - paraview ^mesa ^bzip2%gcc@11.2.0 ^double-conversion%gcc@11.2.0 ^cmake@3.23.1%gcc
+        ^py-matplotlib@3.5.3 ^eigen%gcc@11.2.0 ^expat%gcc@11.2.0 ^freetype%gcc@11.2.0 
+        ^libtiff%gcc@11.2.0 ^lz4%gcc@11.2.0 ^lzma%gcc@11.2.0
 
     # Build the above with gcc and all gcc relevant MPI's
     - toolchain-mpi-gcc-10:
@@ -177,9 +178,10 @@ spack:
           prefix: /usr
       buildable: false
     openssl:
-      version: [1.0.2k-rhel]
+      # This actually seems to be 1.1.0i on Chicoma...
+      version: [1.1.1d-rhel]
       externals:
-        - spec: openssl@1.0.2k-rhel%gcc@11.2.0~docs+systemcerts
+        - spec: openssl@1.1.1d-rhel%gcc@11.2.0~docs+systemcerts
           prefix: /usr
       buildable: false
 
@@ -757,7 +759,7 @@ spack:
           - patchelf
           - py-pint
           - python
-          - qt
+          - qt 
           - subversion
           - tmux
           - totalview

@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+from pathlib import Path
 import re
 
 def main():
@@ -13,17 +14,25 @@ def main():
         help="Show packages that are the same except for their hash")
     group.add_argument('--version', action='store_true', 
         help="Show packages with multiple versions.")
-    parser.add_argument('conc_log', action='store',
-        help="The install or concretization log to examine.")
+    parser.add_argument('conc_logs', action='store', type=Path, nargs='+',
+        help="An install or concretization log to check. If a directory or multiple files are "
+             "given, then newest of the file found is used.")
 
     args = parser.parse_args()
 
+    log_file = find_log(args.conc_logs)
+    if not log_file:
+        print("No suitable file found.", file=sys.stderr)
+        sys.exit(1)
+    else:
+        print("Using file '{}'.".format(log_file.name), file=sys.stderr)
+
+
     try:
-        with open(args.conc_log) as file:
-            specs = get_specs(file)
-            
-    except OSError:
-        print("Invalid path: {}".format(sys.argv[1]), file=sys.stderr)
+        with log_file.open() as file:
+            specs = get_specs(file)            
+    except OSError as err:
+        print("Error reading file '{}': {}".format(log_file, err), file=sys.stderr)
         sys.exit(1)
 
     if not specs:
@@ -31,12 +40,64 @@ def main():
         sys.exit(1)
 
     if args.hash:
-        find_hash_dups(specs)
+        return find_hash_dups(specs)
     elif args.version:
-        find_version_dups(specs)
+        return find_version_dups(specs)
     else:
         for shash, pkg, vers, compiler in specs:
             print(shash, pkg, vers, compiler)
+
+
+def find_log(paths):
+    """Find a log file for the given path.
+
+    - If multiple files are given, choose the newest (the *.log case)
+    - If a directory is given, find the log directory, and return the newest 
+      inst.log or conc.log file.
+    - If a specific file is given, just use that.
+    """
+
+    dirs = []
+    files = []
+
+    for path in paths:
+        if not path.exists():
+            print("No such path: {}".format(path), file=sys.stderr)
+        elif path.is_dir():
+            dirs.append(path)
+        else:
+            files.append(path)
+
+    while dirs:
+        dir_path = dirs.pop(0)
+        dir_files = []
+
+        for path in dir_path.iterdir():
+            if path.name == 'logs':
+                # If we're not pointed at the logs directory, go there.
+                dirs.append(dir_path/path)
+                break
+            # Don't recurse
+            elif not path.is_dir():
+                dir_files.append(path)
+        else:
+            files.extend(dir_files)
+
+
+    final_files = []
+    for path in files:
+        base = path.stem.split('.')[0]
+        # Only grab install and concretization log files.
+        if path.suffix == '.log' and base in ('inst', 'conc'):
+            final_files.append(path)
+
+    final_files.sort(key=lambda f: f.stat().st_mtime)
+    if not final_files:
+        return []
+
+    # The last file is the most recent.
+    return final_files.pop() 
+
 
 def get_specs(file):
 
@@ -106,6 +167,8 @@ def find_version_dups(specs):
         last_vers = vers
         last_spec = spec
 
+    return len(printed)
+
 
 def find_hash_dups(specs):
 
@@ -126,6 +189,8 @@ def find_hash_dups(specs):
                 printed.append(shash)
         last_shash = shash
         last_spec = spec
+
+    return len(printed)
 
 if __name__ == '__main__':
     main()
