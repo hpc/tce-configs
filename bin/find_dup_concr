@@ -4,6 +4,39 @@ import sys
 import argparse
 from pathlib import Path
 import re
+import yaml
+
+
+class Spec:
+    def __init__(self, shash, pkg, version, compiler, raw):
+        
+        self.shash = shash
+        self.pkg = pkg
+        self.version = version
+        self.compiler = compiler
+        self.raw = raw
+
+    # These are needed for uniqueness to be maintained
+    def __eq__(self, other):
+        return self.shash == other.shash
+
+    def __hash__(self):
+        return hash(self.shash)
+
+
+def error(*args, **kwargs):
+    """Print an error message and exit."""
+
+    warn(*args, **kwargs)
+    sys.exit(1)
+
+
+def warn(*args, **kwargs):
+    """Print a warning to stderr."""
+
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
+
 
 def main():
     
@@ -14,6 +47,12 @@ def main():
         help="Show packages that are the same except for their hash")
     group.add_argument('--version', action='store_true', 
         help="Show packages with multiple versions.")
+    group.add_argument('--base', action='store', type=Path,
+        help="Check that all packages in the 'base' definition in the given spack.yaml occur for "
+             "only one compiler.")
+    group.add_argument('--packages', action='store', type=Path, 
+        help="Check that all packages built exist in the package section of the given spack.yaml, "
+             "and that the versions to be built match the versions defined.")
     parser.add_argument('conc_logs', action='store', type=Path, nargs='+',
         help="An install or concretization log to check. If a directory or multiple files are "
              "given, then newest of the file found is used.")
@@ -22,31 +61,42 @@ def main():
 
     log_file = find_log(args.conc_logs)
     if not log_file:
-        print("No suitable file found.", file=sys.stderr)
+        error("No suitable file found.")
         sys.exit(1)
     else:
-        print("Using file '{}'.".format(log_file.name), file=sys.stderr)
+        warn("Using file '{}'.".format(log_file.name))
 
 
     try:
         with log_file.open() as file:
             specs = get_specs(file)            
     except OSError as err:
-        print("Error reading file '{}': {}".format(log_file, err), file=sys.stderr)
+        error("Error reading file '{}': {}".format(log_file))
         sys.exit(1)
 
     if not specs:
-        print("No specs found", file=sys.stderr)
+        error("No specs found")
         sys.exit(1)
+
+    spack_yaml = None
+    if args.base or args.packages:
+        yaml_path = args.base or args.packages
+        spack_yaml = load_spack_yaml(yaml_path)
 
     if args.hash:
         return find_hash_dups(specs)
     elif args.version:
         return find_version_dups(specs)
+    elif args.base:
+        return check_base(specs, spack_yaml)
+    elif args.packages:
+        return check_packages(specs, spack_yaml)
     else:
-        for shash, pkg, vers, compiler in specs:
-            print(shash, pkg, vers, compiler)
-
+        for spec in specs:
+            print("{:7s} {:25s} @{:15s} %{}"
+                  .format(spec.shash, spec.pkg, spec.version, spec.compiler))
+        print('{} uniq specs concretized'.format(len(specs)))
+                  
 
 def find_log(paths):
     """Find a log file for the given path.
@@ -62,7 +112,7 @@ def find_log(paths):
 
     for path in paths:
         if not path.exists():
-            print("No such path: {}".format(path), file=sys.stderr)
+            warn("No such path: {}".format(path))
         elif path.is_dir():
             dirs.append(path)
         else:
@@ -99,11 +149,31 @@ def find_log(paths):
     return final_files.pop() 
 
 
+def load_spack_yaml(path):
+    
+    # Be a bit forgiving about whether the actual file is given.
+    if path.is_dir():
+        if (path/'spack.yaml').exists():
+            path = path/'spack.yaml'
+        else:
+            error("Could not find a 'spack.yaml' file at '{}'".format(path))
+            return None
+
+    try:
+        with path.open() as yaml_file:
+            return yaml.load(yaml_file, Loader=yaml.SafeLoader)
+
+    except OSError as err:
+        error("Error reading yaml file '{}':\n    {}".format(path, err))
+    except yaml.YAMLError as err:
+        error("Error parsing spack.yaml file at '{}':\n    {}".format(path, err))
+
+
 def get_specs(file):
 
     pkg_re = re.compile(r'^[^%@]+')
-    comp_re = re.compile(r'%[^@]+')
-    vers_re = re.compile(r'@[^%]+')
+    vers_re = re.compile(r'@([^%]+)')
+    comp_re = re.compile(r'%([^ ]+)')
     
     specs = set()
     for line in file:
@@ -115,7 +185,7 @@ def get_specs(file):
         try:
             _, shash, spec = line.split(maxsplit=2)
         except ValueError:
-            print('bad line', line)
+            warn('bad line')
             continue
 
         for sym in ' +~':
@@ -131,15 +201,15 @@ def get_specs(file):
             pkg = pkg.group()
         comp = comp_re.search(spec)
         if comp:
-            comp = comp.group()
+            comp = comp.groups()[0]
         vers = vers_re.search(spec)
         if vers:
-            vers = vers.group()
+            vers = vers.groups()[0]
         else:
-            print(line)
-            print(spec)
+            warn(line)
+            warn(spec)
         
-        specs.add((shash, pkg, vers, comp))
+        specs.add(Spec(shash, pkg, vers, comp, line))
     
     specs = list(specs)
 
@@ -147,50 +217,144 @@ def get_specs(file):
 
 def find_version_dups(specs):
 
-    specs = [((pkg, comp), vers, shash) for shash, pkg, vers, comp in specs]
-    specs.sort()
+    specs.sort(key=lambda s: (s.pkg, s.compiler))
 
-    last_vers = None
-    last_spec = None
-    last_shash = None
+    last = None
     printed = []
     
-    for spec, vers, shash in specs:
-        if last_spec and spec == last_spec and last_vers != vers:
-            if last_shash not in printed:
-                print(last_spec, last_vers, last_shash)
+    for spec in specs:
+        if last and spec.pkg == last.pkg and last.version != spec.version:
+            if last.shash not in printed:
+                print(last.pkg, last.version, last.hash)
                 printed.append(last_shash)
             if shash not in printed:
-                print(spec, vers, shash)
+                print(spec.pkg, spec.version, spec.shash)
                 printed.append(shash)
-        last_shash = shash
-        last_vers = vers
-        last_spec = spec
+        last = spec
 
     return len(printed)
 
 
 def find_hash_dups(specs):
 
-    specs = [((pkg, vers, comp), shash) for shash, pkg, vers, comp in specs]
-    specs.sort()
+    specs = [((pkg, veddrs, comp), shash) for shash, pkg, vers, comp in specs]
+    specs.sort(key=lambda s: (s.pkg, s.version, s.compiler))
     
-    last_shash = None
-    last_spec = None
+    last = None
     printed = []
 
-    for spec, shash in specs:
-        if last_spec and spec == last_spec:
+    for spec in specs:
+        if last and spec.pkg == last.pkg:
             if last_shash not in printed:
-                print(last_shash, last_spec)
-                printed.append(last_shash)
+                print(last.shash, last.pkg)
+                printed.append(last.shash)
             if shash not in printed:
-                print(shash, spec)
-                printed.append(shash)
-        last_shash = shash
-        last_spec = spec
+                print(spec.shash, spec.pkg)
+                printed.append(spec.shash)
+        last = spec
 
     return len(printed)
+
+
+PACKAGE_RE = re.compile(r'(?P<pkg>[a-zA-Z0-9_-]+)\s*'  # Package 
+                        r'(?:@(?P<version>[a-zA-Z0-9_.-]+))?\s*' # Package version
+                        # Compiler and compiler version
+                        r'(?:%(?P<compiler>[a-zA-Z0-9_-]+(?:@[a-zA-Z0-9_.-]+)?))?') 
+
+
+def check_base(specs, spack_yaml):
+    """Check the packages defined in the 'base' definition against the concretized specs. 
+    They should all be present, and only concretized against the base compiler."""
+
+    definitions = spack_yaml.get('spack', {}).get('definitions', [])
+    if not definitions:
+        error("Could not find definititons section in the spack.yaml")
+
+    if not isinstance(definitions, list):
+        error("Expected the definitions section to be a list. Got: {}".format(definitions))
+
+    base = None
+    base_compiler = None
+    for defn in definitions:
+        if not isinstance(defn, dict):
+            continue
+
+        if 'base' in defn:
+            base = defn['base']
+
+        if 'base-compiler' in defn:
+            base_compiler = defn['base-compiler']
+            if not isinstance(base_compiler, list) or  len(base_compiler) != 1:
+                error("Expected base_compiler definition to be a list of one item, got '{}'"
+                      .format(base_compiler))
+
+            base_compiler = base_compiler[0]
+
+    if not base:
+        error("Could not find 'base' definitions in the spack.yaml.")
+
+    if not base_compiler:
+        error("Could not find 'base-compiler' definition in the spack.yaml.")
+
+    missing = []
+    mismatched = []
+    for package in base:
+        pkg_def = PACKAGE_RE.match(package)
+        if not pkg_def:
+            warn("Could not parse package def: '{}'".format(package))
+
+        pkg_def = pkg_def.groupdict()
+
+        matches = find_spec(specs, pkg=pkg_def['pkg'])
+        if not matches:
+            missing.append(package)
+
+        for spec in matches:
+            if spec.compiler != base_compiler:
+                mismatched.append((package, spec))
+        
+    if missing:
+        print("These packages were in base, but we couldn't find a concretized spec:")
+
+        for package in missing:
+            print("  -", package)
+
+    if mismatched:
+        print("These packages were built with the wrong compiler.")
+        print("Expected {}".format(base_compiler))
+        for package, spec in mismatched:
+            print(" ", spec.pkg, spec.version, spec.compiler)
+
+    if not missing or mismatched:
+        print("No mismatched or missing base packages.")
+        return 0
+    else:
+        return 1
+
+
+def find_spec(specs, pkg=None, version=None, compiler=None, shash=None):
+    """Find only specs that match all of the given criteria."""
+
+    found = []
+    for spec in specs:
+        if pkg and spec.pkg != pkg:
+            continue
+        elif version and spec.version != version:
+            continue
+        elif compiler and spec.compiler != compiler:
+            continue
+        elif shash and spec.shash != shash:
+            continue
+
+        found.append(spec)
+
+    return found
+
+
+
+    
+
+
 
 if __name__ == '__main__':
     main()
