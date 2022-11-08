@@ -122,135 +122,9 @@ def find_log(paths):
         dir_path = dirs.pop(0)
         dir_files = []
 
-        for path in dir_path.iterdir():
-            if path.name == 'logs':
-                # If we're not pointed at the logs directory, go there.
-                dirs.append(dir_path/path)
-                break
-            # Don't recurse
-            elif not path.is_dir():
-                dir_files.append(path)
-        else:
-            files.extend(dir_files)
 
-
-    final_files = []
-    for path in files:
-        base = path.stem.split('.')[0]
-        # Only grab install and concretization log files.
-        if path.suffix == '.log' and base in ('inst', 'conc'):
-            final_files.append(path)
-
-    final_files.sort(key=lambda f: f.stat().st_mtime)
-    if not final_files:
-        return []
-
-    # The last file is the most recent.
-    return final_files.pop() 
-
-
-def load_spack_yaml(path):
-    
-    # Be a bit forgiving about whether the actual file is given.
-    if path.is_dir():
-        if (path/'spack.yaml').exists():
-            path = path/'spack.yaml'
-        else:
-            error("Could not find a 'spack.yaml' file at '{}'".format(path))
-            return None
-
-    try:
-        with path.open() as yaml_file:
-            return yaml.load(yaml_file, Loader=yaml.SafeLoader)
-
-    except OSError as err:
-        error("Error reading yaml file '{}':\n    {}".format(path, err))
-    except yaml.YAMLError as err:
-        error("Error parsing spack.yaml file at '{}':\n    {}".format(path, err))
-
-
-def get_specs(file):
-
-    pkg_re = re.compile(r'^[^%@]+')
-    vers_re = re.compile(r'@([^%]+)')
-    comp_re = re.compile(r'%([^ ]+)')
-    
-    specs = set()
-    for line in file:
-        line = line.strip()
-
-        if not (line.startswith('-') or line.startswith('[+]') or line.startswith('[^]')):
-            continue
-
-        try:
-            _, shash, spec = line.split(maxsplit=2)
-        except ValueError:
-            warn('bad line')
-            continue
-
-        for sym in ' +~':
-            sym_loc = spec.find(sym)
-            if sym_loc > 0:
-                spec = spec[:sym_loc]
-
-        if spec.startswith('^'):
-            spec = spec[1:]
-        
-        pkg = pkg_re.search(spec)
-        if pkg:
-            pkg = pkg.group()
-        comp = comp_re.search(spec)
-        if comp:
-            comp = comp.groups()[0]
-        vers = vers_re.search(spec)
-        if vers:
-            vers = vers.groups()[0]
-        else:
-            warn(line)
-            warn(spec)
-        
-        specs.add(Spec(shash, pkg, vers, comp, line))
-    
-    specs = list(specs)
-
-    return specs
-
-def find_version_dups(specs):
-
-    specs.sort(key=lambda s: (s.pkg, s.compiler))
-
-    last = None
-    printed = []
-    
-    for spec in specs:
-        if last and spec.pkg == last.pkg and last.version != spec.version:
-            if last.shash not in printed:
-                print(last.pkg, last.version, last.hash)
-                printed.append(last_shash)
-            if shash not in printed:
-                print(spec.pkg, spec.version, spec.shash)
-                printed.append(shash)
-        last = spec
-
-    return len(printed)
-
-
-def find_hash_dups(specs):
-
-    specs = [((pkg, veddrs, comp), shash) for shash, pkg, vers, comp in specs]
-    specs.sort(key=lambda s: (s.pkg, s.version, s.compiler))
-    
-    last = None
-    printed = []
-
-    for spec in specs:
-        if last and spec.pkg == last.pkg:
-            if last_shash not in printed:
-                print(last.shash, last.pkg)
-                printed.append(last.shash)
-            if shash not in printed:
-                print(spec.shash, spec.pkg)
-                printed.append(spec.shash)
+#???LINES MISSING
+        printed.append(spec.shash)
         last = spec
 
     return len(printed)
@@ -330,6 +204,57 @@ def check_base(specs, spack_yaml):
         return 0
     else:
         return 1
+
+
+def check_packages(specs, spack_yaml):
+    """Make sure all of the concretized specs match the versions specified in the packages 
+    section."""
+
+    packages = spack_yaml.get('spack', {}).get('packages', {})
+
+    if not packages:
+        error("Packages section in spack.yaml was empty.")
+
+    missing_package_defs = set()
+    no_version = set()
+    wrong_version = set()
+    for spec in specs:
+        if spec.pkg not in packages:
+            missing_package_defs.add(spec)
+        pkg_defaults = packages[spec.pkg]
+        def_version = pkg_defaults.get('version', [])
+
+        if not def_version:
+            no_version.add(spec)
+
+        if spec.version not in def_version:
+            wrong_version.add(spec)
+        
+
+    if not (missing_package_defs or no_version or wrong_version):
+        print("All concretized versions match the defined default versions.")
+        return 0
+
+    if missing_package_defs:
+        print("The following packages were concretized, \n"
+              "but had no defined defaults:")
+        for spec in missing_package_defs:
+            print(" ", spec.pkg)
+
+    if no_version:
+        print("These packages had package defaults, but no set version:")
+        for spec in no_version:
+            print(" ", spec.pkg)
+
+    if wrong_version:
+        print("These packages were concretized at a version outside of the set defaults:")
+        for spec in wrong_version:
+            pkg_defaults = packages[spec.pkg]
+            def_version = pkg_defaults.get('version', [])
+            print("  {:15s} @{:15s} - expected {}"
+                  .format(spec.pkg, spec.version, def_version))
+
+    return 1
 
 
 def find_spec(specs, pkg=None, version=None, compiler=None, shash=None):
