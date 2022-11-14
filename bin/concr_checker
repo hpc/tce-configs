@@ -2,6 +2,8 @@
 
 import sys
 import argparse
+import shutil
+import subprocess
 from pathlib import Path
 import re
 import yaml
@@ -19,6 +21,12 @@ class Spec:
     # These are needed for uniqueness to be maintained
     def __eq__(self, other):
         return self.shash == other.shash
+
+    def __lt__(self, other):
+        if self.pkg == other.pkg:
+            return self.version < other.version
+        else:
+            return self.pkg < other.pkg
 
     def __hash__(self):
         return hash(self.shash)
@@ -47,10 +55,10 @@ def main():
         help="Show packages that are the same except for their hash")
     group.add_argument('--version', action='store_true', 
         help="Show packages with multiple versions.")
-    group.add_argument('--base', action='store', type=Path,
+    group.add_argument('--base', action='store', type=Path, metavar='SPACK.YAML',
         help="Check that all packages in the 'base' definition in the given spack.yaml occur for "
              "only one compiler.")
-    group.add_argument('--packages', action='store', type=Path, 
+    group.add_argument('--packages', action='store', type=Path, metavar='SPACK.YAML',
         help="Check that all packages built exist in the package section of the given spack.yaml, "
              "and that the versions to be built match the versions defined.")
     parser.add_argument('conc_logs', action='store', type=Path, nargs='+',
@@ -122,8 +130,135 @@ def find_log(paths):
         dir_path = dirs.pop(0)
         dir_files = []
 
+        for path in dir_path.iterdir():
+            if path.name == 'logs':
+                # If we're not pointed at the logs directory, go there.
+                dirs.append(dir_path/path)
+                break
+            # Don't recurse
+            elif not path.is_dir():
+                dir_files.append(path)
+        else:
+            files.extend(dir_files)
 
-#???LINES MISSING
+
+    final_files = []
+    for path in files:
+        base = path.stem.split('.')[0]
+        # Only grab install and concretization log files.
+        if path.suffix == '.log' and base in ('inst', 'conc'):
+            final_files.append(path)
+
+    final_files.sort(key=lambda f: f.stat().st_mtime)
+    if not final_files:
+        return []
+
+    # The last file is the most recent.
+    return final_files.pop() 
+
+
+def load_spack_yaml(path):
+    
+    # Be a bit forgiving about whether the actual file is given.
+    if path.is_dir():
+        if (path/'spack.yaml').exists():
+            path = path/'spack.yaml'
+        else:
+            error("Could not find a 'spack.yaml' file at '{}'".format(path))
+            return None
+
+    try:
+        with path.open() as yaml_file:
+            return yaml.load(yaml_file, Loader=yaml.SafeLoader)
+
+    except OSError as err:
+        error("Error reading yaml file '{}':\n    {}".format(path, err))
+    except yaml.YAMLError as err:
+        error("Error parsing spack.yaml file at '{}':\n    {}".format(path, err))
+
+
+def get_specs(file):
+
+    pkg_re = re.compile(r'^[^%@]+')
+    vers_re = re.compile(r'@([^%]+)')
+    comp_re = re.compile(r'%([^ ]+)')
+    
+    specs = set()
+    for line in file:
+        line = line.strip()
+
+        if not (line.startswith('-') or line.startswith('[+]') or line.startswith('[^]')):
+            continue
+
+        try:
+            _, shash, spec = line.split(maxsplit=2)
+        except ValueError:
+            warn('bad line')
+            continue
+
+        for sym in ' +~':
+            sym_loc = spec.find(sym)
+            if sym_loc > 0:
+                spec = spec[:sym_loc]
+
+        if spec.startswith('^'):
+            spec = spec[1:]
+        
+        pkg = pkg_re.search(spec)
+        if pkg:
+            pkg = pkg.group()
+        comp = comp_re.search(spec)
+        if comp:
+            comp = comp.groups()[0]
+        vers = vers_re.search(spec)
+        if vers:
+            vers = vers.groups()[0]
+        else:
+            warn(line)
+            warn(spec)
+        
+        specs.add(Spec(shash, pkg, vers, comp, line))
+    
+    specs = list(specs)
+
+    return specs
+
+def find_version_dups(specs):
+
+    specs.sort(key=lambda s: (s.pkg, s.compiler))
+
+    last = None
+    printed = []
+    
+    for spec in specs:
+        if last and spec.pkg == last.pkg and last.version != spec.version:
+            if last.shash not in printed:
+                print(last.pkg, last.version, last.hash)
+                printed.append(last_shash)
+            if shash not in printed:
+                print(spec.pkg, spec.version, spec.shash)
+                printed.append(shash)
+        last = spec
+
+    return len(printed)
+
+
+def find_hash_dups(specs):
+
+    specs = [((pkg, veddrs, comp), shash) for shash, pkg, vers, comp in specs]
+    specs.sort(key=lambda s: (s.pkg, s.version, s.compiler))
+    
+    last = None
+    printed = []
+
+    for spec in specs:
+        if last and spec.pkg == last.pkg:
+            if last_shash not in printed:
+                print(last.shash, last.pkg)
+                printed.append(last.shash)
+            if shash not in printed:
+                print(spec.shash, spec.pkg)
+                printed.append(spec.shash)
         printed.append(spec.shash)
         last = spec
 
@@ -215,46 +350,81 @@ def check_packages(specs, spack_yaml):
     if not packages:
         error("Packages section in spack.yaml was empty.")
 
+    # Look for cases where versions that look like ints/floats weren't quoted
+    bad_vers_format = []
+    for pkg in packages:
+        for vers in packages.get(pkg, {}).get('version', []):
+            if not isinstance(vers, str):
+                bad_vers_format.append((pkg, vers))
+
     missing_package_defs = set()
     no_version = set()
     wrong_version = set()
     for spec in specs:
         if spec.pkg not in packages:
             missing_package_defs.add(spec)
+            continue
         pkg_defaults = packages[spec.pkg]
         def_version = pkg_defaults.get('version', [])
 
         if not def_version:
             no_version.add(spec)
+            continue
 
         if spec.version not in def_version:
             wrong_version.add(spec)
-        
+            continue
 
-    if not (missing_package_defs or no_version or wrong_version):
+
+    if not (missing_package_defs or no_version or wrong_version or bad_vers_format):
         print("All concretized versions match the defined default versions.")
         return 0
 
-    if missing_package_defs:
-        print("The following packages were concretized, \n"
-              "but had no defined defaults:")
-        for spec in missing_package_defs:
-            print(" ", spec.pkg)
+    if bad_vers_format:
+        print("These packages had versions that need to be quoted.")
+        bad_vers_format = sorted(bad_vers_format)
+        for pkg, vers in bad_vers_format:
+            print("  {}  {}".format(pkg, vers))
 
+    if missing_package_defs:
+        print("The following packages were concretized, but had no defined defaults:")
+        if shutil.which('spack') is None:
+            print("Activate the spack environment to see the spack preferred versions.")
+
+        missing_package_defs = sorted(missing_package_defs)
+        for spec in missing_package_defs:
+            preferred = get_spack_preferred_version(spec) or ''
+            print("    {}:".format(spec.pkg))
+            if preferred and preferred != spec.version:
+                print("      # Spack preferred: {}".format(preferred))
+            print("      version: ['{}']".format(spec.version))
+           
     if no_version:
         print("These packages had package defaults, but no set version:")
+        no_version = sorted(no_version)
         for spec in no_version:
-            print(" ", spec.pkg)
+            preferred = get_spack_preferred_version(spec) or ''
+            print(" ", spec.pkg, preferred)
 
     if wrong_version:
+        wrong_version = sorted(wrong_version)
         print("These packages were concretized at a version outside of the set defaults:")
+        pkg_width = max([len(spec.pkg) for spec in wrong_version])
+        ver_width = max([len(str(spec.version)) for spec in wrong_version])
+        format_str = "  {{:{}s}} {{:{}s}} {{}}".format(pkg_width, ver_width)
+        print(format_str.format("Package", "Conc Vers", "spack.yaml Version"))
         for spec in wrong_version:
-            pkg_defaults = packages[spec.pkg]
+            pkg_defaults = packages.get(spec.pkg, {})
             def_version = pkg_defaults.get('version', [])
-            print("  {:15s} @{:15s} - expected {}"
-                  .format(spec.pkg, spec.version, def_version))
+            print(format_str.format(spec.pkg, spec.version, def_version))
 
     return 1
+
+
+def get_width(vals):
+    """Get the minimum width needed to display all items evenly"""
+
+    return max([str(val) for val in values])
 
 
 def find_spec(specs, pkg=None, version=None, compiler=None, shash=None):
@@ -275,11 +445,19 @@ def find_spec(specs, pkg=None, version=None, compiler=None, shash=None):
 
     return found
 
+def get_spack_preferred_version(spec):
 
-
-    
-
-
+    spack = shutil.which('spack')
+    if spack is not None:
+        cmd = [spack, 'info', '--no-variants', '--no-dependencies', spec.pkg]
+        
+        out = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+        lines = out.decode().split('\n')
+        for i in range(len(lines)):
+            line = lines[i].split()
+            if 'Preferred' in line:
+                if i+1 < len(lines):
+                    return lines[i+1].strip().split()[0]
 
 if __name__ == '__main__':
     main()

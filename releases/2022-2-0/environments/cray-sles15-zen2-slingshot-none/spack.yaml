@@ -193,7 +193,7 @@ spack:
     #   with only those variants that differ above.
     # Compiler - Should not be set.
     apr:
-      version: [1.7.0]
+      version: [1.6.2]
     apr-util:
       version: [1.6.1]
     arm-forge:
@@ -210,23 +210,34 @@ spack:
       version: ['2.69']
     automake:
       version: ['1.16.5']
+    bdftopcf:
+      version: ['1.0.5']
     binutils:
       version: ['2.36.1']
       variants: +gold+libiberty~nls+ld+gas
+    bison:
+      version: ['3.8.2']
+    boost:
+      version: ['1.79.0']
     bzip2:
       version: ['1.0.8']
+    cairo:
+      version: ['1.16.0']
     charliecloud:  # check variants
       version: ['0.27']
       variants: ~docs
     cmake:
-      version: ['3.23.3']
-    #cubelib:   # !!!!
+      version: ['3.23.1']
     curl:
       version: [7.83.0]
     dbus:
       version: [1.12.8]
     diffutils:
       version: ['3.8']
+    docbook-xml:
+      version: ['4.4']
+    docbook-xsl:
+      version: ['1.79.2']
     double-conversion:
       version: ['3.1.5']
     dyninst:
@@ -243,8 +254,22 @@ spack:
       version: ['28.1']
     expat:
       version: ['2.4.8']
+    findutils:
+      version: ['4.9.0']
+    fixesproto:
+      version: ['5.0']
+    flex:
+      version: ['2.6.3']
+    font-util:
+      version: ['1.3.2']
+    fontconfig: 
+      version: ['2.13.94']
+    fontsproto:
+      version: ['2.1.3']
     freetype:
       version: ['2.10.1']
+    fribidi:
+      version: ['1.0.12']
     gcc:
       variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
       version: [11.2.0]
@@ -255,7 +280,7 @@ spack:
       version: ['2.42.6']
     gettext:
       variants: +bzip2+curses+git~libunistring~libxml2+tar+xz
-      version: [0.21]
+      version: ["0.21"]
     giflib:
       version: [5.2.1]
     git:
@@ -266,20 +291,24 @@ spack:
       version: [2.72.1]
     glproto:
       version: [1.4.17]
+    gmake:
+      version: ['4.3']
     gmp:
       version: [6.2.1]
     gnuplot:
       variants: +X ~cairo
       version: [5.4.3]
     gobject-introspection:
-      version: [1.56.1]
+      version: [1.72.0]
     gotcha:
       version: [1.0.3]
+    gperf:
+      version: ['3.1']
     gtkplus:
       variants: default_library=shared ~cups
       version: [3.24.29]
     harfbuzz:
-      version: [5.1.0]
+      version: [4.2.1]
     hdf:
       version: [4.2.15]
     hdf5:
@@ -294,9 +323,12 @@ spack:
       version: [3.2.0]
     hwloc:
       version: [2.8.0]
+    icu4c:
+      version: ['67.1']
     idl:
       version: ['8.7']
-    # !!!!!
+    inputproto:
+      version: ['2.3.2']
     intel:
       variants: +open
     intel-oneapi-compilers:
@@ -308,6 +340,8 @@ spack:
       version: ['2020.3']
     intel-xed:
       version: [12.0.1]
+    intltool:
+      version: ['0.51.0']
     isl:
       version: ['0.24']
     jsoncpp:
@@ -336,6 +370,8 @@ spack:
       version: [2.1.12]
     libffi:
       version: ['3.4.2']
+    libfontenc:
+      version: ['1.1.3']
     libgcrypt:
       externals:
         - spec: libgcrypt@1.10.1%gcc@11.2.0
@@ -343,6 +379,8 @@ spack:
       buildable: false
     libgd:
       version: [2.2.4]
+    libgit2:
+      version: ['1.3.1']
     libiberty:
       variants: +pic
       version: ['2.37']
@@ -360,7 +398,7 @@ spack:
       version: [2.0.3]
     libmonitor:
       variants: +hpctoolkit ~dlopen
-      version: [2022.09.02]
+      version: [2021.11.08]
     libogg:
       version: [1.3.5]
     libpciaccess:
@@ -375,6 +413,8 @@ spack:
       version: [2.51.0]
     libsigsegv:
       version: ['2.13']
+    libssh2:
+      version: ['1.10.0']
     libsm:
       version: [1.2.3]
     libtheora:
@@ -394,6 +434,8 @@ spack:
       version: [1.0.3]
     libx11:
       version: [1.7.0]
+    libxfont:
+      version: ['1.5.2'] 
     libxau:
       version: [1.0.8]
     libxcb:
@@ -410,6 +452,8 @@ spack:
       version: [1.7.6]
     libxkbcommon:
       version: [1.4.0]
+    libxkbfile:
+      version: ['1.0.9']
     libxml2:
       variants: +python
       version: [2.9.13]
@@ -419,6 +463,8 @@ spack:
       version: [1.5.0]
     libxrender:
       version: [0.9.10]
+    libxt:
+      version: ['1.1.5']
     libxtst:
       version: [1.2.2]
     libyogrt:
@@ -442,14 +488,25 @@ spack:
     mesa:
       variants: +osmesa swr=avx,avx2
       version: [22.1.2]
+    meson:
+      version: ['0.62.1']
+    mkfontdir:
+      version: ['1.0.7']
+    mkfontscale:
+      version: ['1.1.2']
     mpc:
       version: [1.2.1]
     mpfr:
       version: [4.1.0]
+    mpich:
+      # Provided by system
+      version: ['8.1.14']
     mvapich2:
       variants: +debug fabrics=psm2 file_systems=lustre,nfs,ufs process_managers=slurm
         threads=multiple ch3_rank_bits=32 ~regcache ~wrapperrpath
       version: [2.3.7]
+    nasm:
+      version: ['2.15.05']
     ncurses:
       version: ['6.2']
     netcdf-c:
@@ -461,6 +518,8 @@ spack:
     netcdf-fortran:
       variants: +pic
       version: [4.5.4]
+    ninja:
+      version: ['1.10.2']
     numactl:
       version: [2.0.14]
     openblas:
@@ -498,25 +557,86 @@ spack:
       version: [5.16.3]
     perl-alien-svn:
       version: [1.8.11.0]
+    perl-data-dumper:
+      version: ['2.173']
+    perl-encode-locale:
+      version: ['1.05']
+    perl-extutils-config:
+      version: ['0.008']
+    perl-extutils-helpers:
+      version: ['0.026']
+    perl-extutils-installpaths:
+      version: ['0.012']
+    perl-file-listing:
+      version: ['6.04']
+    perl-html-parser:
+      version: ['3.72']
+    perl-html-tagset:
+      version: ['3.20']
+    perl-http-cookies:
+      version: ['6.04']
+    perl-http-daemon:
+      version: ['6.01']
+    perl-http-date:
+      version: ['6.02']
+    perl-http-message:
+      version: ['6.13']
+    perl-http-negotiate:
+      version: ['6.01']
+    perl-io-html:
+      version: ['1.001']
+    perl-libwww-perl:
+      version: ['6.33']
+    perl-lwp-mediatypes:
+      version: ['6.02']
+    perl-module-build:
+      version: ['0.4224']
+    perl-module-build-tiny:
+      version: ['0.039']
+    perl-net-http:
+      version: ['6.17']
+    perl-test-needs:
+      version: ['0.002005']
+    perl-try-tiny:
+      version: ['0.28']
+    perl-uri:
+      version: ['1.72']
     perl-termreadkey:
       version: ['2.38']
+    perl-www-robotrules:
+      version: ['6.02']
+    perl-xml-parser:
+      version: ['2.44']
+    pigz:
+      version: ['2.7']
+    pixman:
+      version: [0.40.0]
     pkg-config:
+      version: ['0.29.2']
       externals:
         - spec: pkg-config@0.29.2%gcc
           prefix: /usr
       buildable: false
-    pixman:
-      version: [0.40.0]
     protobuf:
-      version: [21.1]
+      version: ["3.18.0"]
     pugixml:
       version: [1.11.4]
     py-certifi:
       version: [2021.10.8]
     py-chardet:
       version: [4.0.0]
+    py-charset-normalizer:
+      version: ['2.0.12']
+    py-cppy:
+      version: ['1.1.0']
     py-cycler:
       version: [0.11.0]
+    py-cython:
+      version: ['0.29.30']
+    py-docutils:
+      version: ['0.18.1']
+    py-fonttools:
+      version: ['4.31.2']
     py-idna:
       version: ['3.3']
     py-kiwisolver:
@@ -524,18 +644,24 @@ spack:
     # Changed name from py-lark-parser to py-lark
     py-lark:
       version: [0.1.2]
+    py-mako:
+      version: ['1.1.6']
+    py-markupsafe:
+      version: ['2.0.1']
     py-matplotlib:
       version: [3.5.3]
     py-mpi4py:
       version: [3.1.2]
     py-numpy:
-      version: [1.23.2]
+      version: [1.22.4]
     py-packaging:
       version: ['21.3']
     py-pillow:
       version: [9.2.0]
     py-pint:
       version: ['0.17']
+    py-pip:
+      version: ['21.3.1']
     py-pygments:
       version: [2.10.0]
     py-pyparsing:
@@ -546,10 +672,18 @@ spack:
       version: [2.26.0]
     py-setuptools:
       version: [58.2.0]
+    py-setuptools-scm:
+      version: ['6.3.2']
+    py-setuptools-scm-git-archive:
+      version: ['1.1']
     py-six:
       version: [1.16.0]
+    py-tomli:
+      version: ['1.2.2']
     py-urllib3:
       version: [1.26.6]
+    py-wheel:
+      version: ['0.37.0']
     python:
       variants: ~uuid~libxml2
       version: [3.10.6]
@@ -571,6 +705,10 @@ spack:
       version: [1.14.2]
     renderproto:
       version: [0.11.1]
+    rust:
+      version: ['1.60.0']
+    scons:
+      version: ['4.3.0']
     scorep: 
       version: ['7.0']
       variants: +pdt
@@ -579,12 +717,13 @@ spack:
     shared-mime-info:
       version: ['1.9']
     slurm:
+      version: ['21.08.3']
       externals:
         - spec: slurm@21.08.3%gcc@11.2.0
           prefix: /usr
       buildable: false
     sqlite:
-      version: [3.39.2]
+      version: [3.38.5]
     subversion:
       variants: +lz4_internal +perl +utf8proc_internal ~apxs
       version: [1.14.1]
@@ -595,6 +734,8 @@ spack:
       version: [2.31.1]
     tar:
       version: ['1.34']
+    texinfo:
+      version: ['6.5']
     tmux:
       version: [3.2a]
     totalview:
@@ -623,6 +764,8 @@ spack:
       version: [3.2.3]
     xextproto:
       version: [7.3.0]
+    xkbcomp:
+      version: ['1.4.4']
     xkbdata:
       version: [1.0.1]
     xproto:
@@ -638,6 +781,8 @@ spack:
       version: [4.8.16]
     zlib:
       version: [1.2.12]
+    zstd:
+      version: ['1.5.2']
 
   upstreams: {}
   mirrors: {}
