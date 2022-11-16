@@ -2,6 +2,7 @@ spack-cc-*
 inst*
 conc*
 mod*
+.nfs*
 *.sw*
 *.pyc
 module*.txt

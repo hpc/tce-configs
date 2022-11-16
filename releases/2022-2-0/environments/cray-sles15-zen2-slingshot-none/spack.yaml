@@ -44,7 +44,7 @@ spack:
       #- intel-parallel-studio +vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
       # Separate mkl installation.
       #- intel-parallel-studio ~mpi~ipp~daal~tbb~ilp64~newdtags
-      - julia_binary
+      - julia
       - libyogrt
       - mercurial ^python@3.10.6
       - numactl
@@ -346,8 +346,8 @@ spack:
       version: ['0.24']
     jsoncpp:
       version: [1.9.4]
-    julia_binary:
-      version: [1.5.3]
+    julia:
+      version: [1.7.2]
     kbproto:
       version: [1.0.7]
     krb5:

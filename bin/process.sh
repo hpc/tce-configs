@@ -309,7 +309,7 @@ function repo_checkout () {
         checkout_opts=''
         checkout_ref="${ref}"
     fi
-    if ! git fetch --all --tags; then
+    if ! git fetch -f --all --tags; then
         error "Error fetching tags for repo."
         return 1
     fi
@@ -319,6 +319,7 @@ function repo_checkout () {
     # User input should never be allowed in checkout_opts.
     # shellcheck disable=2086
     if ! git checkout $checkout_opts "$checkout_ref"; then
+        echo "$checkout_opts  $checkout_ref"
         error "Error checking out reference $ref."
         return 1
     fi

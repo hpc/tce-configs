@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import sys
+from collections import defaultdict
 import argparse
 import shutil
 import subprocess
@@ -230,39 +231,57 @@ def find_version_dups(specs):
     last = None
     printed = []
     
+    dup_versions = defaultdict(set)
+
     for spec in specs:
         if last and spec.pkg == last.pkg and last.version != spec.version:
-            if last.shash not in printed:
-                print(last.pkg, last.version, last.hash)
-                printed.append(last_shash)
-            if shash not in printed:
-                print(spec.pkg, spec.version, spec.shash)
-                printed.append(shash)
+            dup_versions[spec.pkg].add(spec.version)
+            dup_versions[spec.pkg].add(last.version)
         last = spec
 
-    return len(printed)
+    if not dup_versions:
+        warn("No packages with multiple versions found.")
+        return 0
+
+    pkg_width = max([len(pkg) for pkg in dup_versions])
+
+    warn("Packages with multiple versions found.")
+    for pkg in sorted(dup_versions.keys()):
+        versions = [str(version) for version in dup_versions[pkg]]
+        versions = ', '.join(sorted(versions))
+
+        print("  {:{width}s} {}".format(pkg, versions, width=pkg_width))
+
+    return 1
 
 
 def find_hash_dups(specs):
 
-    specs = [((pkg, veddrs, comp), shash) for shash, pkg, vers, comp in specs]
     specs.sort(key=lambda s: (s.pkg, s.version, s.compiler))
     
     last = None
-    printed = []
+
+    extra_hashes = defaultdict(set)
 
     for spec in specs:
-        if last and spec.pkg == last.pkg:
-            if last_shash not in printed:
-                print(last.shash, last.pkg)
-                printed.append(last.shash)
-            if shash not in printed:
-                print(spec.shash, spec.pkg)
-                printed.append(spec.shash)
-        printed.append(spec.shash)
+        if (last and spec.pkg == last.pkg and spec.compiler == last.compiler and 
+                spec.version ==last.version):
+            extra_hashes[spec.pkg].add(spec.shash)
+            extra_hashes[spec.pkg].add(last.shash)
         last = spec
 
-    return len(printed)
+    if not extra_hashes:
+        warn("No packages with multiple hashes found.")
+        return 0
+
+    pkg_width = max([len(pkg) for pkg in extra_hashes])
+
+    warn("Packages with multiple hashes found:")
+    for pkg in sorted(extra_hashes):
+        hashes = ', '.join(sorted(extra_hashes[pkg]))
+        print("  {:{width}s} {}".format(pkg, hashes, width=pkg_width))
+
+    return 1
 
 
 PACKAGE_RE = re.compile(r'(?P<pkg>[a-zA-Z0-9_-]+)\s*'  # Package 
@@ -323,19 +342,19 @@ def check_base(specs, spack_yaml):
                 mismatched.append((package, spec))
         
     if missing:
-        print("These packages were in base, but we couldn't find a concretized spec:")
+        warn("These packages were in base, but we couldn't find a concretized spec:")
 
         for package in missing:
             print("  -", package)
 
     if mismatched:
-        print("These packages were built with the wrong compiler.")
-        print("Expected {}".format(base_compiler))
+        warn("These packages were built with the wrong compiler.")
+        warn("Expected {}".format(base_compiler))
         for package, spec in mismatched:
             print(" ", spec.pkg, spec.version, spec.compiler)
 
     if not missing or mismatched:
-        print("No mismatched or missing base packages.")
+        warn("No mismatched or missing base packages.")
         return 0
     else:
         return 1
@@ -377,17 +396,17 @@ def check_packages(specs, spack_yaml):
 
 
     if not (missing_package_defs or no_version or wrong_version or bad_vers_format):
-        print("All concretized versions match the defined default versions.")
+        warn("All concretized versions match the defined default versions.")
         return 0
 
     if bad_vers_format:
-        print("These packages had versions that need to be quoted.")
+        warn("These packages had versions that need to be quoted.")
         bad_vers_format = sorted(bad_vers_format)
         for pkg, vers in bad_vers_format:
             print("  {}  {}".format(pkg, vers))
 
     if missing_package_defs:
-        print("The following packages were concretized, but had no defined defaults:")
+        warn("The following packages were concretized, but had no defined defaults:")
         if shutil.which('spack') is None:
             print("Activate the spack environment to see the spack preferred versions.")
 
@@ -400,7 +419,7 @@ def check_packages(specs, spack_yaml):
             print("      version: ['{}']".format(spec.version))
            
     if no_version:
-        print("These packages had package defaults, but no set version:")
+        warn("These packages had package defaults, but no set version:")
         no_version = sorted(no_version)
         for spec in no_version:
             preferred = get_spack_preferred_version(spec) or ''
@@ -408,11 +427,11 @@ def check_packages(specs, spack_yaml):
 
     if wrong_version:
         wrong_version = sorted(wrong_version)
-        print("These packages were concretized at a version outside of the set defaults:")
+        warn("These packages were concretized at a version outside of the set defaults:")
         pkg_width = max([len(spec.pkg) for spec in wrong_version])
         ver_width = max([len(str(spec.version)) for spec in wrong_version])
         format_str = "  {{:{}s}} {{:{}s}} {{}}".format(pkg_width, ver_width)
-        print(format_str.format("Package", "Conc Vers", "spack.yaml Version"))
+        warn(format_str.format("Package", "Conc Vers", "spack.yaml Version"))
         for spec in wrong_version:
             pkg_defaults = packages.get(spec.pkg, {})
             def_version = pkg_defaults.get('version', [])
