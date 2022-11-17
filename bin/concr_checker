@@ -49,32 +49,38 @@ def warn(*args, **kwargs):
 
 def main():
     
-    parser = argparse.ArgumentParser("Print duplicate packages found during concretization.")
-
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--hash', action='store_true', 
+    parser = argparse.ArgumentParser("Check the concretization log against the Spack.yaml for "
+        "correctness in a variety of ways.")
+    
+    parser.add_argument('--hash', action='store_true', 
         help="Show packages that are the same except for their hash")
-    group.add_argument('--version', action='store_true', 
+    parser.add_argument('--version', action='store_true', 
         help="Show packages with multiple versions.")
-    group.add_argument('--base', action='store', type=Path, metavar='SPACK.YAML',
+    parser.add_argument('--base', action='store_true',
         help="Check that all packages in the 'base' definition in the given spack.yaml occur for "
              "only one compiler.")
-    group.add_argument('--packages', action='store', type=Path, metavar='SPACK.YAML',
+    parser.add_argument('--packages', action='store_true', 
         help="Check that all packages built exist in the package section of the given spack.yaml, "
              "and that the versions to be built match the versions defined.")
-    parser.add_argument('conc_logs', action='store', type=Path, nargs='+',
-        help="An install or concretization log to check. If a directory or multiple files are "
-             "given, then newest of the file found is used.")
+    parser.add_argument('--all', action='store_true', 
+        help="Run all checks.")
+    parser.add_argument('install_path', action='store', type=Path,
+        help="Path to the install area for the environment (the install path + environment name, "
+             "typically).")
+    parser.add_argument('-c', '--conc_log', action='store', type=Path,
+        help="The specific concretization log to look at. Can be a full path or just a log name.")
+    parser.add_argument('-e', '--env', action='store', 
+        help="The name of the environment to examine. By default, a single environment is "
+             "assumed.")
 
     args = parser.parse_args()
 
-    log_file = find_log(args.conc_logs)
+    log_file = find_log(args.install_path, args.conc_log)
     if not log_file:
         error("No suitable file found.")
         sys.exit(1)
     else:
         warn("Using file '{}'.".format(log_file.name))
-
 
     try:
         with log_file.open() as file:
@@ -87,18 +93,18 @@ def main():
         error("No specs found")
         sys.exit(1)
 
-    spack_yaml = None
-    if args.base or args.packages:
-        yaml_path = args.base or args.packages
-        spack_yaml = load_spack_yaml(yaml_path)
+    spack_yaml = load_spack_yaml(args.install_path, args.env)
+
+    if args.all:
+        args.hash = args.base = args.version = args.packages = True
 
     if args.hash:
         return find_hash_dups(specs)
-    elif args.version:
+    if args.version:
         return find_version_dups(specs)
-    elif args.base:
+    if args.base:
         return check_base(specs, spack_yaml)
-    elif args.packages:
+    if args.packages:
         return check_packages(specs, spack_yaml)
     else:
         for spec in specs:
@@ -107,7 +113,7 @@ def main():
         print('{} uniq specs concretized'.format(len(specs)))
                   
 
-def find_log(paths):
+def find_log(install_path, log_name):
     """Find a log file for the given path.
 
     - If multiple files are given, choose the newest (the *.log case)
@@ -116,60 +122,70 @@ def find_log(paths):
     - If a specific file is given, just use that.
     """
 
-    dirs = []
+    # If a path to a specific log was specified, just use that.
+    if log_name is not None and Path(log_name).exists():
+        return Path(log_name)
+
+    log_path = install_path/'logs'
+
+    if log_name:
+        log_path = log_path/log_name
+        if log_path.exists():
+            return log_path
+        else:
+            error("Specified log name '{}' does not exist at '{}'"
+                  .format(log_name, log_path))
+
     files = []
+    for path in log_path.iterdir():
+        if path.is_dir():
+            # Ignore directories
+            continue
 
-    for path in paths:
-        if not path.exists():
-            warn("No such path: {}".format(path))
-        elif path.is_dir():
-            dirs.append(path)
-        else:
-            files.append(path)
-
-    while dirs:
-        dir_path = dirs.pop(0)
-        dir_files = []
-
-        for path in dir_path.iterdir():
-            if path.name == 'logs':
-                # If we're not pointed at the logs directory, go there.
-                dirs.append(dir_path/path)
-                break
-            # Don't recurse
-            elif not path.is_dir():
-                dir_files.append(path)
-        else:
-            files.extend(dir_files)
-
-
-    final_files = []
-    for path in files:
         base = path.stem.split('.')[0]
         # Only grab install and concretization log files.
         if path.suffix == '.log' and base in ('inst', 'conc'):
-            final_files.append(path)
+            files.append(path)
 
-    final_files.sort(key=lambda f: f.stat().st_mtime)
-    if not final_files:
-        return []
+    files.sort(key=lambda f: f.stat().st_mtime)
+    if not files:
+        error("No install or concretization log found in '{}'"
+              .format(log_path))
 
     # The last file is the most recent.
-    return final_files.pop() 
+    return files.pop() 
 
 
-def load_spack_yaml(path):
-    
-    # Be a bit forgiving about whether the actual file is given.
-    if path.is_dir():
-        if (path/'spack.yaml').exists():
-            path = path/'spack.yaml'
-        else:
-            error("Could not find a 'spack.yaml' file at '{}'".format(path))
-            return None
+def load_spack_yaml(path, env):
+
+    env_dir = path/'spack/var/spack/environments'
+    if not env_dir.is_dir():
+        error("Expected an environments directory here: {}".format(env_dir))    
+
+    if env:
+        env_dir = env_dir/env
+        if not env_dir.is_dir():
+            error("Specified environment '{}' does not exist here: {}".format(env, env_dir))
+    else:
+        environments = [dirpath for dirpath in env_dir.iterdir() 
+                        if dirpath.is_dir() and (dirpath/'spack.yaml').exists()]
+        if not environments:
+            error("No valid spack environments in env dir: {}".format(env_dir))
+
+        if len(environments) > 1:
+            error("Multiple environments exist ({}), specify one with '-e <env_name>'"
+                  .format([dirpath.name for dirpath in environments]))
+
+        env_dir = environments[0]
+
+    spack_yaml_path = env_dir/'spack.yaml'
+
+    # Check for the spack.yaml file
+    if not spack_yaml_path.exists():
+        error("No spack.yaml file in the environment '{}'".format(env_dir))
 
     try:
-        with path.open() as yaml_file:
+        with spack_yaml_path.open() as yaml_file:
             return yaml.load(yaml_file, Loader=yaml.SafeLoader)
 
     except OSError as err:

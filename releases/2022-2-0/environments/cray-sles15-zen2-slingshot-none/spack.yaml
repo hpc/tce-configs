@@ -44,7 +44,7 @@ spack:
       #- intel-parallel-studio +vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
       # Separate mkl installation.
       #- intel-parallel-studio ~mpi~ipp~daal~tbb~ilp64~newdtags
-      - julia
+      - julia_binary
       - libyogrt
       - mercurial ^python@3.10.6
       - numactl
@@ -160,8 +160,7 @@ spack:
     libsodium:
       buildable: false
     mbedtls:
-      variants: +hash_only +pic
-      version: [2.16.9]
+      buildable: false
     nettle:
       buildable: false
     nss:
@@ -346,7 +345,7 @@ spack:
       version: ['0.24']
     jsoncpp:
       version: [1.9.4]
-    julia:
+    julia_binary:
       version: [1.7.2]
     kbproto:
       version: [1.0.7]
@@ -739,7 +738,7 @@ spack:
     tmux:
       version: [3.2a]
     totalview:
-      version: [2021.1.16]
+      version: [2022.2.13]
     utf8proc:
       version: [2.6.1]
     util-macros:

@@ -864,6 +864,7 @@ else
     fi
 
     status "Set up spacklemore repo in install directory"
+    rm -rf "${spacklemore_root}"
     mkdir -p "${spacklemore_root}"
     cp -R "${spacklemore}" "${install_dir}"
 fi
