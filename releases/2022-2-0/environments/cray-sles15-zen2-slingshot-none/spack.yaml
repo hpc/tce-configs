@@ -8,7 +8,7 @@ spack:
       - intel-oneapi-compilers@2022.2.0
     - toolchain-compiler-constraints:
       - $%base-compiler
-      - '%intel@2022.0.2'
+      - '%intel@2021.5.0'
       # - '%clang@13.0.1'
       - '%cce@13.0.0'
 
@@ -55,7 +55,7 @@ spack:
       - py-pint
       - qt ^cmake@3.23.1%gcc
       - subversion ^cmake@3.23.1%gcc
-      - totalview
+      - 
       - tmux
     - base_matrix:
       - exclude: []
@@ -115,7 +115,7 @@ spack:
     - toolchain-mpi-intel:
       - matrix:
         - [$mpi-packages]
-        - ['%intel@2022.0.2']
+        - ['%intel@2021.5.0']
         - [$intel-mpi-constraints]
         exclude:
         - hpctoolkit
@@ -737,7 +737,7 @@ spack:
       version: ['6.5']
     tmux:
       version: [3.2a]
-    totalview:
+    :
       version: [2022.2.13]
     utf8proc:
       version: [2.6.1]
@@ -822,7 +822,7 @@ spack:
         py-pint: '{name}/{name}-{version}'
         qt: '{name}/{name}-{version}'
         subversion: '{name}/{name}-{version}'
-        totalview: '{name}/{name}-{version}'
+        : '{name}/{name}-{version}'
         tmux: '{name}/{name}-{version}'
         ^mpi: '{name}/{name}-{version}-{compiler.name}-{compiler.version}-{^mpi.name}-{^mpi.version}'
         all: '{name}/{name}-{version}-{compiler.name}-{compiler.version}'
@@ -873,7 +873,7 @@ spack:
           - qt
           - subversion
           - tmux
-          - totalview
+          - 
         core_compilers:
           - gcc@11.2.0
         core_specs:
@@ -906,7 +906,7 @@ spack:
           - qt 
           - subversion
           - tmux
-          - totalview
+          - 
         projections:
           intel-parallel-studio+mkl: 'mkl/{version}'
           intel-parallel-studio+vtune: 'intel-tools/{version}'
