@@ -98,14 +98,15 @@ def main():
     if args.all:
         args.hash = args.base = args.version = args.packages = True
 
+    exit_code = 0
     if args.hash:
-        return find_hash_dups(specs)
+        exit_code += find_hash_dups(specs)
     if args.version:
-        return find_version_dups(specs)
+        exit_code += find_version_dups(specs)
     if args.base:
-        return check_base(specs, spack_yaml)
+        exit_code += check_base(specs, spack_yaml)
     if args.packages:
-        return check_packages(specs, spack_yaml)
+        exit_code += check_packages(specs, spack_yaml)
     else:
         for spec in specs:
             print("{:7s} {:25s} @{:15s} %{}"
@@ -203,6 +204,10 @@ def get_specs(file):
     specs = set()
     for line in file:
         line = line.strip()
+
+        # Concretization output ends here.
+        if line.startswith('==> Installing environment'):
+            break
 
         if not (line.startswith('-') or line.startswith('[+]') or line.startswith('[^]')):
             continue
