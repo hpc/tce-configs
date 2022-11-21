@@ -1,5 +1,6 @@
 set -e
 
+install_dir=$1
 fix_compiler="${REPO_ROOT}/bin/fix_compiler" # REPO_ROOT provided by wrapper
 compilers_yaml="${install_dir}/spack/etc/spack/compilers.yaml"
 
@@ -12,18 +13,21 @@ spack compiler find --scope=site
 IFX=$(which icx)
 ICPX=$(which icpx)
 
-# The compilers are detected at the compiler version (ie, correctly) rather than the package
-# version.
-# The intel-classic compiler is detected as intel (hybrid)
-# Spack doesn't recognize a compiler named intel-classic, so we just add a 'c' to the version. 
-$fix_compiler "$compilers_yaml"  intel@2021.5.0 sles15 x86_64 edit --rename intel@2022.0.2c
+# Only ever do this once.
+if ! grep 'intel@2021.5.0.classic' $compilers_yaml; then 
+    # The compilers are detected at the compiler version (ie, correctly) rather than the package
+    # version.
+    # The intel-classic compiler is detected as intel (hybrid)
+    # Spack doesn't recognize a compiler named intel-classic, so we just add a 'c' to the version. 
+    $fix_compiler "$compilers_yaml"  intel@2021.5.0 sles15 x86_64 copy intel@2022.0.2
+    $fix_compiler "$compilers_yaml"  intel@2021.5.0 sles15 x86_64 edit --rename intel@2021.5.0.classic
 
-# The intel compiler is just like the classic one, except different.
-$fix_compiler "$compilers_yaml"  intel@2022.0.2c sles15 x86_64 copy intel@2022.0.2
-$fix_compiler "$compilers_yaml"  intel@2022.0.2 sles15 x86_64 edit --cc="$IFX" --cxx="$ICPX"
+    # The intel compiler is just like the classic one, except different.
+    $fix_compiler "$compilers_yaml"  intel@2022.0.2 sles15 x86_64 edit --cc="$IFX" --cxx="$ICPX"
 
-# The version of oneapi is correct too, so we have to 'fix' it.
-$fix_compiler "$compilers_yaml"  oneapi@2022.0.0 sles15 x86_64 edit --rename oneapi@2022.0.2
+    # The version of oneapi is correct too, so we have to 'fix' it.
+    $fix_compiler "$compilers_yaml"  oneapi@2022.0.0 sles15 x86_64 edit --rename oneapi@2022.0.2
+fi
 
 module switch PrgEnv-intel PrgEnv-gnu
 spack compiler find --scope=site

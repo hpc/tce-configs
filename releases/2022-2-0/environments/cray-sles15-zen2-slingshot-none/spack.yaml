@@ -3,13 +3,11 @@ spack:
 # Toss compilers
     - base-compiler:
       - gcc@11.2.0
-    - toolchain-compilers-non-base:
-      - cce@13.0.0
-      - intel-oneapi-compilers@2022.2.0
     - toolchain-compiler-constraints:
       - $%base-compiler
-      - '%intel@2021.5.0'
-      # - '%clang@13.0.1'
+      - '%intel@2022.0.2'
+      - '%intel@2021.5.0.classic'
+      - '%oneapi@2022.0.2'
       - '%cce@13.0.0'
 
     # The same as above, except as a dependency and compiled against a specific compiler
@@ -31,14 +29,14 @@ spack:
     # Packages built with the default compiler only.
     - base:
       - arm-forge
-      - charliecloud ^python@3.10.6
+      - charliecloud ^python@3.10.6%gcc
       - cmake
       # We need to specify non-default mesa
       - emacs ^mesa+glx
       - git
-      - gnuplot ^cmake@3.23.1%gcc ^python@3.10.6
+      - gnuplot ^cmake@3.23.1%gcc ^python@3.10.6%gcc
       - hpcviewer
-      - htop ^python@3.10.6
+      - htop ^python@3.10.6%gcc
       - idl
       # Tools installation for intel products.
       #- intel-parallel-studio +vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
@@ -46,17 +44,18 @@ spack:
       #- intel-parallel-studio ~mpi~ipp~daal~tbb~ilp64~newdtags
       - julia_binary
       - libyogrt
-      - mercurial ^python@3.10.6
+      - mercurial ^python@3.10.6%gcc
       - numactl
       - openjdk
       - papi
       - patchelf
-      - python
+      - python %gcc
+      - py-matplotlib
       - py-pint
       - qt ^cmake@3.23.1%gcc
       - subversion ^cmake@3.23.1%gcc
-      - 
       - tmux
+      - totalview
     - base_matrix:
       - exclude: []
         matrix:
@@ -66,12 +65,12 @@ spack:
     # Packages built out against each compiler
     - compiler-packages:
       - mesa ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.2.0
-        ^ncurses%gcc ^zlib%gcc ^python@3.10.6
+        ^ncurses%gcc ^zlib%gcc ^python@3.10.6%gcc
 
     #
     - install-comp:
       - intel-oneapi-compilers@2022.0.2
-      - llvm@14.0.2 ^swig@4.0.2 ^cmake@3.23.1%gcc ^python@3.10.6
+      - llvm@14.0.2 ^swig@4.0.2 ^cmake@3.23.1%gcc ^python@3.10.6%gcc
 
       - matrix:
         - [$compiler-packages]
@@ -95,11 +94,11 @@ spack:
 
     # Packages to build against all compiler/mpi combinations
     - mpi-packages:
-      - hpctoolkit ^cmake@3.23.1%gcc ^python@3.10.6
+      - hpctoolkit ^cmake@3.23.1%gcc ^python@3.10.6%gcc
       - libquo
       - valgrind
       - paraview ^mesa ^bzip2%gcc@11.2.0 ^double-conversion%gcc@11.2.0 ^cmake@3.23.1%gcc
-        ^py-matplotlib@3.5.3 ^eigen%gcc@11.2.0 ^expat%gcc@11.2.0 ^freetype%gcc@11.2.0 
+        ^py-matplotlib@3.5.3%gcc ^eigen%gcc@11.2.0 ^expat%gcc@11.2.0 ^freetype%gcc@11.2.0 
         ^libtiff%gcc@11.2.0 ^lz4%gcc@11.2.0 ^lzma%gcc@11.2.0
 
     # Build the above with gcc and all gcc relevant MPI's
@@ -115,11 +114,31 @@ spack:
     - toolchain-mpi-intel:
       - matrix:
         - [$mpi-packages]
-        - ['%intel@2021.5.0']
+        - ['%intel@2022.2.0']
         - [$intel-mpi-constraints]
         exclude:
         - hpctoolkit
         - valgrind %intel
+
+    # Build the above with gcc and all intel relevant MPI's
+    - toolchain-mpi-intel-classic:
+      - matrix:
+        - [$mpi-packages]
+        - ['%intel@2021.5.0.classic']
+        - [$intel-mpi-constraints]
+        exclude:
+        - hpctoolkit
+        - valgrind %intel
+
+    # Build the above with gcc and all intel relevant MPI's
+    - toolchain-mpi-oneapi:
+      - matrix:
+        - [$mpi-packages]
+        - ['%oneapi@2022.2.0']
+        - [$intel-mpi-constraints]
+        exclude:
+        - hpctoolkit
+        - valgrind %oneapi
 
     # This defines the actual packages to get installed
     - install:
@@ -127,6 +146,8 @@ spack:
       - $install-comp
       - $toolchain-mpi-gcc-10
       - $toolchain-mpi-intel
+      - $toolchain-mpi-intel-classic
+      - $toolchain-mpi-oneapi
 
 # Final definition
   specs:
@@ -143,7 +164,6 @@ spack:
       # Virtual packages and which specs provide that functionality.
       providers:
         gl: [mesa]
-        glx: [mesa+glx]
         osmesa: [mesa+osmesa swr=avx,avx2]
         pkgconfig: [pkg-config]
         tbb: [intel-tbb+shared]
@@ -223,7 +243,7 @@ spack:
     cairo:
       version: ['1.16.0']
     charliecloud:  # check variants
-      version: ['0.27']
+      version: ['0.29']
       variants: ~docs
     cmake:
       version: ['3.23.1']
@@ -284,12 +304,14 @@ spack:
       version: [5.2.1]
     git:
       variants: +subtree+svn
-      version: ['2.35.2']
+      version: ['2.38.1']
     glib:
       variants: tracing=none
       version: [2.72.1]
     glproto:
       version: [1.4.17]
+    glx:
+      version: ['1.4']
     gmake:
       version: ['4.3']
     gmp:
@@ -437,6 +459,8 @@ spack:
       version: ['1.5.2'] 
     libxau:
       version: [1.0.8]
+    libxaw:
+      version: ['1.0.13']
     libxcb:
       version: ['1.14']
     libxdmcp:
@@ -456,6 +480,8 @@ spack:
     libxml2:
       variants: +python
       version: [2.9.13]
+    libxmu:
+      version: ['1.1.2']
     libxpm:
       version: [3.5.12]
     libxrandr:
@@ -639,7 +665,7 @@ spack:
     py-idna:
       version: ['3.3']
     py-kiwisolver:
-      version: [1.3.0]
+      version: [1.1.0]
     # Changed name from py-lark-parser to py-lark
     py-lark:
       version: [0.1.2]
@@ -737,8 +763,8 @@ spack:
       version: ['6.5']
     tmux:
       version: [3.2a]
-    :
-      version: [2022.2.13]
+    totalview:
+      version: ['2022.2.13']
     utf8proc:
       version: [2.6.1]
     util-macros:
@@ -779,7 +805,7 @@ spack:
     z3:
       version: [4.8.16]
     zlib:
-      version: [1.2.12]
+      version: [1.2.13]
     zstd:
       version: ['1.5.2']
 
@@ -822,8 +848,8 @@ spack:
         py-pint: '{name}/{name}-{version}'
         qt: '{name}/{name}-{version}'
         subversion: '{name}/{name}-{version}'
-        : '{name}/{name}-{version}'
         tmux: '{name}/{name}-{version}'
+        totalview: '{name}/{name}-{version}'
         ^mpi: '{name}/{name}-{version}-{compiler.name}-{compiler.version}-{^mpi.name}-{^mpi.version}'
         all: '{name}/{name}-{version}-{compiler.name}-{compiler.version}'
   modules:
@@ -873,7 +899,7 @@ spack:
           - qt
           - subversion
           - tmux
-          - 
+          - totalview
         core_compilers:
           - gcc@11.2.0
         core_specs:
@@ -906,7 +932,7 @@ spack:
           - qt 
           - subversion
           - tmux
-          - 
+          - totalview 
         projections:
           intel-parallel-studio+mkl: 'mkl/{version}'
           intel-parallel-studio+vtune: 'intel-tools/{version}'

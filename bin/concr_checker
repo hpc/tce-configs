@@ -108,6 +108,7 @@ def main():
     if args.packages:
         exit_code += check_packages(specs, spack_yaml)
     else:
+        specs.sort()
         for spec in specs:
             print("{:7s} {:25s} @{:15s} %{}"
                   .format(spec.shash, spec.pkg, spec.version, spec.compiler))
