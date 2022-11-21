@@ -207,7 +207,7 @@ def get_specs(file):
         line = line.strip()
 
         # Concretization output ends here.
-        if line.startswith('==> Installing environment'):
+        if '==> Installing environment' in line:
             break
 
         if not (line.startswith('-') or line.startswith('[+]') or line.startswith('[^]')):

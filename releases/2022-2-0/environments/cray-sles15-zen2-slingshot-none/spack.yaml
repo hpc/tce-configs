@@ -91,6 +91,8 @@ spack:
         # - intel-oneapi-tbb%clang
         - intel-oneapi-tbb%intel
         - mesa%cce
+        - mesa%oneapi
+        - mesa%intel@2022.0.2
 
     # Packages to build against all compiler/mpi combinations
     - mpi-packages:
@@ -119,6 +121,7 @@ spack:
         exclude:
         - hpctoolkit
         - valgrind %intel
+        - paraview
 
     # Build the above with gcc and all intel relevant MPI's
     - toolchain-mpi-intel-classic:
@@ -139,6 +142,7 @@ spack:
         exclude:
         - hpctoolkit
         - valgrind %oneapi
+        - paraview
 
     # This defines the actual packages to get installed
     - install:
@@ -198,9 +202,9 @@ spack:
       buildable: false
     openssl:
       # This actually seems to be 1.1.0i on Chicoma...
-      version: [1.1.1d-rhel]
+      version: ['1.1.0i-rhel']
       externals:
-        - spec: openssl@1.1.1d-rhel%gcc@11.2.0~docs+systemcerts
+        - spec: openssl@1.1.0i-rhel%gcc@11.2.0~docs+systemcerts
           prefix: /usr
       buildable: false
 
@@ -216,6 +220,7 @@ spack:
     apr-util:
       version: [1.6.1]
     arm-forge:
+      variants: +accept-eula
       version: ['21.0']
     at-spi2-atk:
       variants: default_library=shared
@@ -512,7 +517,7 @@ spack:
       version: ['5.8']
     mesa:
       variants: +osmesa swr=avx,avx2
-      version: [22.1.2]
+      version: [22.2.6]
     meson:
       version: ['0.62.1']
     mkfontdir:
