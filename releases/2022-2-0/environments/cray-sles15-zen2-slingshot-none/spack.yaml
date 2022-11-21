@@ -16,11 +16,11 @@ spack:
     # that will break if that happens. So we have to force the builds of some software
     # to use an mpi built against the matching compiler.
     - gcc-10-mpi-constraints:
-      - ^mpich@8.1.14
+      - ^cray-mpich@8.1.14 os=sles15
 
     # The same, for intel.
     - intel-mpi-constraints:
-      - ^mpich@8.1.14%gcc
+      - ^cray-mpich@8.1.14%gcc os=sles15
       
 
     # Note that we don't build anything for clang/mpi combos, so a clang specific
@@ -523,9 +523,15 @@ spack:
       version: [1.2.1]
     mpfr:
       version: [4.1.0]
-    mpich:
+    cray-mpich:
       # Provided by system
       version: ['8.1.14']
+      variants: '+wrappers'
+      externals:
+        - spec: cray-mpich@8.1.14 +wrappers os=sles15
+          modules:
+            - cray-mpich/8.1.14
+      buildable: false
     mvapich2:
       variants: +debug fabrics=psm2 file_systems=lustre,nfs,ufs process_managers=slurm
         threads=multiple ch3_rank_bits=32 ~regcache ~wrapperrpath

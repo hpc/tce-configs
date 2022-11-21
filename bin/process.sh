@@ -1126,7 +1126,7 @@ fi
 function do_install() {
     local log_path=$1
 
-    /usr/bin/time spack "${SPACK_VERBOSE[@]}" install "$SPACK_CACHING" --reuse --no-checksum \
+    /usr/bin/time spack --stacktrace "${SPACK_VERBOSE[@]}" install "$SPACK_CACHING" --reuse --no-checksum \
         --yes-to-all |& tee "$log_path"
     local ret_val=$?
 
