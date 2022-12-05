@@ -1,0 +1,118 @@
+#!/usr/bin/python3
+
+
+import argparse
+from pathlib import Path
+import json
+import sys
+
+import pprint
+
+
+def error(*args, **kwargs):
+    print(*args, **kwargs, file=sys.stderr)
+    sys.exit(1)
+
+
+def main():
+    
+
+    parser = argparse.ArgumentParser(
+        "For all packages in the binary cache that aren't in the "
+        "given files, move both the package and it's yaml file to the backup path."
+        "Prints what would be done by default. Use --confirm to actually do it.")
+
+    parser.add_argument('bin_cache', type=Path, 
+                        help='Path to the binary cache.')
+    parser.add_argument('backup', type=Path,
+                        help='Where to move all removed files.')
+    parser.add_argument('--confirm', action='store_true', 
+                        help='Actually do the cleanup')
+    parser.add_argument('prod_package_json', nargs='+', type=Path,
+                        help='Path to production package lists is JSON.')
+
+
+    args = parser.parse_args()
+
+    packages = load_json_packages(args.prod_package_json)
+
+    known_packages = [pkg.pkg_path for pkg in packages.values()]
+    known_yamls = [pkg.pkg_path for pkg in packages.values()]
+
+    for file in args.bin_cache.iterdir():
+        if not file.isdir() and file.suffix == '.yaml':
+            if file not in known_yamls:
+                
+
+    print('packages', len(packages))
+
+
+class Package:
+    
+    def __init__(self, data):
+        self.data = data
+
+    @property
+    def package(self):
+        return '{}-{}'.format(self.data['name'], self.data['version'])
+
+    @property
+    def platform(self):
+        return '{}-{}-{}'.format(
+            self.data['arch']['platform'],
+            self.data['arch']['platform_os'],
+            self.data['arch']['target']['name'])
+
+    @property
+    def compiler(self):
+        return '{}-{}'.format(
+            self.data['compiler']['name'],
+            self.data['compiler']['version'])
+
+    @property
+    def pkg_name(self):
+        return '{}-{}-{}-{}'.format(
+            self.platform,
+            self.compiler,
+            self.package,
+            self.data['hash'])
+
+    @property
+    def pkg_path(self):
+        path = Path('')/self.platform/self.compiler/self.package/self.pkg_name
+        return path.with_suffix('.spack')
+
+    @property
+    def yaml_path(self):
+        return Path(self.pkg_name).with_suffix('.spec.yaml')
+
+
+def load_json_packages(json_paths):
+
+    packages = {}
+
+    for json_path in json_paths:
+
+        try:
+            with open(json_path) as file:
+                data = json.load(file)
+        except OSError as err:
+            error("Error loading json data from file '{}': {}".format(json_path, err))
+
+        for entry in data:
+            packages[entry['hash']] = Package(entry)
+
+    return packages
+
+def package_path(pkg):
+    
+    arch = pkg['arch']
+
+    path = Path('')
+    
+    package_name = '{}-{}-{}-{}.spack'.format(platform, compiler, package, pkg['hash'])
+
+    return path/platform/compiler/package/package_name
+
+if __name__ == '__main__':
+    main()
