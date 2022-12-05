@@ -5,10 +5,10 @@ spack:
       - gcc@11.2.0
     - toolchain-compiler-constraints:
       - $%base-compiler
-      - '%intel@2022.0.2'
-      - '%intel@2021.5.0.classic'
+      - '%intel@2022.2.1'
+      - '%intel@2021.7.1.classic'
       - '%oneapi@2022.0.2'
-      - '%cce@13.0.0'
+      - '%cce@15.0.0'
 
     # The same as above, except as a dependency and compiled against a specific compiler
     # A 'feature' of the new concretizer' is that dependencies don't have to use the
@@ -92,7 +92,7 @@ spack:
         - intel-oneapi-tbb%intel
         - mesa%cce
         - mesa%oneapi
-        - mesa%intel@2022.0.2
+        - mesa%intel@2022.2.1
 
     # Packages to build against all compiler/mpi combinations
     - mpi-packages:
@@ -116,7 +116,7 @@ spack:
     - toolchain-mpi-intel:
       - matrix:
         - [$mpi-packages]
-        - ['%intel@2022.2.0']
+        - ['%intel@2022.2.1']
         - [$intel-mpi-constraints]
         exclude:
         - hpctoolkit
@@ -127,7 +127,7 @@ spack:
     - toolchain-mpi-intel-classic:
       - matrix:
         - [$mpi-packages]
-        - ['%intel@2021.5.0.classic']
+        - ['%intel@2021.7.1.classic']
         - [$intel-mpi-constraints]
         exclude:
         - hpctoolkit
@@ -195,16 +195,18 @@ spack:
           prefix: /usr
       buildable: false
     openssh:
-      version: [7.4p1]
+      version: [8.4p1]
       externals:
-        - spec: openssh@7.4p1%gcc@11.2.0
+        - spec: openssh@8.4p1%gcc@11.2.0
           prefix: /usr
       buildable: false
     openssl:
       # This actually seems to be 1.1.0i on Chicoma...
-      version: ['1.1.0i-rhel']
+      # version: ['1.1.0i-rhel']
+      version: ['1.1.1d-rhel']
       externals:
-        - spec: openssl@1.1.0i-rhel%gcc@11.2.0~docs+systemcerts
+        # - spec: openssl@1.1.0i-rhel%gcc@11.2.0~docs+systemcerts
+        - spec: openssl@1.1.1d-rhel%gcc@11.2.0~docs+systemcerts
           prefix: /usr
       buildable: false
 
