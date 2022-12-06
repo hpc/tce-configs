@@ -1059,7 +1059,7 @@ if [[ -e ${environment}/bootstrap_compilers.sh ]]; then
         [[ $(awk '{print $1}' "${install_dir}/bootstrapped.md5") == $(awk '{print $1}' "$tmp_sum") ]] &&
         [[ ${force_bootstrap} = false ]]; then
 
-        status "Skipping setup compilers script (already run)."
+        status "Skipping compiler bootstrap script (already run)."
         bootstrap_stat=${valid_statuses[3]}
     else
         make_log "$log_dir" bootstrap
