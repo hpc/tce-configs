@@ -734,6 +734,7 @@ if [[ -n $buildcache ]]; then
     # Check for the proper path length so that the created buildcaches are
     # usable in production.
     if ! [[ ${#install_dir} -eq ${install_path_len} ]]; then
+        #TODO tgoetsch: rework to suggest a path with padding sufficient to pass check
         error_exit "Install path length '${#install_dir}' is incorrect for
 buildcache generation. Need a path of exactly length ${install_path_len}.
 The following path has a length of ${#install_dir}:
@@ -767,6 +768,7 @@ If you want to use your ~/.spack directory, use the '--user-spack-ok' option."
 fi
 
 # Check for hugepages modulefiles
+#TODO tgoetsch: ask if this check should only be done on a Cray
 if [[ ${_LMFILES_} =~ hugepages ]] || [[ ${LOADEDMODULES} =~ hugepages ]] ; then
     error_exit "Detected a hugepages modulefile in your environment.  This will most
 certainly cause issues with certain packages building on a Cray.  Unload the module
@@ -780,6 +782,12 @@ else
 fi
 
 # Figure out environment specific install dir.
+#TODO tgoetsch: is there a cleaner way to generate the install_env for the 
+# buildache, without chopping the environment name in the path? Maybe have
+# spack assess the full path requirement (buildcache/install_dir/inst_env_name)
+# and suggest an appropriate path length. If the buildcache path is too long
+# without any padding... idk yet.
+
 if [[ -n $buildcache ]]; then
     # When generating the build cache, the prefix must be the same
     # length to ensure binary cached builds will always be relocatable.
@@ -817,6 +825,7 @@ backup_copy "${BASH_SOURCE[0]}" "${hist_script}"
 
 # If there is no Spack installation in the installation directory, clone it.
 spack_root="${install_dir}/spack"
+#TODO tgoetsch: should the repo log belong in the user's home directory?
 spack_repo_log=$(mktemp ~/.process.spack_log.XXXXXXXX)
 spacklemore_root=${install_dir}/spacklemore
 
@@ -829,6 +838,7 @@ if [[ "$nostage" = true ]]; then
     else
         pushd "${spack_root}" &>/dev/null
     fi
+    # TODO tgoetsch: what is this "if false; then" doing?
     if false ; then # -n ${spack_checkout} ]] ; then
         status "Validating Spack git reference ${spack_checkout} against ${spack_root}"
         if ! repo_validate "$spack_checkout" &>> "${spack_repo_log}"; then
@@ -848,8 +858,10 @@ else
     # If there is no Spack installation in the installation directory, clone it.
     if [[ ! -d "${spack_root}" ]]; then
         status "Cloning Spack from ${spack_url} into ${spack_root}"
+        #TODO tgoetsch: can a timeout be set on this op? Is that smart?
         if ! git clone "${spack_url}" "${spack_root}" &>> "${spack_repo_log}"; then
             error_exit "Unable to checkout spack repository from $spack_url. See ${spack_repo_log}"
+            #TODO tgoetsch: why is this status line here?
             status "Cloning Spack from ${spack_url} into ${spack_root}"
         fi
     fi
@@ -863,7 +875,9 @@ else
         popd &>/dev/null
     fi
 
-    status "Set up spacklemore repo in install directory"
+    status "Setting up spacklemore repo in install directory"
+    #TODO tgoetsch: should checks not be made here as they are elsewhere 
+    # when dealing with directories?
     rm -rf "${spacklemore_root}"
     mkdir -p "${spacklemore_root}"
     cp -R "${spacklemore}" "${install_dir}"
@@ -885,6 +899,7 @@ for file in  *.yaml; do
 done
 
 spack_config=$spack_root/etc/spack/config.yaml
+#TODO tgoetsch: what is this?
 if [[ -n "${install_root}" ]]; then
     "${config_repo_root}/bin/line_edit" -i "${spack_config}" -o "${spack_config}" \
         'root:.*$' "root: ${install_root}"
@@ -1049,7 +1064,7 @@ function do_concretize() {
     fi
 }
 
-status "Running compiler bootstrap script."
+status "Checking for compiler bootstrap script."
 if [[ -e ${environment}/bootstrap_compilers.sh ]]; then
     bootstrap_stat=${valid_statuses[1]}
     wrapper=${config_repo_root}/bin/wrapper.sh
@@ -1062,6 +1077,7 @@ if [[ -e ${environment}/bootstrap_compilers.sh ]]; then
         status "Skipping compiler bootstrap script (already run)."
         bootstrap_stat=${valid_statuses[3]}
     else
+        status "Running compiler bootstrap script."
         make_log "$log_dir" bootstrap
         bootstrap_log=$make_log_path
 
@@ -1156,6 +1172,7 @@ if [[ $build_continue = true ]]; then
     fi
 fi
 
+#DEBUG BUILDCACHE
 # Generate the build cache. Doing this doesn't depend on past stages being
 # attempted or being successful. This could be building a buildcache of a
 # previous run.
@@ -1163,6 +1180,7 @@ if [[ -n $buildcache ]]; then
     make_log "$log_dir" buildcache
     buildcache_log=${make_log_path}
 
+    #TODO tgoetsch: should the inital state of these stats be "Successful" or rather "Not Done"?
     buildcache_stat=${valid_statuses[1]}
 
     # Initialize the signing key.
@@ -1172,6 +1190,7 @@ if [[ -n $buildcache ]]; then
         warning "Could not set up secret key from ${secret_path}"
     fi
 
+    #TODO tgoetsch: possible divergence point for ci/production buildcache's?
     status "Setting push url to ${buildcache}"
     spack mirror set-url buildcache --push --scope=site "${buildcache}"
 
@@ -1208,7 +1227,9 @@ if [[ $build_continue = true ]]; then
     if [[ $module = true ]]; then
         module_stat=${valid_statuses[1]}
         status "Generating modules"
-        if [[ "$environment_name" =~ linux-rhel7-x86_64_v3-* ]]; then
+        #TODO tgoetsch: if module gen has issues on the Cray Shasta systems, check this for bug
+        if [[ "$environment_name" =~ linux-rhel7-x86_64_v3-* ||
+            "$environment_name" =~ cray-sles15-zen2-*-none ]]; then
             mod_type="lmod"
         #    mod_list="utils toolchains toolchains-root"
         else
