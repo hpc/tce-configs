@@ -23,6 +23,7 @@ module_def=false # Don't generate modulefiles
 stage_def=false # Don't stop after staging everything (before doing concretization, install, etc)
 no_stage_def=false # Don't skip over the stage step
 force_bootstrap_def=false # Don't force the use of the bootstrap script if it has already been run
+production_def=false # Don't upload binarycache to production. Defaults to development.
 ignorecache_def=false # Allow buildcache to be used.
 install_path_len_def='74' # This is the length of the CI path that we have configured
 spack_url_def='https://github.com/spack/spack' # URL for the official spack repo
@@ -83,6 +84,10 @@ usage () {
     echo "      When given, create binary buildcache of the environment in"
     echo "      the directory specified by <buildcache path>."
     echo "      Environment Variable: TCE_BUILDCACHE"
+    echo ""
+    echo "  --production"
+    echo "      Uploades the binary cache to production space"
+    echo "      Default: $production_def"
     echo ""
     echo "  -g|--shared_group <group-name>"
     echo "      When given, set the group owner of the software built to the specified group"
@@ -489,6 +494,11 @@ case $key in
         echo "Build cache=${buildcache}"
         shift
         ;;
+    --production)
+        shift
+        production=true
+        echo "Uploading buildcache to production"
+        ;;
     -g|--shared_group)
         shift
         shared_group="$1"
@@ -700,6 +710,7 @@ skip_install=${skip_install:-${skip_install_def}}
 module=${module:=${module_def}}
 stage=${stage:=${stage_def}}
 force_bootstrap=${force_bootstrap:-${force_bootstrap_def}}
+production=${production:-${production_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
 buildcache=${buildcache:-${TCE_BUILDCACHE}}
 shared_group=${shared_group:-${TCE_SHARED_GROUP:-${shared_group_def}}}
@@ -1172,8 +1183,13 @@ if [[ -n $buildcache ]]; then
         warning "Could not set up secret key from ${secret_path}"
     fi
 
-    status "Setting push url to ${buildcache}"
-    spack mirror set-url buildcache --push --scope=site "${buildcache}"
+    if [[ $production = true ]] ; then
+        status "Setting push url to ${buildcache}-prod"
+        spack mirror set-url buildcache --push --scope=site "${buildcache}"-prod
+    else
+        status "Setting push url to ${buildcache}"
+        spack mirror set-url buildcache --push --scope=site "${buildcache}"
+    fi
 
     status "Generating build cache."
 
