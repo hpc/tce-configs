@@ -5,11 +5,6 @@ install_dir=$1
 fix_compiler="${REPO_ROOT}/bin/fix_compiler" # REPO_ROOT provided by wrapper
 compilers_yaml="${install_dir}/spack/etc/spack/compilers.yaml"
 
-echo "Checking for compilers under PrgEnv-cray"
-spack compiler find --scope=site
-
-module switch PrgEnv-cray PrgEnv-intel
-
 echo "Checking for compilers under PrgEnv-intel"
 spack compiler find --scope=site
 
@@ -33,7 +28,11 @@ if ! grep 'intel@2021.7.1.classic' $compilers_yaml; then
     # $fix_compiler "$compilers_yaml"  oneapi@2022.0.0 sles15 x86_64 edit --rename oneapi@2022.0.2
 fi
 
-module switch PrgEnv-intel PrgEnv-gnu
+echo "Checking for compilers under PrgEnv-cray"
+module switch PrgEnv-intel PrgEnv-cray
+spack compiler find --scope=site
+
+module switch PrgEnv-cray PrgEnv-gnu
 
 echo "Checking for compilers under PrgEnv-gnu"
 spack compiler find --scope=site

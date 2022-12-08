@@ -16,11 +16,11 @@ spack:
     # that will break if that happens. So we have to force the builds of some software
     # to use an mpi built against the matching compiler.
     - gcc-10-mpi-constraints:
-      - ^cray-mpich@8.1.14 os=sles15
+      - ^cray-mpich@8.1.21 os=sles15
 
     # The same, for intel.
     - intel-mpi-constraints:
-      - ^cray-mpich@8.1.14%gcc os=sles15
+      - ^cray-mpich@8.1.21%gcc os=sles15
       
 
     # Note that we don't build anything for clang/mpi combos, so a clang specific
@@ -69,7 +69,7 @@ spack:
 
     #
     - install-comp:
-      - intel-oneapi-compilers@2022.0.2
+      - intel-oneapi-compilers@2022.2.1
       - llvm@14.0.2 ^swig@4.0.2 ^cmake@3.23.1%gcc ^python@3.10.6%gcc
 
       - matrix:
@@ -172,6 +172,11 @@ spack:
         pkgconfig: [pkg-config]
         tbb: [intel-tbb+shared]
         uuid: [libuuid]
+        # cray-hdf5
+        # cray-hdf5-parallel
+        # cray-netcdf-hdf5parallel
+        # cray-netcdf
+        # cray-parallel-netcdf
 
     # The following crypto libraries should not be built. If needed, they should
     # be pulled from system space.
@@ -189,11 +194,11 @@ spack:
       buildable: false
     nss:
       buildable: false
-    opa-psm2:
-      externals:
-        - spec: opa-psm2@11.2.78%gcc@11.2.0
-          prefix: /usr
-      buildable: false
+    # opa-psm2: #DEBUG
+    #   externals:
+    #     - spec: opa-psm2@11.2.78%gcc@11.2.0
+    #       prefix: /usr
+    #   buildable: false
     openssh:
       version: [8.4p1]
       externals:
@@ -340,8 +345,13 @@ spack:
     hdf:
       version: [4.2.15]
     hdf5:
-      variants: +cxx+fortran+hl~mpi+pic+shared+threadsafe api=v18
-      version: [1.12.2]
+      variants: +cxx+fortran+hl~mpic+shared+threadsafe api=v18
+      version: ['1.12.2']
+      externals:
+        - spec: hdf5@1.12.2 +cxx +fortran +hl ~mpi +shared +threadsafe api=v18
+          modules:
+            - cray-hdf5-parallel/1.12.2.1
+      buildable: false
     hpctoolkit:
       version:  ['2022.05.15']
       variants: +mpi+papi
@@ -354,16 +364,22 @@ spack:
     icu4c:
       version: ['67.1']
     idl:
-      version: ['8.7']
+      version: ['8.8.3']
     inputproto:
       version: ['2.3.2']
     intel:
       variants: +open
+      buildable: false
+      # version: ['19.1.3']
     intel-oneapi-compilers:
-      version: [2022.0.2]
-    intel-parallel-studio:
-      variants: ~tbb+mpi+ilp64+newdtags
-      version: [cluster.2020.4]
+      version: [2022.2.1]
+    # intel-parallel-studio: # DEBUG
+    #   variants: ~tbb+mpi+ilp64+newdtags
+    #   version: [cluster.2020.4]
+    #   externals:
+    #     - spec: intel-parallel-studio@cluster.2020.4
+    #       prefix: /usr
+    #   buildable: false
     intel-tbb:
       version: ['2020.3']
     intel-xed:
@@ -375,7 +391,7 @@ spack:
     jsoncpp:
       version: [1.9.4]
     julia_binary:
-      version: [1.7.2]
+      version: [1.8.2]
     kbproto:
       version: [1.0.7]
     krb5:
@@ -402,7 +418,8 @@ spack:
       version: ['1.1.3']
     libgcrypt:
       externals:
-        - spec: libgcrypt@1.10.1%gcc@11.2.0
+        - spec: libgcrypt20@1.8.2%gcc@11.2.0
+        # - spec: libgcrypt@1.10.1%gcc@11.2.0 #DEBUG
           prefix: /usr
       buildable: false
     libgd:
@@ -532,12 +549,12 @@ spack:
       version: [4.1.0]
     cray-mpich:
       # Provided by system
-      version: ['8.1.14']
+      version: ['8.1.21']
       variants: '+wrappers'
       externals:
-        - spec: cray-mpich@8.1.14 +wrappers os=sles15
+        - spec: cray-mpich@8.1.21 +wrappers os=sles15
           modules:
-            - cray-mpich/8.1.14
+            - cray-mpich/8.1.21
       buildable: false
     mvapich2:
       variants: +debug fabrics=psm2 file_systems=lustre,nfs,ufs process_managers=slurm
@@ -549,13 +566,28 @@ spack:
       version: ['6.2']
     netcdf-c:
       variants: ~mpi~parallel-netcdf+hdf4+pic+shared
-      version: [4.8.1]
+      version: ['4.9.0']
+      externals:
+        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared
+          modules:
+            - cray-netcdf-hdf5parallel/4.9.0.1
+      buildable: false
     netcdf-cxx4:
       variants: +pic
-      version: [4.3.1]
+      version: ['4.9.0']
+      externals:
+        - spec: netcdf-cxx4@4.9.0 +pic
+          modules:
+            - cray-netcdf-hdf5parallel/4.9.0.1
+      buildable: false
     netcdf-fortran:
       variants: +pic
-      version: [4.5.4]
+      version: ['4.9.0']
+      externals:
+        - spec: netcdf-fortran@4.9.0 +pic
+          modules:
+            - cray-netcdf-hdf5parallel/4.9.0.1
+      buildable: false
     ninja:
       version: ['1.10.2']
     numactl:
@@ -574,7 +606,12 @@ spack:
     papi:
       version: [6.0.0.1]
     parallel-netcdf:
-      version: [1.12.2]
+      version: ['1.12.3']
+      externals:
+        - spec: parallel-netcdf@1.12.3
+          modules:
+            - cray-parallel-netcdf/1.12.3.1
+      buildable: false
     paraview:
       variants: +eyedomelighting +fortran +hdf5 +osmesai +mpi +shared
                 +pagosa +python3 ~vtkm cuda_arch=none
@@ -589,7 +626,7 @@ spack:
       version: [3.2.0]
     perl:
       externals:
-        - spec: perl@5.16.3%gcc
+        - spec: perl@5.26.1%gcc
           prefix: /usr
       buildable: false
       version: [5.16.3]
@@ -734,7 +771,7 @@ spack:
       version: [1.5.0]
     rdma-core:
       externals:
-        - spec: rdma-core@22.4%gcc@11.2.0
+        - spec: rdma-core@31.0%gcc@11.2.0
           prefix: /usr
       buildable: false
     readline:
@@ -755,9 +792,9 @@ spack:
     shared-mime-info:
       version: ['1.9']
     slurm:
-      version: ['21.08.3']
+      version: ['22.05.6']
       externals:
-        - spec: slurm@21.08.3%gcc@11.2.0
+        - spec: slurm@22.05.6%gcc@11.2.0
           prefix: /usr
       buildable: false
     sqlite:
@@ -1025,7 +1062,7 @@ spack:
         intel-oneapi-compilers:
           environment:
             prepend_path:
-              MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2022.0.2
+              MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2022.2.1
               PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/bin
               LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/lib64
             set:
