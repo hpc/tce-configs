@@ -83,6 +83,12 @@ usage () {
     echo "      When given, create binary buildcache of the environment in"
     echo "      the directory specified by <buildcache path>."
     echo "      Environment Variable: TCE_BUILDCACHE"
+    # echo ""
+    # echo "  --prod <production buildcache path>"
+    # echo "      When given, create binary buildcache of the environment in"
+    # echo "      the directory specified by <production buildcache path>."
+    # echo "      Specifies the production buildcache to use.
+    # echo "      Environment Variable: TCE_PRODUCTION_BUILDCACHE"
     echo ""
     echo "  -g|--shared_group <group-name>"
     echo "      When given, set the group owner of the software built to the specified group"
@@ -1090,10 +1096,10 @@ See $bootstrap_log"
             bootstrap_stat=${valid_statuses[2]}
             build_continue=false
         else
+            mv "$tmp_sum" "${install_dir}/bootstrapped.md5"
             warning "Forcing concretization after bootstrapping."
             concretize=true
         fi
-        mv "$tmp_sum" "${install_dir}/bootstrapped.md5"
     fi
 else
     warning "No ${environment}/bootstrap_compilers.sh script found.
@@ -1198,16 +1204,32 @@ if [[ -n $buildcache ]]; then
 
     # Deactivating environment to pick up all built packages, not just those built for our
     # environment.
-    spack env deactivate
+    #TODO tgoetsch: added this check for spack env deactivate, does spack need to die if this fails?
+    if ! spack "${SPACK_VERBOSE[@]}" env deactivate; then
+        error_exit "Failed to deactivate environment."
+    fi
 
     for buildhash in $(spack find -lv | grep -vE '^==|^--|^ *$' | cut -c -7 | sort | uniq); do
         spack find -lv "/$buildhash" |& tee "$buildcache_log"
-        if ! spack "${SPACK_VERBOSE[@]}" buildcache create -m buildcache \
+
+        # Check if package binary cache exists in mirror, attempt to build it if it doesn't.
+        if ! spack "${SPACK_VERBOSE[@]}" buildcache check -m buildcache /
             --only package -a "/$buildhash" |& tee "$buildcache_log"; then
-            error "Binary cache creation failed for $buildhash. See $buildcache_log."
-            buildcache_stat=${valid_statuses[2]}
+            if ! spack "${SPACK_VERBOSE[@]}" buildcache create -m $buildcache  /
+                --only package -a "/$buildhash" |& tee "$buildcache_log"; then
+                error "Binary cache creation failed for $buildhash. See $buildcache_log."
+                buildcache_stat=${valid_statuses[2]}
+            fi
         fi
     done
+
+    # Upload any newly built binary packages to the buildcache mirror
+    cert_store=$(dirname $secret_path)
+    upload_tree=${config_repo_root}/bin/upload_tree.sh
+    if ! "${upload_tree}" $cert_store $buildcache |& tee "$buildcache_log"; then
+        error "Failed to upload buildcache changes to remote mirror. See $buildcache_log."
+        #TODO tgoetsch: should this cause spack to die?
+    fi
 
     # Reactivating environment
     if ! spack "${SPACK_VERBOSE[@]}" env activate -V "${release_name}"; then
