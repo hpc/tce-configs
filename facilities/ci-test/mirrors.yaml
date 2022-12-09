@@ -1,5 +1,5 @@
 mirrors:
     lanl: https://pe-serve.lanl.gov/spack-mirror
-    buildcache: https://pe-serve.lanl.gov/dev-buildcache
+    # buildcache: https://pe-serve.lanl.gov/dev-buildcache
     tce-2022-1-0: /usr/projects/hpcsoft/spack-mirror/tce-2022-1-0
     tce-2022-2-0: /usr/projects/hpcsoft/spack-mirror/tce-2022-2-0
