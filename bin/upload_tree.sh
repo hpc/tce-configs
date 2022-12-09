@@ -74,9 +74,9 @@ function main() {
     fi
 
     if ! [[ -e $cert_file ]]; then
-        error "Could not find cert file at $cert"
+        error "Could not find cert file at $cert_file"
     elif ! [[ -e $key_file ]]; then
-        error "Could not find key file at $key"
+        error "Could not find key file at $key_file"
     elif ! [[ -e $src_path ]]; then
         error "Source path '${src_path}' does not exist."
     fi
