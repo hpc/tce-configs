@@ -24,6 +24,7 @@ stage_def=false # Don't stop after staging everything (before doing concretizati
 no_stage_def=false # Don't skip over the stage step
 force_bootstrap_def=false # Don't force the use of the bootstrap script if it has already been run
 production_def=false # Don't upload binarycache to production. Defaults to development.
+cert_store_def='/usr/projects/hpctools/gitlab-ci/cert_store' # Path to certificates.
 ignorecache_def=false # Allow buildcache to be used.
 install_path_len_def='74' # This is the length of the CI path that we have configured
 spack_url_def='https://github.com/spack/spack' # URL for the official spack repo
@@ -84,6 +85,10 @@ usage () {
     echo "      When given, create binary buildcache of the environment in"
     echo "      the directory specified by <buildcache path>."
     echo "      Environment Variable: TCE_BUILDCACHE"
+    echo ""
+    echo "  --cert_store <cert_store path>"
+    echo "      Path to cert store for the upload_tree script"
+    echo "      Default: $cert_store_def"
     echo ""
     echo "  --production"
     echo "      Uploades the binary cache to production space"
@@ -499,6 +504,12 @@ case $key in
         production=true
         echo "Uploading buildcache to production"
         ;;
+    --cert_store)
+        shift
+        cert_store="$1"
+        echo "Cert store=${cert_store}"
+        shift
+        ;;
     -g|--shared_group)
         shift
         shared_group="$1"
@@ -711,6 +722,7 @@ module=${module:=${module_def}}
 stage=${stage:=${stage_def}}
 force_bootstrap=${force_bootstrap:-${force_bootstrap_def}}
 production=${production:-${production_def}}
+cert_store=${cert_store:-${cert_store_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
 buildcache=${buildcache:-${TCE_BUILDCACHE}}
 shared_group=${shared_group:-${TCE_SHARED_GROUP:-${shared_group_def}}}
@@ -1183,13 +1195,8 @@ if [[ -n $buildcache ]]; then
         warning "Could not set up secret key from ${secret_path}"
     fi
 
-    if [[ $production = true ]] ; then
-        status "Setting push url to ${buildcache}-prod"
-        spack mirror set-url buildcache --push --scope=site "${buildcache}"-prod
-    else
-        status "Setting push url to ${buildcache}"
-        spack mirror set-url buildcache --push --scope=site "${buildcache}"
-    fi
+    status "Setting push url to ${buildcache}"
+    spack mirror set-url buildcache --push --scope=site "${buildcache}"
 
     status "Generating build cache."
 
@@ -1205,6 +1212,13 @@ if [[ -n $buildcache ]]; then
             buildcache_stat=${valid_statuses[2]}
         fi
     done
+
+    if [[ $production = true ]]; then
+        mv $buildcache/build_cache $buildcache/build_cache-prod
+    fi
+
+    status "Uploading buildcache to pe-serve."
+    ./bin/upload_tree.sh $cert_store $buildcache
 
     # Reactivating environment
     if ! spack "${SPACK_VERBOSE[@]}" env activate -V "${release_name}"; then
