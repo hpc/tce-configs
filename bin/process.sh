@@ -1206,42 +1206,32 @@ if [[ -n $local_buildcache ]]; then
     if ! spack "${SPACK_VERBOSE[@]}" env deactivate; then
         error_exit "Failed to deactivate environment."
     fi
+
+    remote_buildcache_url=$(spack mirror list | awk -v ref="$remote_buildcache" '$1 == ref {print $2}')
+
     status "Printing available mirrors"
     spack mirror list
 
-    remote_buildcache_url=$(spack mirror list | awk -v ref="$remote_buildcache" '$1 == ref {print $2}')
-    status 
+    status "Setting push url to ${buildcache}"
+    spack mirror set-url buildcache --push --scope=site "${local_buildcache}"
+
+    status "Printing available mirrors"
+    spack mirror list
 
     status "Generating build cache."
     for buildhash in $(spack find -lv | grep -vE '^==|^--|^ *$' | cut -c -7 | sort | uniq); do
         spack find -lv "/$buildhash" |& tee "$buildcache_log"
-
-        status "Checking for binary package for buildhash $buildhash in mirror: $remote_buildcache $remote_buildcache_url"
-        #TODO: Is there a reason spack buildcache check and spack buildcache create use mirror_mnemonics and mirror_urls differently?
-        if spack "${SPACK_VERBOSE[@]}" buildcache check -m "${remote_buildcache_url}" -s "/$buildhash" |& tee "$buildcache_log"; then
-            status "Attempting to download binary package for buildhash $buildhash from mirror."
-            #TODO tgoetsch: make remote mirror a cmdline arg for upload_tree.sh
-            if ! spack "${SPACK_VERBOSE[@]}" buildcache download -s "/$buildhash" |& tee "$buildcache_log"; then
-                error "Download of binary package for buildhash $buildhash from $remote_buildcache failed. See $buildcache_log."
-                status "Attempting to create binary package for buildhash $buildhash in $local_buildcache"
-                if ! spack "${SPACK_VERBOSE[@]}" buildcache create -d $local_buildcache --only package -a "/$buildhash" |& tee "$buildcache_log"; then
-                    error "Binary package creation failed for buildhash $buildhash. See $buildcache_log."
-                    local_buildcache_stat=${valid_statuses[2]}
-                fi
-            fi
-        else
-            status "Attempting to create binary package for buildhash $buildhash in $local_buildcache"
-            if ! spack "${SPACK_VERBOSE[@]}" buildcache create -d $local_buildcache --only package -a "/$buildhash" |& tee "$buildcache_log"; then
-                error "Binary package creation failed for buildhash $buildhash. See $buildcache_log."
-                local_buildcache_stat=${valid_statuses[2]}
-            fi
+        status "Attempting to create binary package for buildhash $buildhash in $local_buildcache"
+        if ! spack "${SPACK_VERBOSE[@]}" buildcache create -d $local_buildcache --only package -a "/$buildhash" |& tee "$buildcache_log"; then
+            error "Binary package creation failed for buildhash $buildhash. See $buildcache_log."
+            local_buildcache_stat=${valid_statuses[2]}
         fi
-
     done
 
     # Upload any newly built binary packages to the buildcache mirror
     status "Uploading local buildcache to remote buildcache: $remote_buildcache $remote_buildcache_url"
     cert_store=$(dirname $secret_path)
+    #TODO tgoetsch: make remote mirror a cmdline arg for upload_tree.sh
     upload_tree=${config_repo_root}/bin/upload_tree.sh
     status "cert_store: $cert_store"
     status "upload_tree: $upload_tree"
