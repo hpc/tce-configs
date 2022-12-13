@@ -1,6 +1,6 @@
 spack:
   definitions:
-# Toss compilers
+    # Compilers
     - base-compiler:
       - gcc@11.2.0
     - toolchain-compiler-constraints:
@@ -16,11 +16,11 @@ spack:
     # that will break if that happens. So we have to force the builds of some software
     # to use an mpi built against the matching compiler.
     - gcc-10-mpi-constraints:
-      - ^cray-mpich@8.1.14 os=sles15
+      - ^cray-mpich@8.1.21 os=sles15
 
     # The same, for intel.
     - intel-mpi-constraints:
-      - ^cray-mpich@8.1.14%gcc os=sles15
+      - ^cray-mpich@8.1.21%gcc os=sles15
       
 
     # Note that we don't build anything for clang/mpi combos, so a clang specific
@@ -164,6 +164,7 @@ spack:
     all:
       # Unless otherwise specified, build with gcc
       compiler: [gcc@11.2.0]
+      target: [x86_64_v3]
 
       # Virtual packages and which specs provide that functionality.
       providers:
@@ -299,7 +300,6 @@ spack:
     gcc:
       variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
       version: [11.2.0]
-      target: [haswell]
     gdbm:
       version: ['1.23']
     gdk-pixbuf:
@@ -519,7 +519,7 @@ spack:
       version: ['5.8']
     mesa:
       variants: +osmesa swr=avx,avx2
-      version: [22.2.6]
+      version: [22.1.2]
     meson:
       version: ['0.62.1']
     mkfontdir:
@@ -532,12 +532,12 @@ spack:
       version: [4.1.0]
     cray-mpich:
       # Provided by system
-      version: ['8.1.14']
+      version: ['8.1.21']
       variants: '+wrappers'
       externals:
-        - spec: cray-mpich@8.1.14 +wrappers os=sles15
+        - spec: cray-mpich@8.1.21 +wrappers os=sles15
           modules:
-            - cray-mpich/8.1.14
+            - cray-mpich/8.1.21
       buildable: false
     mvapich2:
       variants: +debug fabrics=psm2 file_systems=lustre,nfs,ufs process_managers=slurm
