@@ -5,6 +5,8 @@ install_dir=$1
 fix_compiler="${REPO_ROOT}/bin/fix_compiler" # REPO_ROOT provided by wrapper
 compilers_yaml="${install_dir}/spack/etc/spack/compilers.yaml"
 
+module switch PrgEnv-intel PrgEnv-cray
+
 echo "Checking for compilers under PrgEnv-cray"
 spack compiler find --scope=site
 

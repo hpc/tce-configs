@@ -45,8 +45,8 @@ usage () {
     echo "  specified through the command line, environment, or process.cfg file."
     echo ""
     echo "  -C|--cache-only"
-    echo "	When building out on a machine, we'd like to force it to only utilize"
-    echo "	binary caches, not build anything from source"
+    echo "  When building out on a machine, we'd like to force it to only utilize"
+    echo "  binary caches, not build anything from source"
     echo ""
     echo "  -f|--facility <facility>"
     echo "      Name of the facility directory for this deployment.  This"
@@ -93,6 +93,9 @@ usage () {
     echo "  --production"
     echo "      Uploades the binary cache to production space"
     echo "      Default: $production_def"
+    echo ""
+    echo "  --skip-buildcache-on-failure"
+    echo "  On install or other failure, skip buildcache generation."
     echo ""
     echo "  -g|--shared_group <group-name>"
     echo "      When given, set the group owner of the software built to the specified group"
@@ -146,7 +149,7 @@ usage () {
     echo ""
     echo "  --no-stage"
     echo "      Skip over stage step, this assumes that the Spacklemore and Spack"
-    echo "	repos are already in place by another means (i.e., --stage, then sync) before"
+    echo "      repos are already in place by another means (i.e., --stage, then sync) before"
     echo "      concretization, installation, and/or module generation."
     echo "      Default: $no_stage_def"
     echo ""
@@ -510,6 +513,10 @@ case $key in
         echo "Cert store=${cert_store}"
         shift
         ;;
+    --skip-buildcache-on-failure)
+        shift
+        skip_buildcache_on_failure=true
+        ;;
     -g|--shared_group)
         shift
         shared_group="$1"
@@ -726,6 +733,7 @@ production=${production:-${production_def}}
 cert_store=${cert_store:-${cert_store_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
 local_buildcache=${local_buildcache:-${TCE_BUILDCACHE}}
+skip_buildcache_on_failure=false
 shared_group=${shared_group:-${TCE_SHARED_GROUP:-${shared_group_def}}}
 secret_path=${secret_path:-${TCE_SECRET}}
 public_key_path=${public_key_path:-${TCE_PUBLIC_KEY}}
@@ -1201,7 +1209,11 @@ if [[ $build_continue = true ]]; then
     fi
 fi
 
-#DEBUG BUILDCACHE
+# Skip the buildcache step
+if [[ $build_continue = false ]] && [[ $skip_buildcache_on_failure ]]; then
+    buildcache=
+fi
+
 # Generate the build cache. Doing this doesn't depend on past stages being
 # attempted or being successful. This could be building a buildcache of a
 # previous run.
