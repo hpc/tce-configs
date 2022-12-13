@@ -23,6 +23,8 @@ module_def=false # Don't generate modulefiles
 stage_def=false # Don't stop after staging everything (before doing concretization, install, etc)
 no_stage_def=false # Don't skip over the stage step
 force_bootstrap_def=false # Don't force the use of the bootstrap script if it has already been run
+production_def=false # Don't upload binarycache to production. Defaults to development.
+cert_store_def='/usr/projects/hpctools/gitlab-ci/cert_store' # Path to certificates.
 ignorecache_def=false # Allow buildcache to be used.
 install_path_len_def='74' # This is the length of the CI path that we have configured
 spack_url_def='https://github.com/spack/spack' # URL for the official spack repo
@@ -79,12 +81,18 @@ usage () {
     echo "      appended to this path."
     echo "      Environment Variable: TCE_INSTALL_DIR"
     echo ""
-    echo "  -b|--buildcache <local_buildcache_path> <remote_buildcache_name>"
+    echo "  -b|--buildcache <local_buildcache_path>"
     echo "      When given, create binary buildcache of the environment in"
-    echo "      the directory specified by <local_buildcache_path> and check"
-    echo "      for binaries at <remote_buildcache_name>. <remote_buildcache_name>"
-    echo "      needs to be a valid entry in mirrors.yaml"
+    echo "      the directory specified by <local_buildcache_path>. "
     echo "      Environment Variable: TCE_BUILDCACHE"
+    echo ""
+    echo "  --cert_store <cert_store path>"
+    echo "      Path to cert store for the upload_tree script"
+    echo "      Default: $cert_store_def"
+    echo ""
+    echo "  --production"
+    echo "      Uploades the binary cache to production space"
+    echo "      Default: $production_def"
     echo ""
     echo "  -g|--shared_group <group-name>"
     echo "      When given, set the group owner of the software built to the specified group"
@@ -490,8 +498,16 @@ case $key in
         local_buildcache="$1"
         echo "Build cache=${local_buildcache}"
         shift
-        remote_buildcache="$1"
-        echo "Remote build cache=${remote_buildcache}"
+        ;;
+    --production)
+        shift
+        production=true
+        echo "Uploading buildcache to production"
+        ;;
+    --cert_store)
+        shift
+        cert_store="$1"
+        echo "Cert store=${cert_store}"
         shift
         ;;
     -g|--shared_group)
@@ -706,6 +722,8 @@ skip_install=${skip_install:-${skip_install_def}}
 module=${module:=${module_def}}
 stage=${stage:=${stage_def}}
 force_bootstrap=${force_bootstrap:-${force_bootstrap_def}}
+production=${production:-${production_def}}
+cert_store=${cert_store:-${cert_store_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
 local_buildcache=${local_buildcache:-${TCE_BUILDCACHE}}
 shared_group=${shared_group:-${TCE_SHARED_GROUP:-${shared_group_def}}}
@@ -1026,15 +1044,19 @@ fi
 # even in the face of failure.
 
 # An array to house valid status indicators
-valid_statuses=( "Not Done" "Successful" "Failed" "Skipped" )
+NOT_DONE="Not Done"
+SUCCESSFUL="Successful"
+FAILED="Failed"
+SKIPPED="Skipped"
+valid_statuses=( $NOT_DONE $SUCCESSFUL $FAILED $SKIPPED )
 # Variables to track the status of the stages
-bootstrap_stat=${valid_statuses[0]}
-reindex_stat=${valid_statuses[0]}
-concretize_stat=${valid_statuses[0]}
-install_stat=${valid_statuses[0]}
-local_buildcache_stat=${valid_statuses[0]}
-remote_buildcache_stat=${valid_statuses[0]}
-module_stat=${valid_statuses[0]}
+bootstrap_stat=$NOT_DONE
+reindex_stat=$NOT_DONE
+concretize_stat=$NOT_DONE
+install_stat=$NOT_DONE
+local_buildcache_stat=$NOT_DONE
+upload_buildcache_stat=$NOT_DONE
+module_stat=$NOT_DONE
 # Variable to track whether or not to continue doing each stage. This will
 # allow continuing with execution of this script until the end.
 build_continue=true
@@ -1073,7 +1095,7 @@ function do_concretize() {
 
 status "Checking for compiler bootstrap script."
 if [[ -e ${environment}/bootstrap_compilers.sh ]]; then
-    bootstrap_stat=${valid_statuses[1]}
+    bootstrap_stat=$SUCCESSFUL
     wrapper=${config_repo_root}/bin/wrapper.sh
     tmp_sum=$(mktemp)
     md5sum "${environment}/bootstrap_compilers.sh" > "${tmp_sum}"
@@ -1082,7 +1104,7 @@ if [[ -e ${environment}/bootstrap_compilers.sh ]]; then
         [[ ${force_bootstrap} = false ]]; then
 
         status "Skipping compiler bootstrap script (already run)."
-        bootstrap_stat=${valid_statuses[3]}
+        bootstrap_stat=$SKIPPED
     else
         status "Running compiler bootstrap script."
         make_log "$log_dir" bootstrap
@@ -1094,7 +1116,7 @@ if [[ -e ${environment}/bootstrap_compilers.sh ]]; then
                 |& tee "$bootstrap_log"; then
             error "Running ${environment}/bootstrap_compilers.sh failed.
 See $bootstrap_log"
-            bootstrap_stat=${valid_statuses[2]}
+            bootstrap_stat=$FAILED
             build_continue=false
         else
             mv "$tmp_sum" "${install_dir}/bootstrapped.md5"
@@ -1105,25 +1127,25 @@ See $bootstrap_log"
 else
     warning "No ${environment}/bootstrap_compilers.sh script found.
 Create one to bootstrap base compilers, if needed."
-    bootstrap_stat=${valid_statuses[3]}
+    bootstrap_stat=$SKIPPED
 fi
 
 # Reindex if option was provided
 if [[ $build_continue = true ]]; then
     rendx_log=""
     if [[ $reindex = true ]]; then
-        reindex_stat=${valid_statuses[1]}
+        reindex_stat=$SUCCESSFUL
         status "Reindexing"
         make_log "$log_dir" rendx
         rendx_log=$make_log_path
         if ! do_reindex "$rendx_log"; then
             error "Reindexing failed.  See $rendx_log"
-            reindex_stat=${valid_statuses[2]}
+            reindex_stat=$FAILED
             build_continue=false
         fi
     else
         status "Skipping reindexing"
-        reindex_stat=${valid_statuses[3]}
+        reindex_stat=$SKIPPED
     fi
 fi
 
@@ -1131,18 +1153,18 @@ fi
 if [[ $build_continue = true ]]; then
     if [[ $concretize = true ]]; then
         conc_log=""
-        concretize_stat=${valid_statuses[1]}
+        concretize_stat=$SUCCESSFUL
         status "Concretizing"
         make_log "$log_dir" conc
         conc_log=$make_log_path
         if ! do_concretize "$conc_log"; then
             error "Concretization failed.  See $conc_log"
-            concretize_stat=${valid_statuses[2]}
+            concretize_stat=$FAILED
             build_continue=false
         fi
     else
         status "Skipping Concretization"
-        concretize_stat=${valid_statuses[3]}
+        concretize_stat=$SKIPPED
     fi
 fi
 
@@ -1166,16 +1188,16 @@ if [[ $build_continue = true ]]; then
         inst_log=""
         make_log "$log_dir" inst
         inst_log=${make_log_path}
-        install_stat=${valid_statuses[1]}
+        install_stat=$SUCCESSFUL
         status "Installing"
         if ! do_install "$inst_log"; then
             error "Installation failed.  See $inst_log"
-            install_stat=${valid_statuses[2]}
+            install_stat=$FAILED
             build_continue=false
         fi
     else
         status "Skipping install step"
-        install_stat=${valid_statuses[3]}
+        install_stat=$SKIPPED
     fi
 fi
 
@@ -1188,8 +1210,8 @@ if [[ -n $local_buildcache ]]; then
     buildcache_log=${make_log_path}
 
     #TODO tgoetsch: should the inital state of these stats be "Successful" or rather "Not Done"?
-    local_buildcache_stat=${valid_statuses[1]}
-    remote_buildcache_stat=${valid_statuses[1]}
+    local_buildcache_stat=$SUCCESSFUL
+    upload_buildcache_stat=$SUCCESSFUL
 
     # Initialize the signing key.
     status "Adding secret key"
@@ -1207,12 +1229,10 @@ if [[ -n $local_buildcache ]]; then
         error_exit "Failed to deactivate environment."
     fi
 
-    remote_buildcache_url=$(spack mirror list | awk -v ref="$remote_buildcache" '$1 == ref {print $2}')
-
     status "Printing available mirrors"
     spack mirror list
 
-    status "Setting push url to ${buildcache}"
+    status "Setting push url to ${local_buildcache}"
     spack mirror set-url buildcache --push --scope=site "${local_buildcache}"
 
     status "Printing available mirrors"
@@ -1224,21 +1244,19 @@ if [[ -n $local_buildcache ]]; then
         status "Attempting to create binary package for buildhash $buildhash in $local_buildcache"
         if ! spack "${SPACK_VERBOSE[@]}" buildcache create -d $local_buildcache --only package -a "/$buildhash" |& tee "$buildcache_log"; then
             error "Binary package creation failed for buildhash $buildhash. See $buildcache_log."
-            local_buildcache_stat=${valid_statuses[2]}
+            local_buildcache_stat=$FAILED
         fi
     done
 
-    # Upload any newly built binary packages to the buildcache mirror
-    status "Uploading local buildcache to remote buildcache: $remote_buildcache $remote_buildcache_url"
-    cert_store=$(dirname $secret_path)
-    #TODO tgoetsch: make remote mirror a cmdline arg for upload_tree.sh
+    if [[ $production = true ]]; then
+        mv $local_buildcache/build_cache-dev $local_buildcache/build_cache-prod
+    fi
+
+    status "Uploading buildcache to pe-serve."
     upload_tree=${config_repo_root}/bin/upload_tree.sh
-    status "cert_store: $cert_store"
-    status "upload_tree: $upload_tree"
-    #TODO tgoetsch: should we ask for a cmdline arg to specify whether to upload the buildcache?
     if ! "${upload_tree}" $cert_store $local_buildcache |& tee "$buildcache_log"; then
-        remote_buildcache_stat=${valid_statuses[2]}
-        error "Failed to upload buildcache changes to remote buildcache. See $buildcache_log."
+        upload_buildcache_stat=$FAILED
+        error "Failed to upload buildcache changes to pe-serve. See $buildcache_log."
         #TODO tgoetsch: should this cause spack to die?
     fi
 
@@ -1248,8 +1266,8 @@ if [[ -n $local_buildcache ]]; then
     fi
 else
     status "Skipping the buildcache step"
-    local_buildcache_stat=${valid_statuses[3]}
-    remote_buildcache_stat=${valid_statuses[3]}
+    local_buildcache_stat=$SKIPPED
+    upload_buildcache_stat=$SKIPPED
 fi
 
 # Run the module generation based on the type of install, if requested and if
@@ -1259,7 +1277,7 @@ fi
 if [[ $build_continue = true ]]; then
     mod_log_list=""
     if [[ $module = true ]]; then
-        module_stat=${valid_statuses[1]}
+        module_stat=$SUCCESSFUL
         status "Generating modules"
         #TODO tgoetsch: if module gen has issues on the Cray Shasta systems, check this for bug
         if [[ "$environment_name" =~ linux-rhel7-x86_64_v3-* ||
@@ -1283,21 +1301,21 @@ if [[ $build_continue = true ]]; then
                 if ! /usr/bin/time spack "${SPACK_VERBOSE[@]}" module "${mod_type}" \
                    -n "$mod_name" refresh -y "${delete_tree}" |& tee "${make_log_path}" ; then
                     error "Module generation failed for $mod_name. See $make_log_path."
-                    module_stat=${valid_statuses[2]}
+                    module_stat=$FAILED
                     build_continue=false
                     break
                 fi
             elif ! /usr/bin/time spack "${SPACK_VERBOSE[@]}" module "${mod_type}" \
                  -n "$mod_name" refresh -y |& tee "${make_log_path}" ; then
                 error "Module generation failed for $mod_name. See $make_log_path."
-                module_stat=${valid_statuses[2]}
+                module_stat=$FAILED
                 build_continue=false
                 break
             fi
         done
     else
         status "Skipping module generation"
-        module_stat=${valid_statuses[3]}
+        module_stat=$SKIPPED
     fi
 fi
 
@@ -1309,38 +1327,38 @@ echo "  Command used: $arg_set"
 echo "  Installation type: $environment_name"
 echo "  Installation directory: $install_dir"
 echo "  Bootstrap: $bootstrap_stat"
-if [[ $bootstrap_stat == "${valid_statuses[1]}" || \
-    $bootstrap_stat == "${valid_statuses[2]}" ]]; then
+if [[ $bootstrap_stat == "$SUCCESSFUL" || \
+    $bootstrap_stat == "$FAILED" ]]; then
     echo "    See $bootstrap_log"
 fi
 echo "  Reindex: $reindex_stat"
-if [[ $reindex_stat == "${valid_statuses[1]}" || \
-    $reindex_stat == "${valid_statuses[2]}" ]]; then
+if [[ $reindex_stat == "$SUCCESSFUL" || \
+    $reindex_stat == "$FAILED" ]]; then
     echo "    See $rendx_log"
 fi
 echo "  Concretization: $concretize_stat"
-if [[ $concretize_stat == "${valid_statuses[1]}" || \
-    $concretize_stat == "${valid_statuses[2]}" ]]; then
+if [[ $concretize_stat == "$SUCCESSFUL" || \
+    $concretize_stat == "$FAILED" ]]; then
     echo "    See $conc_log"
 fi
 echo "  Installation: $install_stat"
-if [[ $install_stat == "${valid_statuses[1]}" || \
-    $install_stat == "${valid_statuses[2]}" ]]; then
+if [[ $install_stat == "$SUCCESSFUL" || \
+    $install_stat == "$FAILED" ]]; then
     echo "    See $inst_log"
 fi
 echo "  Local Buildcache Generation: $local_buildcache_stat"
-if [[ $local_buildcache_stat == "${valid_statuses[1]}" || \
-    $local_buildcache_stat == "${valid_statuses[2]}" ]]; then
+if [[ $local_buildcache_stat == "$SUCCESSFUL" || \
+    $local_buildcache_stat == "$FAILED" ]]; then
     echo "    See $buildcache_log"
 fi
-echo "  Upload to Remote Buildcache: $remote_buildcache_stat"
-if [[ $remote_buildcache_stat == "${valid_statuses[1]}" || \
-    $remote_buildcache_stat == "${valid_statuses[2]}" ]]; then
+echo "  Upload to Remote Buildcache: $upload_buildcache_stat"
+if [[ $upload_buildcache_stat == "$SUCCESSFUL" || \
+    $upload_buildcache_stat == "$FAILED" ]]; then
     echo "    See $buildcache_log"
 fi
 echo "  Module Generation: $module_stat"
-if [[ $module_stat == "${valid_statuses[1]}" || \
-    $module_stat == "${valid_statuses[2]}" ]]; then
+if [[ $module_stat == "$SUCCESSFUL" || \
+    $module_stat == "$FAILED" ]]; then
     echo "    See the following logs:"
     for mod_log in $mod_log_list; do
         echo "      $mod_log"

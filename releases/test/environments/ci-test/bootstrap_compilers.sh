@@ -12,11 +12,14 @@ echo "Concretizing after adding gcc@10.2.0."
 spack "${SPACK_VERBOSE[@]}" concretize
 
 echo "Installing gcc@10.2.0 in the Spack env."
-spack "${SPACK_VERBOSE[@]}" install --add "${SPACK_NO_CACHE}" gcc@10.2.0 ^binutils+ld+gold~nls+gas
+spack "${SPACK_VERBOSE[@]}" install "${SPACK_NO_CACHE}" gcc@10.2.0 ^binutils+ld+gold~nls+gas
 
+spack "${SPACK_VEBOSE[@]}" load "${SPACK_NO_CACHE}" gcc@10.2.0 ^binutils+ld+gold~nls+gas
+
+spack compiler find --scope=site
 echo "Setting binutils_path"
 binutils_path=$(spack find --loaded --long -p | grep binutils | awk '{ print $3 }')/bin
-${fix_compiler} "$compilers_yaml" gcc@10.3.0 rhel7 x86_64 edit --env="PATH+=${binutils_path}"
+${fix_compiler} "$compilers_yaml" gcc@10.2.0 rhel7 x86_64 edit --env="PATH+=${binutils_path}"
 
 echo "Unloading Spack env(?)"
 spack unload -a 
