@@ -79,16 +79,12 @@ usage () {
     echo "      appended to this path."
     echo "      Environment Variable: TCE_INSTALL_DIR"
     echo ""
-    echo "  -b|--buildcache <buildcache path>"
+    echo "  -b|--buildcache <local_buildcache_path> <remote_buildcache_name>"
     echo "      When given, create binary buildcache of the environment in"
-    echo "      the directory specified by <buildcache path>."
+    echo "      the directory specified by <local_buildcache_path> and check"
+    echo "      for binaries at <remote_buildcache_name>. <remote_buildcache_name>"
+    echo "      needs to be a valid entry in mirrors.yaml"
     echo "      Environment Variable: TCE_BUILDCACHE"
-    # echo ""
-    # echo "  --prod <production buildcache path>"
-    # echo "      When given, create binary buildcache of the environment in"
-    # echo "      the directory specified by <production buildcache path>."
-    # echo "      Specifies the production buildcache to use.
-    # echo "      Environment Variable: TCE_PRODUCTION_BUILDCACHE"
     echo ""
     echo "  -g|--shared_group <group-name>"
     echo "      When given, set the group owner of the software built to the specified group"
@@ -491,8 +487,11 @@ case $key in
         ;;
     -b|--buildcache)
         shift
-        buildcache="$1"
-        echo "Build cache=${buildcache}"
+        local_buildcache="$1"
+        echo "Build cache=${local_buildcache}"
+        shift
+        remote_buildcache="$1"
+        echo "Remote build cache=${remote_buildcache}"
         shift
         ;;
     -g|--shared_group)
@@ -547,6 +546,7 @@ case $key in
         shift
         secret_path=$1
         echo "Secret=$secret_path"
+        #TODO tgoetsch: Set default if not provided.
         shift
         ;;
     --public-key)
@@ -707,7 +707,7 @@ module=${module:=${module_def}}
 stage=${stage:=${stage_def}}
 force_bootstrap=${force_bootstrap:-${force_bootstrap_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
-buildcache=${buildcache:-${TCE_BUILDCACHE}}
+local_buildcache=${local_buildcache:-${TCE_BUILDCACHE}}
 shared_group=${shared_group:-${TCE_SHARED_GROUP:-${shared_group_def}}}
 secret_path=${secret_path:-${TCE_SECRET}}
 public_key_path=${public_key_path:-${TCE_PUBLIC_KEY}}
@@ -726,7 +726,7 @@ time_limit=${time_limit:-${TCE_TIME_LIMIT:-${time_limit_def}}}
 install_dir=${install_dir%/}
 
 # There are a few things to check when doing a buildcache
-if [[ -n $buildcache ]]; then
+if [[ -n $local_buildcache ]]; then
     # Set install_root appropriately if not set already
     if [[ -z "${install_root}" ]]; then
         install_root="\$spack/.."
@@ -794,7 +794,7 @@ fi
 # and suggest an appropriate path length. If the buildcache path is too long
 # without any padding... idk yet.
 
-if [[ -n $buildcache ]]; then
+if [[ -n $local_buildcache ]]; then
     # When generating the build cache, the prefix must be the same
     # length to ensure binary cached builds will always be relocatable.
     inst_env_name=$(echo "${environment_name}__________" | cut -c -9)
@@ -1032,7 +1032,8 @@ bootstrap_stat=${valid_statuses[0]}
 reindex_stat=${valid_statuses[0]}
 concretize_stat=${valid_statuses[0]}
 install_stat=${valid_statuses[0]}
-buildcache_stat=${valid_statuses[0]}
+local_buildcache_stat=${valid_statuses[0]}
+remote_buildcache_stat=${valid_statuses[0]}
 module_stat=${valid_statuses[0]}
 # Variable to track whether or not to continue doing each stage. This will
 # allow continuing with execution of this script until the end.
@@ -1182,52 +1183,72 @@ fi
 # Generate the build cache. Doing this doesn't depend on past stages being
 # attempted or being successful. This could be building a buildcache of a
 # previous run.
-if [[ -n $buildcache ]]; then
-    make_log "$log_dir" buildcache
+if [[ -n $local_buildcache ]]; then
+    make_log "$log_dir" local_buildcache
     buildcache_log=${make_log_path}
 
     #TODO tgoetsch: should the inital state of these stats be "Successful" or rather "Not Done"?
-    buildcache_stat=${valid_statuses[1]}
+    local_buildcache_stat=${valid_statuses[1]}
+    remote_buildcache_stat=${valid_statuses[1]}
 
     # Initialize the signing key.
     status "Adding secret key"
+    #TODO tgoetsch: maybe make more robust check for secret?
     if ! spack gpg trust "$secret_path" |& tee "$buildcache_log"; then
         # If the key is already imported, this is fine.
         warning "Could not set up secret key from ${secret_path}"
     fi
 
-    #TODO tgoetsch: possible divergence point for ci/production buildcache's?
-    status "Setting push url to ${buildcache}"
-    spack mirror set-url buildcache --push --scope=site "${buildcache}"
-
-    status "Generating build cache."
-
     # Deactivating environment to pick up all built packages, not just those built for our
     # environment.
     #TODO tgoetsch: added this check for spack env deactivate, does spack need to die if this fails?
+    status "Deactivating spack environment"
     if ! spack "${SPACK_VERBOSE[@]}" env deactivate; then
         error_exit "Failed to deactivate environment."
     fi
+    status "Printing available mirrors"
+    spack mirror list
 
+    remote_buildcache_url=$(spack mirror list | awk -v ref="$remote_buildcache" '$1 == ref {print $2}')
+    status 
+
+    status "Generating build cache."
     for buildhash in $(spack find -lv | grep -vE '^==|^--|^ *$' | cut -c -7 | sort | uniq); do
         spack find -lv "/$buildhash" |& tee "$buildcache_log"
 
-        # Check if package binary cache exists in mirror, attempt to build it if it doesn't.
-        if ! spack "${SPACK_VERBOSE[@]}" buildcache check -m buildcache /
-            --only package -a "/$buildhash" |& tee "$buildcache_log"; then
-            if ! spack "${SPACK_VERBOSE[@]}" buildcache create -m $buildcache  /
-                --only package -a "/$buildhash" |& tee "$buildcache_log"; then
-                error "Binary cache creation failed for $buildhash. See $buildcache_log."
-                buildcache_stat=${valid_statuses[2]}
+        status "Checking for binary package for buildhash $buildhash in mirror: $remote_buildcache $remote_buildcache_url"
+        #TODO: Is there a reason spack buildcache check and spack buildcache create use mirror_mnemonics and mirror_urls differently?
+        if spack "${SPACK_VERBOSE[@]}" buildcache check -m "${remote_buildcache_url}" -s "/$buildhash" |& tee "$buildcache_log"; then
+            status "Attempting to download binary package for buildhash $buildhash from mirror."
+            #TODO tgoetsch: make remote mirror a cmdline arg for upload_tree.sh
+            if ! spack "${SPACK_VERBOSE[@]}" buildcache download -s "/$buildhash" |& tee "$buildcache_log"; then
+                error "Download of binary package for buildhash $buildhash from $remote_buildcache failed. See $buildcache_log."
+                status "Attempting to create binary package for buildhash $buildhash in $local_buildcache"
+                if ! spack "${SPACK_VERBOSE[@]}" buildcache create -d $local_buildcache --only package -a "/$buildhash" |& tee "$buildcache_log"; then
+                    error "Binary package creation failed for buildhash $buildhash. See $buildcache_log."
+                    local_buildcache_stat=${valid_statuses[2]}
+                fi
+            fi
+        else
+            status "Attempting to create binary package for buildhash $buildhash in $local_buildcache"
+            if ! spack "${SPACK_VERBOSE[@]}" buildcache create -d $local_buildcache --only package -a "/$buildhash" |& tee "$buildcache_log"; then
+                error "Binary package creation failed for buildhash $buildhash. See $buildcache_log."
+                local_buildcache_stat=${valid_statuses[2]}
             fi
         fi
+
     done
 
     # Upload any newly built binary packages to the buildcache mirror
+    status "Uploading local buildcache to remote buildcache: $remote_buildcache $remote_buildcache_url"
     cert_store=$(dirname $secret_path)
     upload_tree=${config_repo_root}/bin/upload_tree.sh
-    if ! "${upload_tree}" $cert_store $buildcache |& tee "$buildcache_log"; then
-        error "Failed to upload buildcache changes to remote mirror. See $buildcache_log."
+    status "cert_store: $cert_store"
+    status "upload_tree: $upload_tree"
+    #TODO tgoetsch: should we ask for a cmdline arg to specify whether to upload the buildcache?
+    if ! "${upload_tree}" $cert_store $local_buildcache |& tee "$buildcache_log"; then
+        remote_buildcache_stat=${valid_statuses[2]}
+        error "Failed to upload buildcache changes to remote buildcache. See $buildcache_log."
         #TODO tgoetsch: should this cause spack to die?
     fi
 
@@ -1237,7 +1258,8 @@ if [[ -n $buildcache ]]; then
     fi
 else
     status "Skipping the buildcache step"
-    buildcache_stat=${valid_statuses[3]}
+    local_buildcache_stat=${valid_statuses[3]}
+    remote_buildcache_stat=${valid_statuses[3]}
 fi
 
 # Run the module generation based on the type of install, if requested and if
@@ -1316,9 +1338,14 @@ if [[ $install_stat == "${valid_statuses[1]}" || \
     $install_stat == "${valid_statuses[2]}" ]]; then
     echo "    See $inst_log"
 fi
-echo "  Buildcache Generation: $buildcache_stat"
-if [[ $buildcache_stat == "${valid_statuses[1]}" || \
-    $buildcache_stat == "${valid_statuses[2]}" ]]; then
+echo "  Local Buildcache Generation: $local_buildcache_stat"
+if [[ $local_buildcache_stat == "${valid_statuses[1]}" || \
+    $local_buildcache_stat == "${valid_statuses[2]}" ]]; then
+    echo "    See $buildcache_log"
+fi
+echo "  Upload to Remote Buildcache: $remote_buildcache_stat"
+if [[ $remote_buildcache_stat == "${valid_statuses[1]}" || \
+    $remote_buildcache_stat == "${valid_statuses[2]}" ]]; then
     echo "    See $buildcache_log"
 fi
 echo "  Module Generation: $module_stat"
