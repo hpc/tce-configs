@@ -535,7 +535,7 @@ spack:
       version: ['8.1.21']
       variants: '+wrappers'
       externals:
-        - spec: cray-mpich@8.1.21 +wrappers os=sles15
+        - spec: cray-mpich@8.1.21 os=sles15
           modules:
             - cray-mpich/8.1.21
       buildable: false

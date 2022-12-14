@@ -974,7 +974,6 @@ fi
 
 status "Updating and activating the spack environment release ${release_name}"
 spack --stacktrace env update -y "${release_name}"
-echo "Wooooh!"
 
 # Add the spacklemore repo for this deployment.
 if [[ ! -f "${spack_root}/etc/spack/repos.yaml" ]]; then
