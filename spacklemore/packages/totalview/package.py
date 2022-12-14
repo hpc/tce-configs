@@ -85,14 +85,14 @@ class Totalview(Package):
     )
     resource(
         name="x86_64",
-        url="totalview_{0}_linux_x86-64.tar".format("2022.2.13"),
+        url="file:///fake_mirror/x86_64-2022.2.13.tar",
         destination=".",
         sha256="aebd11b837ce18b8200859ea762caa56e2cea346daa114f2841aa0f05a422309",
         when="@2022.2.13 target=x86_64:",
     )
 
     def url_for_version(self, version):
-        return "file://{0}/totalview.{1}-doc.tar".format(os.getcwd(), version)
+        return "file:///fake_mirror/totalview-{0}.tar".format(version)
 
     def setup_run_environment(self, env):
         env.prepend_path(
