@@ -1,6 +1,6 @@
 spack:
   definitions:
-# Toss compilers
+    # Compilers
     - base-compiler:
       - gcc@11.2.0
     - toolchain-compiler-constraints:
@@ -164,6 +164,7 @@ spack:
     all:
       # Unless otherwise specified, build with gcc
       compiler: [gcc@11.2.0]
+      target: [x86_64_v3]
 
       # Virtual packages and which specs provide that functionality.
       providers:
@@ -304,7 +305,6 @@ spack:
     gcc:
       variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
       version: [11.2.0]
-      target: [haswell]
     gdbm:
       version: ['1.23']
     gdk-pixbuf:
@@ -536,7 +536,7 @@ spack:
       version: ['5.8']
     mesa:
       variants: +osmesa swr=avx,avx2
-      version: [22.2.6]
+      version: [22.1.2]
     meson:
       version: ['0.62.1']
     mkfontdir:

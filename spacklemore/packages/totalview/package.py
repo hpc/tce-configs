@@ -43,49 +43,49 @@ class Totalview(Package):
     # resource once the target architecture is known.
     resource(
         name="x86_64",
-        url="totalview_{0}_linux_x86-64.tar".format(version),
+        url="totalview_{0}_linux_x86-64.tar".format("2019.2.18"),
         destination=".",
         sha256="3b0ab078deff3654ddc912a004d256f1376978aa1c4dd5a8a41fa9fbb474d07c",
         when="@2019.2.18 target=x86_64:",
     )
     resource(
         name="aarch64",
-        url="totalview_{0}_linux_arm64.tar".format(version),
+        url="totalview_{0}_linux_arm64.tar".format("2019.2.18"),
         destination=".",
         sha256="3bbda1aa7c06ce82874c1517bf949c9f6cbd0f4c9ebe283d21f0643f6e724b6b",
         when="@2019.2.18 target=aarch64:",
     )
     resource(
         name="ppcle",
-        url="totalview_{0}_linux_powerle.tar".format(version),
+        url="totalview_{0}_linux_powerle.tar".format("2019.2.18"),
         destination=".",
         sha256="c0e4dbf145312fc7143ad0b7e9474e653933581990e0b9d07237c73dbdff8365",
         when="@2019.2.18 target=ppc64le:",
     )
     resource(
         name="x86_64",
-        url="totalview_{0}_linux_x86-64.tar".format(version),
+        url="totalview_{0}_linux_x86-64.tar".format("2021.1.16"),
         destination=".",
         sha256="129e991d3ce4df9f9f04adbf79b62d3c2706d7732ec305f3d3c97a6b4d1f5a13",
         when="@2021.1.16 target=x86_64:",
     )
     resource(
         name="aarch64",
-        url="totalview_{0}_linux_arm64.tar".format(version),
+        url="totalview_{0}_linux_arm64.tar".format("2021.1.16"),
         destination=".",
         sha256="d559c0e090b2a6b935986324a2f1b20c02c5a2991432b8305952c120db41cdb5",
         when="@2021.1.16 target=aarch64:",
     )
     resource(
         name="ppcle",
-        url="totalview_{0}_linux_powerle.tar".format(version),
+        url="totalview_{0}_linux_powerle.tar".format("2021.1.16"),
         destination=".",
         sha256="88c6bf82bd0807f826e2920967b288ac40e9bc56554e55966dfea793bc9c2b0a",
         when="@2021.1.16 target=ppcle:",
     )
     resource(
         name="x86_64",
-        url="totalview_{0}_linux_x86-64.tar".format(version),
+        url="totalview_{0}_linux_x86-64.tar".format("2022.2.13"),
         destination=".",
         sha256="aebd11b837ce18b8200859ea762caa56e2cea346daa114f2841aa0f05a422309",
         when="@2022.2.13 target=x86_64:",
