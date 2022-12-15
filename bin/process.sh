@@ -23,8 +23,7 @@ module_def=false # Don't generate modulefiles
 stage_def=false # Don't stop after staging everything (before doing concretization, install, etc)
 no_stage_def=false # Don't skip over the stage step
 force_bootstrap_def=false # Don't force the use of the bootstrap script if it has already been run
-production_def=false # Don't upload binarycache to production. Defaults to development.
-cert_store_def='/usr/projects/hpctools/gitlab-ci/cert_store' # Path to certificates.
+production_buildcache_def=false # Don't upload binarycache to production. Defaults to development.
 ignorecache_def=false # Allow buildcache to be used.
 install_path_len_def='74' # This is the length of the CI path that we have configured
 spack_url_def='https://github.com/spack/spack' # URL for the official spack repo
@@ -81,18 +80,17 @@ usage () {
     echo "      appended to this path."
     echo "      Environment Variable: TCE_INSTALL_DIR"
     echo ""
-    echo "  -b|--buildcache <local_buildcache_path>"
+    echo "  -b|--buildcache <build_cache_path>"
     echo "      When given, create binary buildcache of the environment in"
-    echo "      the directory specified by <local_buildcache_path>. "
+    echo "      the directory specified by <build_cache_path>. "
     echo "      Environment Variable: TCE_BUILDCACHE"
     echo ""
     echo "  --cert_store <cert_store path>"
     echo "      Path to cert store for the upload_tree script"
-    echo "      Default: $cert_store_def"
     echo ""
-    echo "  --production"
-    echo "      Uploades the binary cache to production space"
-    echo "      Default: $production_def"
+    echo "  --prod-buildcache"
+    echo "      Uploades the binary cache to the production buildcache"
+    echo "      Default: $production_buildcache_def"
     echo ""
     echo "  -g|--shared_group <group-name>"
     echo "      When given, set the group owner of the software built to the specified group"
@@ -112,13 +110,14 @@ usage () {
     echo "      Default: $concretize_def"
     echo ""
     echo "  --secret <path>"
-    echo "      Path to the signing secret to use when creating a buildcache."
-    echo "      These should be generated (and exported) using 'spack gpg create'"
-    echo "      prior to executing this script."
+    echo "      If different from cert_store path, supply path to the signing" 
+    echo "      secret to use when creating a buildcache. These should be generated"
+    echo "      (and exported) using 'spack gpg create' prior to executing this script."
     echo "      Environment Variable: TCE_SECRET"
     echo ""
     echo "  --public-key <path>"
-    echo "      Path to the public key to use to verify binary cached packages."
+    echo "      If different from cert_store path, supply path to the public key"
+    echo "      to use to verify binary cached packages."
     echo "      environment variable: TCE_PUBLIC_KEY"
     echo ""
     echo "  -s|--skip-install"
@@ -495,14 +494,14 @@ case $key in
         ;;
     -b|--buildcache)
         shift
-        local_buildcache="$1"
-        echo "Build cache=${local_buildcache}"
+        build_cache="$1"
+        echo "Build cache=${build_cache}"
         shift
         ;;
-    --production)
+    --prod-buildcache)
         shift
-        production=true
-        echo "Uploading buildcache to production"
+        production_buildcache=true
+        echo "Uploading buildcache to production buildcache"
         ;;
     --cert_store)
         shift
@@ -722,10 +721,10 @@ skip_install=${skip_install:-${skip_install_def}}
 module=${module:=${module_def}}
 stage=${stage:=${stage_def}}
 force_bootstrap=${force_bootstrap:-${force_bootstrap_def}}
-production=${production:-${production_def}}
+production_buildcache=${production_buildcache:-${production_buildcache_def}}
 cert_store=${cert_store:-${cert_store_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
-local_buildcache=${local_buildcache:-${TCE_BUILDCACHE}}
+build_cache=${build_cache:-${TCE_BUILDCACHE}}
 shared_group=${shared_group:-${TCE_SHARED_GROUP:-${shared_group_def}}}
 secret_path=${secret_path:-${TCE_SECRET}}
 public_key_path=${public_key_path:-${TCE_PUBLIC_KEY}}
@@ -743,18 +742,41 @@ time_limit=${time_limit:-${TCE_TIME_LIMIT:-${time_limit_def}}}
 # the trailing slash is removed.
 install_dir=${install_dir%/}
 
+
 # There are a few things to check when doing a buildcache
-if [[ -n $local_buildcache ]]; then
+if [[ -n $build_cache ]]; then
     # Set install_root appropriately if not set already
     if [[ -z "${install_root}" ]]; then
         install_root="\$spack/.."
     fi
-    # Make sure we have reasonable secret keys when in buildcache mode
-    if [[ -z $secret_path ]]; then
-        error_exit "Specified buildcache without providing a secret key"
-    elif ! [[ -e $secret_path ]]; then
+    # Make sure we have reasonable secret/public keys when in buildcache mode
+    if [[ -z $cert_store ]]; then
+        if [[ -z $secret_path ]]; then
+            error_exit "Specified buildcache without providing a secret key"
+        elif ! [[ -e $secret_path ]]; then
+            error_exit "Secret key does not exist at given path '${secret_path}'"
+        fi
+
+        if [[ -z "$public_key_path" ]]; then
+            error_exit "Specified buildcache without providing a public key"
+        elif ! [[ -e ${public_key_path} ]]; then
+            error_exit "Public key does not exist at '${public_key_path}'"
+        fi
+
+    if ! [[ -d $cert_store ]]; then
+        error_exit "Specified cert_store does not exist at given path '${cert_store}'"
+    fi
+    
+    $secret_path=$cert_store/secring.gpg
+    if ! [[ -e $secret_path ]]; then
         error_exit "Secret key does not exist at given path '${secret_path}'"
     fi
+
+    $public_key_path=$cert_store/pubring.gpg
+    elif ! [[ -e ${public_key_path} ]]; then
+        error_exit "Public key does not exist at '${public_key_path}'"
+    fi
+
     # Check for the proper path length so that the created buildcaches are
     # usable in production.
     if ! [[ ${#install_dir} -eq ${install_path_len} ]]; then
@@ -776,12 +798,6 @@ stages to be run, but it looks like both of those stages will be skipped.
 Please enable at least one of those stages."
 fi
 
-# Check the public key that can be used with a binary cache
-if [[ -n "$public_key_path" ]]; then
-    if ! [[ -e ${public_key_path} ]]; then
-        error_exit "Public key does not exist at '${public_key_path}'"
-    fi
-fi
 
 # Check for user spack config files
 if find "$HOME/.spack/" -name "*.yaml" &>/dev/null && [[ "$user_spack_ok" != true ]]; then
@@ -807,12 +823,13 @@ fi
 
 # Figure out environment specific install dir.
 #TODO tgoetsch: is there a cleaner way to generate the install_env for the 
-# buildache, without chopping the environment name in the path? Maybe have
-# spack assess the full path requirement (buildcache/install_dir/inst_env_name)
-# and suggest an appropriate path length. If the buildcache path is too long
-# without any padding... idk yet.
+#               buildache, without chopping the environment name in the path? 
+#               Maybe have spack assess the full path requirement (buildcache/
+#               install_dir/inst_env_name) and suggest an appropriate path 
+#               length. If the buildcache path is too long without any padding.
+#               .... IDK
 
-if [[ -n $local_buildcache ]]; then
+if [[ -n $build_cache ]]; then
     # When generating the build cache, the prefix must be the same
     # length to ensure binary cached builds will always be relocatable.
     inst_env_name=$(echo "${environment_name}__________" | cut -c -9)
@@ -901,7 +918,7 @@ else
 
     status "Setting up spacklemore repo in install directory"
     #TODO tgoetsch: should checks not be made here as they are elsewhere 
-    # when dealing with directories?
+    #               when dealing with directories?
     rm -rf "${spacklemore_root}"
     mkdir -p "${spacklemore_root}"
     cp -R "${spacklemore}" "${install_dir}"
@@ -982,6 +999,8 @@ spack config --scope=site update config -y
 SPACK_CACHING=--use-cache
 
 # Set up the public key for binary packages
+#TODO tgoetsch: Checks earlier make sure that public_key_path exists, so
+#               can we get rid of this part of the following check?
 if [[ -n ${public_key_path} && $ignorecache = false ]]; then
     status "Setting up the public key"
     if ! spack gpg trust "${public_key_path}" &>/dev/null ; then
@@ -1054,7 +1073,7 @@ bootstrap_stat=$NOT_DONE
 reindex_stat=$NOT_DONE
 concretize_stat=$NOT_DONE
 install_stat=$NOT_DONE
-local_buildcache_stat=$NOT_DONE
+build_cache_stat=$NOT_DONE
 upload_buildcache_stat=$NOT_DONE
 module_stat=$NOT_DONE
 # Variable to track whether or not to continue doing each stage. This will
@@ -1205,12 +1224,12 @@ fi
 # Generate the build cache. Doing this doesn't depend on past stages being
 # attempted or being successful. This could be building a buildcache of a
 # previous run.
-if [[ -n $local_buildcache ]]; then
-    make_log "$log_dir" local_buildcache
+if [[ -n $build_cache ]]; then
+    make_log "$log_dir" build_cache
     buildcache_log=${make_log_path}
 
     #TODO tgoetsch: should the inital state of these stats be "Successful" or rather "Not Done"?
-    local_buildcache_stat=$SUCCESSFUL
+    build_cache_stat=$SUCCESSFUL
     upload_buildcache_stat=$SUCCESSFUL
 
     # Initialize the signing key.
@@ -1229,32 +1248,26 @@ if [[ -n $local_buildcache ]]; then
         error_exit "Failed to deactivate environment."
     fi
 
-    status "Printing available mirrors"
-    spack mirror list
-
-    status "Setting push url to ${local_buildcache}"
-    spack mirror set-url buildcache --push --scope=site "${local_buildcache}"
-
-    status "Printing available mirrors"
-    spack mirror list
+    status "Setting push url to ${build_cache}"
+    spack mirror set-url buildcache --push --scope=site "${build_cache}"
 
     status "Generating build cache."
     for buildhash in $(spack find -lv | grep -vE '^==|^--|^ *$' | cut -c -7 | sort | uniq); do
         spack find -lv "/$buildhash" |& tee "$buildcache_log"
-        status "Attempting to create binary package for buildhash $buildhash in $local_buildcache"
-        if ! spack "${SPACK_VERBOSE[@]}" buildcache create -d $local_buildcache --only package -a "/$buildhash" |& tee "$buildcache_log"; then
+        status "Attempting to create binary package for buildhash $buildhash in $build_cache"
+        if ! spack "${SPACK_VERBOSE[@]}" buildcache create -d $build_cache --only package -a "/$buildhash" |& tee "$buildcache_log"; then
             error "Binary package creation failed for buildhash $buildhash. See $buildcache_log."
-            local_buildcache_stat=$FAILED
+            build_cache_stat=$FAILED
         fi
     done
 
-    if [[ $production = true ]]; then
-        mv $local_buildcache/build_cache-dev $local_buildcache/build_cache-prod
+    if [[ $production_buildcache = true ]]; then
+        mv $build_cache/build_cache-dev $build_cache/build_cache-prod
     fi
 
     status "Uploading buildcache to pe-serve."
     upload_tree=${config_repo_root}/bin/upload_tree.sh
-    if ! "${upload_tree}" $cert_store $local_buildcache |& tee "$buildcache_log"; then
+    if ! "${upload_tree}" $cert_store $build_cache |& tee "$buildcache_log"; then
         upload_buildcache_stat=$FAILED
         error "Failed to upload buildcache changes to pe-serve. See $buildcache_log."
         #TODO tgoetsch: should this cause spack to die?
@@ -1266,7 +1279,7 @@ if [[ -n $local_buildcache ]]; then
     fi
 else
     status "Skipping the buildcache step"
-    local_buildcache_stat=$SKIPPED
+    build_cache_stat=$SKIPPED
     upload_buildcache_stat=$SKIPPED
 fi
 
@@ -1281,7 +1294,7 @@ if [[ $build_continue = true ]]; then
         status "Generating modules"
         #TODO tgoetsch: if module gen has issues on the Cray Shasta systems, check this for bug
         if [[ "$environment_name" =~ linux-rhel7-x86_64_v3-* ||
-            "$environment_name" =~ cray-sles15-zen2-*-none ]]; then
+            "$environment_name" =~ cray-sles15-* ]]; then
             mod_type="lmod"
         #    mod_list="utils toolchains toolchains-root"
         else
@@ -1346,9 +1359,9 @@ if [[ $install_stat == "$SUCCESSFUL" || \
     $install_stat == "$FAILED" ]]; then
     echo "    See $inst_log"
 fi
-echo "  Local Buildcache Generation: $local_buildcache_stat"
-if [[ $local_buildcache_stat == "$SUCCESSFUL" || \
-    $local_buildcache_stat == "$FAILED" ]]; then
+echo "  Local Buildcache Generation: $build_cache_stat"
+if [[ $build_cache_stat == "$SUCCESSFUL" || \
+    $build_cache_stat == "$FAILED" ]]; then
     echo "    See $buildcache_log"
 fi
 echo "  Upload to Remote Buildcache: $upload_buildcache_stat"
