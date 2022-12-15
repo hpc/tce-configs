@@ -1302,7 +1302,7 @@ if [[ -n $build_cache ]]; then
 
     if [[ $prod_buildcache = true ]]; then
         status "Moving development buildcache to production buildcache"
-        mv $build_cache/build_cache-dev $build_cache/build_cache-prod
+        mv $build_cache/build_cache $build_cache/build_cache-prod
     fi
 
     if [[ $buildcache_upload = false ]]; then
