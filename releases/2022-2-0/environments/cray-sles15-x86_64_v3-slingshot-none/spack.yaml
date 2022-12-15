@@ -412,6 +412,12 @@ spack:
       version: [1.4.3]
     libevent:
       version: [2.1.12]
+    libfabric:
+      version: [1.15.0.0]
+      externals:
+        - spec: libfabric@1.15.0.0
+          modules:
+            - libfabric/1.15.0.0
     libffi:
       version: ['3.4.2']
     libfontenc:
@@ -551,10 +557,16 @@ spack:
       # Provided by system
       version: ['8.1.21']
       variants: '+wrappers'
+      # These have to be specified compiler by compiler, or Spack will get confused.
       externals:
-        - spec: cray-mpich@8.1.21 +wrappers os=sles15
-          modules:
-            - cray-mpich/8.1.21
+        - spec: cray-mpich@8.1.21%gcc os=sles15
+          prefix: /opt/cray/pe/mpich/8.1.21/ofi/gnu/9.1
+        - spec: cray-mpich@8.1.21%intel os=sles15
+          prefix: /opt/cray/pe/mpich/8.1.21/ofi/intel/19.0
+        - spec: cray-mpich@8.1.21%oneapi os=sles15
+          prefix: /opt/cray/pe/mpich/8.1.21/ofi/intel/19.0
+        - spec: cray-mpich@8.1.21%cce os=sles15
+          prefix: /opt/cray/pe/mpich/8.1.21/ofi/cray/10.0
       buildable: false
     mvapich2:
       variants: +debug fabrics=psm2 file_systems=lustre,nfs,ufs process_managers=slurm

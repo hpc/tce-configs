@@ -22,12 +22,16 @@ if ! grep 'intel@2021.7.1.classic' $compilers_yaml; then
     # Spack doesn't recognize a compiler named intel-classic, so we just add a 'c' to the version. 
     $fix_compiler "$compilers_yaml"  intel@2021.7.1 sles15 x86_64 copy intel@2022.2.1
     $fix_compiler "$compilers_yaml"  intel@2021.7.1 sles15 x86_64 edit --rename intel@2021.7.1.classic
+    $fix_compiler "$compilers_yaml"  intel@2021.7.1.classic sles15 x86_64 edit \
+        --modules intel-classic/2022.2.1
 
     # The intel compiler is just like the classic one, except different.
-    $fix_compiler "$compilers_yaml"  intel@2022.2.1 sles15 x86_64 edit --cc="$IFX" --cxx="$ICPX"
+    $fix_compiler "$compilers_yaml"  intel@2022.2.1 sles15 x86_64 edit --cc="$IFX" --cxx="$ICPX" \
+        --modules intel/2022.2.1
 
     # The version of oneapi is correct too, so we have to 'fix' it.
-    # $fix_compiler "$compilers_yaml"  oneapi@2022.0.0 sles15 x86_64 edit --rename oneapi@2022.0.2
+    $fix_compiler "$compilers_yaml"  oneapi@2022.0.0 sles15 x86_64 edit --rename oneapi@2022.0.2 \
+        --modules oneapi@2022.2.1
 fi
 
 echo "Checking for compilers under PrgEnv-cray"

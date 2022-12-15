@@ -31,7 +31,14 @@ class CrayMpich(Package):
 
     # cray-mpich 8.1.7: features MPI compiler wrappers
     variant("wrappers", default=True, when="@8.1.7:", description="enable MPI wrappers")
-    depends_on("libfabric")
+    variant(
+        "netmod",
+        default="ofi",
+        description="Network module. Only ofi is currently supported, but this was added in the "\
+                    "expectation that other fabrics will be.",
+        values=("ofi",),
+        multi=False,
+    )
 
     provides("mpi@3")
 
@@ -83,6 +90,22 @@ class CrayMpich(Package):
         env.set("MPICH_F77", spack_f77)
         env.set("MPICH_F90", spack_fc)
         env.set("MPICH_FC", spack_fc)
+
+        # Find the fabric libraries
+        if self.spec.satisfies('netmod=ofi'):
+            # Cray mpich needs the fabric library, which we're assuming is libfabric.
+            fabric_module = module("show", 'libfabric').splitlines()
+
+            library_path = None
+            for line in fabric_module:
+                if "LD_LIBRARY_PATH" in line:
+                    library_path = get_path_args_from_module_line(line)[0]
+                    break
+
+            if library_path is None:
+                raise ValueError("Could not find libfabric module. It's library path is required.")
+
+            env.prepend_path("LD_LIBRARY_PATH", library_path)
 
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
