@@ -583,7 +583,6 @@ case $key in
         shift
         secret_path=$1
         echo "Secret=$secret_path"
-        #TODO tgoetsch: Set default if not provided.
         shift
         ;;
     --public-key)
@@ -902,7 +901,6 @@ if [[ "$nostage" = true ]]; then
     else
         pushd "${spack_root}" &>/dev/null
     fi
-    # TODO tgoetsch: what is this "if false; then" doing?
     if false ; then # -n ${spack_checkout} ]] ; then
         status "Validating Spack git reference ${spack_checkout} against ${spack_root}"
         if ! repo_validate "$spack_checkout" &>> "${spack_repo_log}"; then
@@ -922,11 +920,9 @@ else
     # If there is no Spack installation in the installation directory, clone it.
     if [[ ! -d "${spack_root}" ]]; then
         status "Cloning Spack from ${spack_url} into ${spack_root}"
-        #TODO tgoetsch: can a timeout be set on this op? Is that smart?
+        #TODO tgoetsch: potentially replace with a check using wget and error_exit?
         if ! git clone "${spack_url}" "${spack_root}" &>> "${spack_repo_log}"; then
             error_exit "Unable to checkout spack repository from $spack_url. See ${spack_repo_log}"
-            #TODO tgoetsch: why is this status line here?
-            status "Cloning Spack from ${spack_url} into ${spack_root}"
         fi
     fi
     # If a reference has been passed to checkout in the spack repo, now is the time to do it.
@@ -940,10 +936,9 @@ else
     fi
 
     status "Setting up spacklemore repo in install directory"
-    #TODO tgoetsch: should checks not be made here as they are elsewhere 
-    #               when dealing with directories?
     rm -rf "${spacklemore_root}"
     mkdir -p "${spacklemore_root}"
+    #TODO tgoetsch: add check that copy works
     cp -R "${spacklemore}" "${install_dir}"
 fi
 
@@ -963,7 +958,6 @@ for file in  *.yaml; do
 done
 
 spack_config=$spack_root/etc/spack/config.yaml
-#TODO tgoetsch: what is this?
 if [[ -n "${install_root}" ]]; then
     "${config_repo_root}/bin/line_edit" -i "${spack_config}" -o "${spack_config}" \
         'root:.*$' "root: ${install_root}"
@@ -1255,13 +1249,11 @@ if [[ -n $build_cache ]]; then
     make_log "$log_dir" build_cache
     buildcache_log=${make_log_path}
 
-    #TODO tgoetsch: should the inital state of these stats be "Successful" or rather "Not Done"?
     build_cache_stat=$SUCCESSFUL
     upload_buildcache_stat=$NOT_DONE
 
     # Initialize the signing key.
     status "Adding secret key"
-    #TODO tgoetsch: maybe make more robust check for secret?
     if ! spack gpg trust "$secret_path" |& tee "$buildcache_log"; then
         # If the key is already imported, this is fine.
         warning "Could not set up secret key from ${secret_path}"
@@ -1303,7 +1295,6 @@ if [[ -n $build_cache ]]; then
         if ! "${upload_tree}" $cert_store $build_cache |& tee "$buildcache_log"; then
             upload_buildcache_stat=$FAILED
             error "Failed to upload buildcache changes to pe-serve. See $buildcache_log."
-            #TODO tgoetsch: should this cause spack to die?
         fi
         upload_buildcache_stat=$SUCCESSFUL
     fi
