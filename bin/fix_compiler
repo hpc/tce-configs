@@ -157,7 +157,7 @@ def update_with_delete(base, update):
                 update_with_delete(base[key], upd_val)
         elif isinstance(upd_val, list):
             # Wipe the list where indicated.
-            if value == ['']:
+            if upd_val == ['']:
                 base[key] = []
             else:
                 base[key] = upd_val

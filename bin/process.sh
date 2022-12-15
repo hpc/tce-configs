@@ -1081,10 +1081,10 @@ See $bootstrap_log"
             bootstrap_stat=${valid_statuses[2]}
             build_continue=false
         else
+            mv "$tmp_sum" "${install_dir}/bootstrapped.md5"
             warning "Forcing concretization after bootstrapping."
             concretize=true
         fi
-        mv "$tmp_sum" "${install_dir}/bootstrapped.md5"
     fi
 else
     warning "No ${environment}/bootstrap_compilers.sh script found.

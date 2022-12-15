@@ -7,7 +7,7 @@ spack:
       - $%base-compiler
       - '%intel@2022.2.1'
       - '%intel@2021.7.1.classic'
-      - '%oneapi@2022.0.2'
+      - '%oneapi@2022.2.1'
       - '%cce@15.0.0'
 
     # The same as above, except as a dependency and compiled against a specific compiler
@@ -20,7 +20,13 @@ spack:
 
     # The same, for intel.
     - intel-mpi-constraints:
-      - ^cray-mpich@8.1.21%gcc os=sles15
+      - ^cray-mpich@8.1.21%intel@2022.2.1 os=sles15
+
+    - intel-classic-mpi-constraints:
+      - ^cray-mpich@8.1.21%intel@2021.7.1.classic os=sles15
+
+    - oneapi-mpi-constraints:
+      - ^cray-mpich@8.1.21%oneapi os=sles15
       
 
     # Note that we don't build anything for clang/mpi combos, so a clang specific
@@ -112,7 +118,7 @@ spack:
         exclude:
         - hpctoolkit ^mvapich2
 
-    # Build the above with gcc and all intel relevant MPI's
+    # Build the above with intel hybrid (oneapi with old fortran compiler)
     - toolchain-mpi-intel:
       - matrix:
         - [$mpi-packages]
@@ -123,22 +129,22 @@ spack:
         - valgrind %intel
         - paraview
 
-    # Build the above with gcc and all intel relevant MPI's
+    # Build the above with intel classic
     - toolchain-mpi-intel-classic:
       - matrix:
         - [$mpi-packages]
         - ['%intel@2021.7.1.classic']
-        - [$intel-mpi-constraints]
+        - [$intel-classic-mpi-constraints]
         exclude:
         - hpctoolkit
         - valgrind %intel
 
-    # Build the above with gcc and all intel relevant MPI's
+    # Build the above with oneapi
     - toolchain-mpi-oneapi:
       - matrix:
         - [$mpi-packages]
-        - ['%oneapi@2022.2.0']
-        - [$intel-mpi-constraints]
+        - ['%oneapi@2022.2.1']
+        - [$oneapi-mpi-constraints]
         exclude:
         - hpctoolkit
         - valgrind %oneapi
@@ -561,9 +567,11 @@ spack:
       externals:
         - spec: cray-mpich@8.1.21%gcc os=sles15
           prefix: /opt/cray/pe/mpich/8.1.21/ofi/gnu/9.1
-        - spec: cray-mpich@8.1.21%intel os=sles15
+        - spec: cray-mpich@8.1.21%intel@2022.2.1 os=sles15
           prefix: /opt/cray/pe/mpich/8.1.21/ofi/intel/19.0
-        - spec: cray-mpich@8.1.21%oneapi os=sles15
+        - spec: cray-mpich@8.1.21%intel@2021.7.1.classic os=sles15
+          prefix: /opt/cray/pe/mpich/8.1.21/ofi/intel/19.0
+        - spec: cray-mpich@8.1.21%oneapi@2022.2.1 os=sles15
           prefix: /opt/cray/pe/mpich/8.1.21/ofi/intel/19.0
         - spec: cray-mpich@8.1.21%cce os=sles15
           prefix: /opt/cray/pe/mpich/8.1.21/ofi/cray/10.0
