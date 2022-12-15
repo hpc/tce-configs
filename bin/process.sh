@@ -769,47 +769,31 @@ if [[ -n $build_cache ]]; then
     if [[ -z "${install_root}" ]]; then
         install_root="\$spack/.."
     fi
-    # Make sure we have reasonable secret/public keys when in buildcache mode
-    if [[ -n $secret_path ]]; then
-        if ! [[ -e $secret_path ]]; then
-            error_exit "Secret key does not exist at '${secret_path}'"
-        fi
-    fi
-    
-    if [[ -n $public_key_path ]]; then
-        if ! [[ -e ${public_key_path} ]]; then
-            error_exit "Public key does not exist at '${public_key_path}'"
-        fi
-    fi
 
-    if [[ -n $cert_store && -z $secret_path ]]; then
-        if ! [[ -d $cert_store ]]; then
-            error_exit "Specified cert_store does not exist at given path '${cert_store}'"
-        fi
-
-        $secret_path=$cert_store/secring.gpg
-        if ! [[ -e $secret_path ]]; then
-            error_exit "Secret key does not exist at given path '${secret_path}'"
-        fi
-    fi
-
-    if [[ -n $cert_store && -z $public_key_path ]]; then
-        if ! [[ -d $cert_store ]]; then
-            error_exit "Specified cert_store does not exist at given path '${cert_store}'"
-        fi
-
-        $public_key_path=$cert_store/pubring.gpg
-        if ! [[ -e $public_key_path ]]; then
-            error_exit "Public key does not exist at given path '${secret_path}'"
-        fi
-    fi
-    
     if [[ -z $cert_store ]]; then
-        if [[ -z $secret_path ]]; then
-            error_exit "Specified buildcache without providing --cert-store or --secret"
-        elif [[ -z $public_key_path ]]; then
-            error_exit "Specified buildcache without providing --cert-store or --public-key"
-        fi
+        error_exit "Specified buildcache without providing --cert-store"
+    fi
+
+    # Derive the signing key paths from the cert store if not otherwise specified.
+    if [[ -z $secret_path ]]; then
+        secret_path=$cert_store/secring.gpg
+    fi
+
+    if [[ -z $public_key_path ]]; then
+        public_key_path=$cert_store/pubring.gpg
+    fi
+
+    # Make sure all cert paths exist.
+    if ! [[ -e ${cert_store} ]]; then 
+        error_exit "Specified cert_store does not exist at given path '${cert_store}'"
+    fi
+
+    if ! [[ -e ${secret_path} ]]; then
+        error_exit "Secret key does not exist at '${secret_path}'"
+    fi
+    
+    if ! [[ -e ${public_key_path} ]]; then
+        error_exit "Public key does not exist at '${public_key_path}'"
     fi
 
     # Check for the proper path length so that the created buildcaches are
