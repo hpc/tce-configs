@@ -89,6 +89,21 @@ usage () {
     echo ""
     echo "  --cert-store <cert_store path>"
     echo "      Path to cert store for the upload_tree script"
+    echo "      Used to perform client identification when uploading the build cache "
+    echo "      and for deriving paths for the signing keys."
+    echo "      Environment Variable: TCE_CERT_STORE"
+    echo ""
+    echo "  --secret <path>"
+    echo "      This is the signing key for binary cache packages. "
+    echo "      These should be generated (and exported) using 'spack gpg create' prior to "
+    echo "      executing this script."
+    echo "      Default: <cert_store>/secring.gpg is used. "
+    echo "      Environment Variable: TCE_SECRET"
+    echo ""
+    echo "  --public-key <path>"
+    echo "      The public key for verifying packages. "
+    echo "      Defaults to <cert_store>/pubring.gpg"
+    echo "      environment variable: TCE_PUBLIC_KEY"
     echo ""
     echo "  --prod-buildcache"
     echo "      Uploades the binary cache to the production buildcache"
@@ -117,17 +132,6 @@ usage () {
     echo "      Specify that the stacks should be reconcretized before"
     echo "      installing."
     echo "      Default: $concretize_def"
-    echo ""
-    echo "  --secret <path>"
-    echo "      If different from cert_store path, supply path to the signing" 
-    echo "      secret to use when creating a buildcache. These should be generated"
-    echo "      (and exported) using 'spack gpg create' prior to executing this script."
-    echo "      Environment Variable: TCE_SECRET"
-    echo ""
-    echo "  --public-key <path>"
-    echo "      If different from cert_store path, supply path to the public key"
-    echo "      to use to verify binary cached packages."
-    echo "      environment variable: TCE_PUBLIC_KEY"
     echo ""
     echo "  -s|--skip-install"
     echo "      Skip the installation step.  Useful for just updating modules. "
@@ -740,7 +744,7 @@ module=${module:=${module_def}}
 stage=${stage:=${stage_def}}
 force_bootstrap=${force_bootstrap:-${force_bootstrap_def}}
 prod_buildcache=${prod_buildcache:-${prod_buildcache_def}}
-cert_store=${cert_store:-${cert_store_def}}
+cert_store=${cert_store:-${TCE_CERT_STORE:-${cert_store_def}}}
 buildcache_upload=${buildcache_upload:-${buildcache_upload_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
 build_cache=${build_cache:-${TCE_BUILDCACHE}}
