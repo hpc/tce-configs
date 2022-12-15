@@ -23,7 +23,8 @@ module_def=false # Don't generate modulefiles
 stage_def=false # Don't stop after staging everything (before doing concretization, install, etc)
 no_stage_def=false # Don't skip over the stage step
 force_bootstrap_def=false # Don't force the use of the bootstrap script if it has already been run
-production_def=false # Don't upload binarycache to production. Defaults to development.
+prod_buildcache_def=false # Don't upload binarycache to production. Defaults to development.
+no_buildcache_upload_def=false # Upload buildcache to pe-serve.
 cert_store_def='/usr/projects/hpctools/gitlab-ci/cert_store' # Path to certificates.
 ignorecache_def=false # Allow buildcache to be used.
 install_path_len_def='74' # This is the length of the CI path that we have configured
@@ -86,13 +87,17 @@ usage () {
     echo "      the directory specified by <local_buildcache_path>. "
     echo "      Environment Variable: TCE_BUILDCACHE"
     echo ""
-    echo "  --cert_store <cert_store path>"
+    echo "  --cert-store <cert_store path>"
     echo "      Path to cert store for the upload_tree script"
     echo "      Default: $cert_store_def"
     echo ""
-    echo "  --production"
+    echo "  --prod-buildcache"
     echo "      Uploades the binary cache to production space"
-    echo "      Default: $production_def"
+    echo "      Default: $prod_buildcache_def"
+    echo ""
+    echo "  --no-buildcache-upload"
+    echo "      Disables buildcache upload to pe-serve"
+    echo "      Default: $no_buildcache_upload_def"
     echo ""
     echo "  --skip-buildcache-on-failure"
     echo "  On install or other failure, skip buildcache generation."
@@ -502,16 +507,21 @@ case $key in
         echo "Build cache=${local_buildcache}"
         shift
         ;;
-    --production)
+    --prod-buildcache)
         shift
-        production=true
+        prod_buildcache=true
         echo "Uploading buildcache to production"
         ;;
-    --cert_store)
+    --cert-store)
         shift
         cert_store="$1"
         echo "Cert store=${cert_store}"
         shift
+        ;;
+    --no-buildcache-upload)
+        shift
+        no_buildcache_upload=true
+        echo "Disabling buildcache upload to pe-serve"
         ;;
     --skip-buildcache-on-failure)
         shift
@@ -729,8 +739,9 @@ skip_install=${skip_install:-${skip_install_def}}
 module=${module:=${module_def}}
 stage=${stage:=${stage_def}}
 force_bootstrap=${force_bootstrap:-${force_bootstrap_def}}
-production=${production:-${production_def}}
+prod_buildcache=${prod_buildcache:-${prod_buildcache_def}}
 cert_store=${cert_store:-${cert_store_def}}
+no_buildcache_upload=${no_buildcache_upload:-${no_buildcache_upload_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
 local_buildcache=${local_buildcache:-${TCE_BUILDCACHE}}
 skip_buildcache_on_failure=false
@@ -1260,16 +1271,21 @@ if [[ -n $local_buildcache ]]; then
         fi
     done
 
-    if [[ $production = true ]]; then
+    if [[ $prod_buildcache = true ]]; then
         mv $local_buildcache/build_cache-dev $local_buildcache/build_cache-prod
     fi
 
-    status "Uploading buildcache to pe-serve."
-    upload_tree=${config_repo_root}/bin/upload_tree.sh
-    if ! "${upload_tree}" $cert_store $local_buildcache |& tee "$buildcache_log"; then
-        upload_buildcache_stat=$FAILED
-        error "Failed to upload buildcache changes to pe-serve. See $buildcache_log."
-        #TODO tgoetsch: should this cause spack to die?
+    if [[ $no_buildcache_upload = true ]]; then
+        status "Skipping buildcache upload to pe-serve."
+    else
+        status "Uploading buildcache to pe-serve."
+        upload_tree=${config_repo_root}/bin/upload_tree.sh
+
+        if ! "${upload_tree}" $cert_store $local_buildcache |& tee "$buildcache_log"; then
+            upload_buildcache_stat=$FAILED
+            error "Failed to upload buildcache changes to pe-serve. See $buildcache_log."
+            #TODO tgoetsch: should this cause spack to die?
+        fi
     fi
 
     # Reactivating environment
