@@ -60,6 +60,7 @@ spack:
       - py-pint
       - qt ^cmake@3.23.1%gcc
       - subversion ^cmake@3.23.1%gcc
+      - survey
       - tmux
       - totalview
     - base_matrix:
@@ -822,6 +823,9 @@ spack:
     subversion:
       variants: +lz4_internal +perl +utf8proc_internal ~apxs
       version: [1.14.1]
+    survey:
+      variants: %intel@2022.0.2 +mpi
+      version: ['1.0.5']
     swig:
       version: [4.0.2]
     tau:
