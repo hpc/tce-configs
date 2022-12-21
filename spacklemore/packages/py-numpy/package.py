@@ -172,7 +172,7 @@ class PyNumpy(PythonPackage):
             )
             p1.stderr.close()
             out, err = p2.communicate()
-            gcc_version = Version(out.split()[3].decode("utf-8").split('/')[5])
+            gcc_version = Version(out.decode("utf-8").split('/')[-1].strip())
             if gcc_version < Version("4.8"):
                 raise InstallError(
                     "The GCC version that the Intel compiler "
