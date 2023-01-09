@@ -5,6 +5,7 @@ spack:
       - gcc@11.2.0
     - toolchain-compiler-constraints:
       - $%base-compiler
+      - '%intel@19.1.3'
       - '%intel@2022.2.1'
       - '%intel@2021.7.1.classic'
       - '%oneapi@2022.2.1'
@@ -75,7 +76,7 @@ spack:
 
     #
     - install-comp:
-      - intel-oneapi-compilers@2022.2.1
+      #- intel-oneapi-compilers@2022.2.1
       - llvm@14.0.2 ^swig@4.0.2 ^cmake@3.23.1%gcc ^python@3.10.6%gcc
 
       - matrix:
@@ -107,7 +108,7 @@ spack:
       - valgrind
       - paraview ^mesa ^bzip2%gcc@11.2.0 ^double-conversion%gcc@11.2.0 ^cmake@3.23.1%gcc
         ^py-matplotlib@3.5.3%gcc ^eigen%gcc@11.2.0 ^expat%gcc@11.2.0 ^freetype%gcc@11.2.0 
-        ^libtiff%gcc@11.2.0 ^lz4%gcc@11.2.0 ^lzma%gcc@11.2.0
+        ^libtiff%gcc@11.2.0 ^lz4%gcc@11.2.0 
 
     # Build the above with gcc and all gcc relevant MPI's
     - toolchain-mpi-gcc-10:
@@ -150,6 +151,16 @@ spack:
         - valgrind %oneapi
         - paraview
 
+    # Build the above with intel 19.1.3
+    - toolchain-mpi-intel19:
+      - matrix:
+        - [$mpi-packages]
+        - ['%intel@19.1.3']
+        - [$intel-classic-mpi-constraints]
+        exclude:
+        - hpctoolkit
+        - valgrind %intel
+
     # This defines the actual packages to get installed
     - install:
       - $base_matrix
@@ -158,6 +169,7 @@ spack:
       - $toolchain-mpi-intel
       - $toolchain-mpi-intel-classic
       - $toolchain-mpi-oneapi
+      - $toolchain-mpi-intel19
 
 # Final definition
   specs:
@@ -251,7 +263,7 @@ spack:
     bdftopcf:
       version: ['1.0.5']
     binutils:
-      version: ['2.36.1']
+      version: ['2.38']
       variants: +gold+libiberty~nls+ld+gas
     bison:
       version: ['3.8.2']
@@ -354,9 +366,12 @@ spack:
       variants: +cxx+fortran+hl~mpic+shared+threadsafe api=v18
       version: ['1.12.2']
       externals:
-        - spec: hdf5@1.12.2 +cxx +fortran +hl ~mpi +shared +threadsafe api=v18
-          modules:
-            - cray-hdf5-parallel/1.12.2.1
+        - spec: hdf5@1.12.2 %gcc +cxx +fortran +hl +mpi +shared +threadsafe api=v18
+          prefix: /opt/cray/pe/hdf5/1.12.2.1/gnu/9.1/
+        - spec: hdf5@1.12.2 %intel +cxx +fortran +hl +mpi +shared +threadsafe api=v18
+          prefix: /opt/cray/pe/hdf5/1.12.2.1/intel/19.0/
+        - spec: hdf5@1.12.2 %oneapi +cxx +fortran +hl +mpi +shared +threadsafe api=v18
+          prefix: /opt/cray/pe/hdf5/1.12.2.1/intel/19.0/
       buildable: false
     hpctoolkit:
       version:  ['2022.05.15']
@@ -567,9 +582,7 @@ spack:
       externals:
         - spec: cray-mpich@8.1.21%gcc os=sles15
           prefix: /opt/cray/pe/mpich/8.1.21/ofi/gnu/9.1
-        - spec: cray-mpich@8.1.21%intel@2022.2.1 os=sles15
-          prefix: /opt/cray/pe/mpich/8.1.21/ofi/intel/19.0
-        - spec: cray-mpich@8.1.21%intel@2021.7.1.classic os=sles15
+        - spec: cray-mpich@8.1.21%intel os=sles15
           prefix: /opt/cray/pe/mpich/8.1.21/ofi/intel/19.0
         - spec: cray-mpich@8.1.21%oneapi@2022.2.1 os=sles15
           prefix: /opt/cray/pe/mpich/8.1.21/ofi/intel/19.0
@@ -588,25 +601,34 @@ spack:
       variants: ~mpi~parallel-netcdf+hdf4+pic+shared
       version: ['4.9.0']
       externals:
-        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared
-          modules:
-            - cray-netcdf-hdf5parallel/4.9.0.1
+        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %gcc
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
+        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %intel
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
+        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %oneapi@2022.2.1
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
       buildable: false
     netcdf-cxx4:
       variants: +pic
       version: ['4.9.0']
       externals:
-        - spec: netcdf-cxx4@4.9.0 +pic
-          modules:
-            - cray-netcdf-hdf5parallel/4.9.0.1
+        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %gcc
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
+        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %intel
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
+        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %oneapi@2022.2.1
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
       buildable: false
     netcdf-fortran:
       variants: +pic
       version: ['4.9.0']
       externals:
-        - spec: netcdf-fortran@4.9.0 +pic
-          modules:
-            - cray-netcdf-hdf5parallel/4.9.0.1
+        - spec: netcdf-fortran@4.9.0 +pic %gcc
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
+        - spec: netcdf-fortran@4.9.0 +pic %intel
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
+        - spec: netcdf-fortran@4.9.0 +pic %oneapi@2022.2.1
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
       buildable: false
     ninja:
       version: ['1.10.2']
@@ -628,9 +650,12 @@ spack:
     parallel-netcdf:
       version: ['1.12.3']
       externals:
-        - spec: parallel-netcdf@1.12.3
-          modules:
-            - cray-parallel-netcdf/1.12.3.1
+        - spec: parallel-netcdf@1.12.3 %gcc
+          prefix: /opt/cray/pe/parallel-netcdf/1.12.3.1/gnu/9.1/
+        - spec: parallel-netcdf@1.12.3 %intel
+          prefix: /opt/cray/pe/parallel-netcdf/1.12.3.1/intel/19.0/
+        - spec: parallel-netcdf@1.12.3 %oneapi@2022.2.1
+          prefix: /opt/cray/pe/parallel-netcdf/1.12.3.1/intel/19.0/
       buildable: false
     paraview:
       variants: +eyedomelighting +fortran +hdf5 +osmesai +mpi +shared
@@ -1099,10 +1124,6 @@ spack:
               SLURM_MPI_TYPE: pmix_v3
               HWLOC_ROOT: '{^hwloc.prefix}'
               HWLOC_HOME: '{^hwloc.prefix}'
-        mvapich2:
-          environment:
-            prepend_path:
-              PATH: /usr/tce/packages/binutils/binutils-2.36.1-gcc-11.2.0/bin
     # modules that use the root installation rather than pointing to the view
     toolchains-root:
       roots:
