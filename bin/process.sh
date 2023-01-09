@@ -1164,7 +1164,7 @@ if [[ $build_continue = true ]]; then
 fi
 
 # Skip the buildcache step
-if [[ $build_continue = false ]] && [[ $skip_buildcache_on_failure ]]; then
+if [[ $build_continue = false ]] && [[ $skip_buildcache_on_failure = true ]]; then
     buildcache=
 fi
     
