@@ -14,9 +14,13 @@ config:
 
   # Default directory layout
   # Locations where different types of modules should be installed.
-  module_roots:
-    tcl: $spack/share/spack/modules
-    lmod: $spack/share/spack/lmod
+  modules:
+    tcl: 
+      roots: 
+        - $spack/share/spack/modules
+    lmod: 
+      roots: 
+        - $spack/share/spack/lmod
 
 
   debug: false
@@ -85,7 +89,7 @@ config:
   # archives. If false, Spack skips the checksum step.
   checksum: true
 
-  concretizer: original
+  concretizer: clingo
 
 
   # If set to true, `spack install` and friends will NOT clean
