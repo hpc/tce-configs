@@ -310,6 +310,43 @@ function make_log() {
     make_log_path="${log_path}/${log_name}.${log_num}.log"
 }
 
+# We use a ticket system to do multiprocessing when creating the buildcache.
+# To use tickets to multiprocess a function:
+# 1. Call take_ticket
+# 2. Call and background the function
+# 3. In the function, before returning, call make_ticket
+# 4. After all calls of the function have been issued, call wait_tickets.
+TICKET_DIR=$(mktemp -d)
+TICKET_COUNT=10
+function make_ticket() {
+    # Create a ticket. Tickets are essentially an empty file in the ticket directory.
+    touch $TICKET_DIR/$(uuidgen -r)
+}
+
+function take_ticket() {
+    # Take a ticket. If there are no tickets, wait for one to be available.
+    while true; do
+        for ticket in $(ls -1 $TICKET_DIR); do 
+            rm $TICKET_DIR/$ticket
+            return 
+        done
+        sleep 0.5
+    done
+}
+
+function wait_tickets() {
+    # Wait for all tickets to be returned
+
+    for i in $(seq $TICKET_COUNT); do
+        take_ticket
+    done
+}
+
+# Setup all the initial tickets
+for i in $(seq $TICKET_COUNT); do
+    make_ticket
+done
+
 # Function to checkout a particular git reference for a git repository. Must
 # already be inside the directory of the git repository.
 # Usage:
@@ -1241,6 +1278,39 @@ if [[ $build_continue = false ]] && [[ $skip_buildcache_on_failure = true ]]; th
     buildcache=
 fi
 
+# Collect output from generating binary packages here.
+BUILDCACHE_OUTFILES=/tmp/$USER/buildcache_out
+rm -rf ${BUILDCACHE_OUTFILES}
+mkdir ${BUILDCACHE_OUTFILES}
+
+function dump_buildcache_outfiles() {
+    # Dump the buildcache outfiles to the log and screen.
+    local outfile
+    for outfile in $(ls -1 ${BUILDCACHE_OUTFILES}); do
+        cat ${BUILDCACHE_OUTFILES}/$outfile
+        cat ${BUILDCACHE_OUTFILES}/$outfile > ${buildcache_log}
+        rm -f ${BUILDCACHE_OUTFILES}/$outfile
+    done
+}
+
+function create_package() {
+    # Create a binary package from the given spack hash.
+    # Args:
+    #   1 - Hash of package to create binary package of
+    
+    local tmpfile=$(mktemp)
+    local package=$1
+
+    spack find -lv "/$package" > $tmpfile 2>&1
+    if ! spack "${SPACK_VERBOSE[@]}" buildcache create -m buildcache \
+        --only package -a "/$package" > $tmpfile 2>&1 ; then
+        error "Binary cache creation failed for $package. See $buildcache_log."
+        buildcache_stat=${valid_statuses[2]}
+    fi
+    mv $tmpfile $BUILDCACHE_OUTFILES
+    make_ticket
+}
+
 # Generate the build cache. Doing this doesn't depend on past stages being
 # attempted or being successful. This could be building a buildcache of a
 # previous run.
@@ -1271,13 +1341,13 @@ if [[ -n $build_cache ]]; then
 
     status "Generating build cache."
     for buildhash in $(spack find -lv | grep -vE '^==|^--|^ *$' | cut -c -7 | sort | uniq); do
-        spack find -lv "/$buildhash" |& tee "$buildcache_log"
-        status "Attempting to create binary package for buildhash $buildhash in $build_cache"
-        if ! spack "${SPACK_VERBOSE[@]}" buildcache create -d $build_cache --only package -a "/$buildhash" |& tee "$buildcache_log"; then
-            error "Binary package creation failed for buildhash $buildhash. See $buildcache_log."
-            build_cache_stat=$FAILED
-        fi
+        take_ticket
+        create_package $buildhash &
+        dump_buildcache_outfiles
     done
+
+    wait_tickets
+    dump_buildcache_outfiles
 
     if [[ $prod_buildcache = true ]]; then
         status "Moving development buildcache to production buildcache"
@@ -1297,7 +1367,6 @@ if [[ -n $build_cache ]]; then
         fi
         upload_buildcache_stat=$SUCCESSFUL
     fi
-
 
     # Reactivating environment
     if ! spack "${SPACK_VERBOSE[@]}" env activate -V "${release_name}"; then

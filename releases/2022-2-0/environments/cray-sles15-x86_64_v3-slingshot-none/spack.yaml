@@ -622,9 +622,9 @@ spack:
         - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %gcc
           prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
         - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %intel
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
         - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %oneapi@2022.2.1
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
       buildable: false
     netcdf-cxx4:
       variants: +pic
@@ -633,9 +633,9 @@ spack:
         - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %gcc
           prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
         - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %intel
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
         - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %oneapi@2022.2.1
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
       buildable: false
     netcdf-fortran:
       variants: +pic
@@ -644,9 +644,9 @@ spack:
         - spec: netcdf-fortran@4.9.0 +pic %gcc
           prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
         - spec: netcdf-fortran@4.9.0 +pic %intel
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
         - spec: netcdf-fortran@4.9.0 +pic %oneapi@2022.2.1
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
       buildable: false
     ninja:
       version: ['1.10.2']
