@@ -966,6 +966,8 @@ else
     if [[ -n "${spack_checkout}" ]]; then
         status "Checking out Spack git reference $spack_checkout"
         pushd "${spack_root}" &>/dev/null
+        echo ${spack_root}
+        git config --global --add safe.directory ${spack_root}
         if ! repo_checkout "$spack_checkout" &>> "${spack_repo_log}"; then
             error_exit "Error checking out $spack_checkout in ${spack_root}. See ${spack_repo_log}"
         fi
@@ -1364,8 +1366,9 @@ if [[ -n $build_cache ]]; then
         if ! "${upload_tree}" $cert_store $build_cache |& tee "$buildcache_log"; then
             upload_buildcache_stat=$FAILED
             error "Failed to upload buildcache changes to pe-serve. See $buildcache_log."
+        else 
+            upload_buildcache_stat=$SUCCESSFUL
         fi
-        upload_buildcache_stat=$SUCCESSFUL
     fi
 
     # Reactivating environment
