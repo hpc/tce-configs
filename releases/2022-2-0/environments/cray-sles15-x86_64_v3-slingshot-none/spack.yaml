@@ -44,10 +44,7 @@ spack:
       - hpcviewer
       - htop ^python@3.10.6%gcc
       - idl
-      # Tools installation for intel products.
-      #- intel-parallel-studio +vtune+advisor+itac~mpi~mkl~ipp~daal~tbb~ilp64~newdtags
-      # Separate mkl installation.
-      #- intel-parallel-studio ~mpi~ipp~daal~tbb~ilp64~newdtags
+      - intel-mkl
       - julia_binary
       - libyogrt
       - mercurial ^python@3.10.6%gcc
@@ -84,18 +81,7 @@ spack:
 
         exclude:
         # Only build parallel studio against intel
-        - intel-parallel-studio %gcc
-        # - intel-parallel-studio %clang
-        - intel-parallel-studio %oneapi
-        - intel-oneapi-dal%gcc
-        # - intel-oneapi-dal%clang
-        - intel-oneapi-dal%intel
-        - intel-oneapi-mkl%gcc
-        # - intel-oneapi-mkl%clang
-        - intel-oneapi-mkl%intel
-        - intel-oneapi-tbb%gcc
-        # - intel-oneapi-tbb%clang
-        - intel-oneapi-tbb%intel
+        - intel-mkl@gcc
         - mesa%cce
         - mesa%oneapi
         - mesa%intel@2022.2.1
@@ -411,6 +397,9 @@ spack:
     #     - spec: intel-parallel-studio@cluster.2020.4
     #       prefix: /usr
     #   buildable: false
+    intel-mkl:
+      version: ['2020.4.304']
+      variants: threads=openmp
     intel-tbb:
       version: ['2020.3']
     intel-xed:
