@@ -22,6 +22,7 @@ skip_install_def=false # Do an install
 module_def=false # Don't generate modulefiles
 stage_def=false # Don't stop after staging everything (before doing concretization, install, etc)
 no_stage_def=false # Don't skip over the stage step
+mangle_prefix_path=false # Mangle the install directory name to fit ci path length requirements.
 force_bootstrap_def=false # Don't force the use of the bootstrap script if it has already been run
 prod_buildcache_def=false # Don't upload binarycache to production. Defaults to development.
 buildcache_upload_def=true # Upload buildcache to pe-serve.
@@ -114,7 +115,11 @@ usage () {
     echo "      Default: $buildcache_upload_def"
     echo ""
     echo "  --skip-buildcache-on-failure"
-    echo "  On install or other failure, skip buildcache generation."
+    echo "      On install or other failure, skip buildcache generation."
+    echo ""
+    echo "  --mangle"
+    echo "      Mangle the install directory name to fit ci path-length requirements."
+    echo "      Default: $mangle_prefix_path"
     echo ""
     echo "  -g|--shared_group <group-name>"
     echo "      When given, set the group owner of the software built to the specified group"
@@ -222,7 +227,7 @@ usage () {
     echo "      The length for the install directory path. Long paths are"
     echo "      needed to ensure that there's enough room for build cached files"
     echo "      to be made relocatable. A path of an exact length is needed to"
-    echo "      ensure this true across ci triggered builds."
+    echo "      ensure this is true across ci triggered builds."
     echo "      Environment Variable: TCE_PATH_LEN"
     echo "      Default: $install_path_len"
     echo ""
@@ -568,6 +573,10 @@ case $key in
         shift
         skip_buildcache_on_failure=true
         ;;
+    --mangle)
+        shift
+        mangle_prefix_path=true
+        ;;
     -g|--shared_group)
         shift
         shared_group="$1"
@@ -888,7 +897,7 @@ fi
 #               length. If the buildcache path is too long without any padding.
 #               .... IDK
 
-if [[ -n $build_cache ]]; then
+if [[ -n $build_cache || ($mangle_prefix_path == true) ]]; then
     # When generating the build cache, the prefix must be the same
     # length to ensure binary cached builds will always be relocatable.
     inst_env_name=$(echo "${environment_name}__________" | cut -c -9)

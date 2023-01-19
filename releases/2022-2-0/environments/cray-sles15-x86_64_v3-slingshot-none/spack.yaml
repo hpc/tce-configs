@@ -9,7 +9,7 @@ spack:
       - '%intel@2022.2.1'
       - '%intel@2021.7.1.classic'
       - '%oneapi@2022.2.1'
-      - '%cce@15.0.0'
+      - '%cce@15.0.0' 
 
     # The same as above, except as a dependency and compiled against a specific compiler
     # A 'feature' of the new concretizer' is that dependencies don't have to use the
@@ -29,7 +29,6 @@ spack:
     - oneapi-mpi-constraints:
       - ^cray-mpich@8.1.21%oneapi os=sles15
       
-
     # Note that we don't build anything for clang/mpi combos, so a clang specific
     # section isn't needed currently.
 
@@ -183,7 +182,7 @@ spack:
     all:
       # Unless otherwise specified, build with gcc
       compiler: [gcc@11.2.0]
-      target: [x86_64_v3]
+      target: ['x86_64_v3']
 
       # Virtual packages and which specs provide that functionality.
       providers:
@@ -974,6 +973,7 @@ spack:
       exclude:
         - paraview
         - py-mpi4py
+        - survey
       projections:
         hdf5~mpi: hdf5/hdf5-serial-{version}-{compiler.name}-{compiler.version}
         hdf5+mpi: hdf5/hdf5-parallel-{version}-{compiler.name}-{compiler.version}-{^mpi.name}-{^mpi.version}
@@ -993,7 +993,7 @@ spack:
         idl: '{name}/{name}-{version}'
         julia_binary: 'julia/julia-{version}'
         libyogrt: '{name}/{name}-{version}'
-        llvm: clang/clang-{version}
+        llvm: 'clang/clang-{version}'
         mercurial: '{name}/{name}-{version}'
         numactl: '{name}/{name}-{version}'
         openjdk: '{name}/{name}-{version}'
@@ -1201,6 +1201,7 @@ spack:
         whitelist:
           - paraview
           - py-mpi4py
+          - survey
         core_compilers:
           - gcc
         projections:
