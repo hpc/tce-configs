@@ -678,6 +678,11 @@ facility=${facility:-${TCE_FACILITY}}
 
 # Check that facility is specified, as this is required.
 if [[ -z $facility ]]; then
+    echo "Available facilities:"
+    for file in $config_repo_root/facilities/*; do 
+        file=$(basename $file)
+        echo "  $file";
+    done
     error_exit "A facility must be specified.  This can be done with the
 environment variable TCE_FACILITY or with the --facility command line option."
 fi
@@ -726,11 +731,21 @@ install_dir=${install_dir:-${TCE_INSTALL_DIR}}
 
 # Now, deal with the rest of the required arguments.
 if [[ -z $release_name ]]; then
+    echo "Available Releases"
+    for file in $config_repo_root/releases/*; do 
+        file=$(basename $file)
+        echo "  $file";
+    done
     error_exit "A release must be specified.  This can be done with the
 environment variable TCE_RELEASE or with the --release command line option."
 fi
 
 if [[ -z $environment_name ]]; then
+    echo "Available Environemnts"
+    for file in $release/environments/*; do 
+        file=$(basename $file)
+        echo "  $file";
+    done
     error_exit "An environment must be specified.  This can be done with the
 environment variable TCE_ENVIRONMENT or with the --environment command line option."
 fi
