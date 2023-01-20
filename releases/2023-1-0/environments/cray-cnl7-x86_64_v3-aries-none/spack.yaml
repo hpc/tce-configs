@@ -6,28 +6,27 @@ spack:
     - toolchain-compiler-constraints:
       - $%base-compiler
       - '%intel@19.1.3'
-      - '%intel@2022.2.1'
-      - '%intel@2021.7.1.classic'
-      - '%oneapi@2022.2.1'
-      - '%cce@15.0.0'
+      - '%intel@2022.0.2'
+      - '%intel@2022.0.2.classic'
+      - '%oneapi@2022.0.2'
 
     # The same as above, except as a dependency and compiled against a specific compiler
     # A 'feature' of the new concretizer' is that dependencies don't have to use the
     # compiler of the parent, but these (and many other packages) have fortran libs
     # that will break if that happens. So we have to force the builds of some software
     # to use an mpi built against the matching compiler.
-    - gcc-10-mpi-constraints:
-      - ^cray-mpich@8.1.21 os=sles15
+    - gcc-11-mpi-constraints:
+      - ^cray-mpich@7.7.20 os=cnl7
 
     # The same, for intel.
     - intel-mpi-constraints:
-      - ^cray-mpich@8.1.21%intel@2022.2.1 os=sles15
+      - ^cray-mpich@7.7.20%intel@2022.0.2 os=cnl7
 
     - intel-classic-mpi-constraints:
-      - ^cray-mpich@8.1.21%intel@2021.7.1.classic os=sles15
+      - ^cray-mpich@7.7.20%intel@2022.0.2.classic os=cnl7
 
     - oneapi-mpi-constraints:
-      - ^cray-mpich@8.1.21%oneapi os=sles15
+      - ^cray-mpich@7.7.20%oneapi os=cnl7
       
 
     # Note that we don't build anything for clang/mpi combos, so a clang specific
@@ -71,13 +70,12 @@ spack:
 
     # Packages built out against each compiler
     - compiler-packages:
+      - llvm@14.0.2 ^swig@4.0.2 ^cmake@3.23.1%gcc ^python@3.10.6%gcc
       - mesa ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.2.0
         ^ncurses%gcc ^zlib%gcc ^python@3.10.6%gcc
 
     #
     - install-comp:
-      #- intel-oneapi-compilers@2022.2.1
-      - llvm@14.0.2 ^swig@4.0.2 ^cmake@3.23.1%gcc ^python@3.10.6%gcc
 
       - matrix:
         - [$compiler-packages]
@@ -85,18 +83,6 @@ spack:
 
         exclude:
         # Only build parallel studio against intel
-        - intel-parallel-studio %gcc
-        # - intel-parallel-studio %clang
-        - intel-parallel-studio %oneapi
-        - intel-oneapi-dal%gcc
-        # - intel-oneapi-dal%clang
-        - intel-oneapi-dal%intel
-        - intel-oneapi-mkl%gcc
-        # - intel-oneapi-mkl%clang
-        - intel-oneapi-mkl%intel
-        - intel-oneapi-tbb%gcc
-        # - intel-oneapi-tbb%clang
-        - intel-oneapi-tbb%intel
         - mesa%cce
         - mesa%oneapi
         - mesa%intel@2022.2.1
@@ -112,11 +98,11 @@ spack:
         ^libtiff%gcc@11.2.0 ^lz4%gcc@11.2.0 
 
     # Build the above with gcc and all gcc relevant MPI's
-    - toolchain-mpi-gcc-10:
+    - toolchain-mpi-gcc-11:
       - matrix:
         - [$mpi-packages]
         - ['%gcc@11.2.0']
-        - [$gcc-10-mpi-constraints]
+        - [$gcc-11-mpi-constraints]
         exclude:
         - hpctoolkit ^mvapich2
 
@@ -124,7 +110,7 @@ spack:
     - toolchain-mpi-intel:
       - matrix:
         - [$mpi-packages]
-        - ['%intel@2022.2.1']
+        - ['%intel@2022.0.2']
         - [$intel-mpi-constraints]
         exclude:
         - hpctoolkit
@@ -135,7 +121,7 @@ spack:
     - toolchain-mpi-intel-classic:
       - matrix:
         - [$mpi-packages]
-        - ['%intel@2021.7.1.classic']
+        - ['%intel@2022.0.2.classic']
         - [$intel-classic-mpi-constraints]
         exclude:
         - hpctoolkit
@@ -145,7 +131,7 @@ spack:
     - toolchain-mpi-oneapi:
       - matrix:
         - [$mpi-packages]
-        - ['%oneapi@2022.2.1']
+        - ['%oneapi@2022.0.2']
         - [$oneapi-mpi-constraints]
         exclude:
         - hpctoolkit
@@ -166,7 +152,7 @@ spack:
     - install:
       - $base_matrix
       - $install-comp
-      - $toolchain-mpi-gcc-10
+      - $toolchain-mpi-gcc-11
       - $toolchain-mpi-intel
       - $toolchain-mpi-intel-classic
       - $toolchain-mpi-oneapi
@@ -192,11 +178,6 @@ spack:
         pkgconfig: [pkg-config]
         tbb: [intel-tbb+shared]
         uuid: [libuuid]
-        # cray-hdf5
-        # cray-hdf5-parallel
-        # cray-netcdf-hdf5parallel
-        # cray-netcdf
-        # cray-parallel-netcdf
 
     # The following crypto libraries should not be built. If needed, they should
     # be pulled from system space.
@@ -220,9 +201,9 @@ spack:
     #       prefix: /usr
     #   buildable: false
     openssh:
-      version: [8.4p1]
+      version: [8.1p1]
       externals:
-        - spec: openssh@8.4p1%gcc@11.2.0
+        - spec: openssh@8.1p1%gcc@11.2.0
           prefix: /usr
       buildable: false
     openssl:
@@ -594,18 +575,12 @@ spack:
       version: [4.1.0]
     cray-mpich:
       # Provided by system
-      version: ['8.1.21']
+      version: ['7.7.20']
       variants: '+wrappers'
       # These have to be specified compiler by compiler, or Spack will get confused.
       externals:
-        - spec: cray-mpich@8.1.21%gcc os=sles15
-          prefix: /opt/cray/pe/mpich/8.1.21/ofi/gnu/9.1
-        - spec: cray-mpich@8.1.21%intel os=sles15
-          prefix: /opt/cray/pe/mpich/8.1.21/ofi/intel/19.0
-        - spec: cray-mpich@8.1.21%oneapi@2022.2.1 os=sles15
-          prefix: /opt/cray/pe/mpich/8.1.21/ofi/intel/19.0
-        - spec: cray-mpich@8.1.21%cce os=sles15
-          prefix: /opt/cray/pe/mpich/8.1.21/ofi/cray/10.0
+        - spec: cray-mpich@7.7.20 os=cnl7
+          modules: [cray-mpich]
       buildable: false
     mvapich2:
       variants: +debug fabrics=psm2 file_systems=lustre,nfs,ufs process_managers=slurm
@@ -617,36 +592,24 @@ spack:
       version: ['6.2']
     netcdf-c:
       variants: ~mpi~parallel-netcdf+hdf4+pic+shared
-      version: ['4.9.0']
+      version: ['4.8.1.3']
       externals:
-        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %gcc
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
-        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %intel
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
-        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %oneapi@2022.2.1
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
+        - spec: netcdf-c@4.8.1.3 ~mpi~parallel-netcdf+hdf4+pic+shared
+          modules: [cray-netcdf/4.8.1.3]
       buildable: false
     netcdf-cxx4:
       variants: +pic
-      version: ['4.9.0']
+      version: ['4.8.1.3']
       externals:
-        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %gcc
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
-        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %intel
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
-        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %oneapi@2022.2.1
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
+        - spec: netcdf-cxx4@4.8.1.3 +pic+shared
+          modules: [cray-netcdf/4.8.1.3]
       buildable: false
     netcdf-fortran:
       variants: +pic
-      version: ['4.9.0']
+      version: ['4.8.1.3']
       externals:
-        - spec: netcdf-fortran@4.9.0 +pic %gcc
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
-        - spec: netcdf-fortran@4.9.0 +pic %intel
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
-        - spec: netcdf-fortran@4.9.0 +pic %oneapi@2022.2.1
-          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
+        - spec: netcdf-fortran@4.8.1.3 +pic 
+          modules: [cray-netcdf/4.8.1.3]
       buildable: false
     ninja:
       version: ['1.10.2']
@@ -669,14 +632,10 @@ spack:
       require: '%gcc'
       version: [6.0.0.1]
     parallel-netcdf:
-      version: ['1.12.3']
+      version: ['1.12.2.3']
       externals:
-        - spec: parallel-netcdf@1.12.3 %gcc
-          prefix: /opt/cray/pe/parallel-netcdf/1.12.3.1/gnu/9.1/
-        - spec: parallel-netcdf@1.12.3 %intel
-          prefix: /opt/cray/pe/parallel-netcdf/1.12.3.1/intel/19.0/
-        - spec: parallel-netcdf@1.12.3 %oneapi@2022.2.1
-          prefix: /opt/cray/pe/parallel-netcdf/1.12.3.1/intel/19.0/
+        - spec: parallel-netcdf@1.12.2.3
+          modules: [cray-parallel-netcdf/1.12.2.3]
       buildable: false
     paraview:
       variants: +eyedomelighting +fortran +hdf5 +osmesai +mpi +shared
@@ -891,9 +850,9 @@ spack:
     shared-mime-info:
       version: ['1.9']
     slurm:
-      version: ['22.05.6']
+      version: ['21.08.6']
       externals:
-        - spec: slurm@22.05.6%gcc@11.2.0
+        - spec: slurm@21.08.6%gcc@11.2.0
           prefix: /usr
       buildable: false
     sqlite:
