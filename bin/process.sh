@@ -16,6 +16,7 @@ releases=${config_repo_root}/releases
 spacklemore=${config_repo_root}/spacklemore
 
 # Default settings for optional parameters
+skip_buildcache_on_failure=false
 reindex_def=false # Don't reindex
 concretize_def=false # Don't concretize
 skip_install_def=false # Do an install
@@ -808,7 +809,6 @@ cert_store=${cert_store:-${TCE_CERT_STORE:-${cert_store_def}}}
 buildcache_upload=${buildcache_upload:-${buildcache_upload_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
 build_cache=${build_cache:-${TCE_BUILDCACHE}}
-skip_buildcache_on_failure=false
 shared_group=${shared_group:-${TCE_SHARED_GROUP:-${shared_group_def}}}
 secret_path=${secret_path:-${TCE_SECRET}}
 public_key_path=${public_key_path:-${TCE_PUBLIC_KEY}}
@@ -1299,9 +1299,11 @@ if [[ $build_continue = true ]]; then
     fi
 fi
 
+echo "BUILDCACHE? $build_continue $skip_buildcache_on_failure"
 # Skip the buildcache step
 if [[ $build_continue = false ]] && [[ $skip_buildcache_on_failure = true ]]; then
-    buildcache=
+    echo "Disabling build cache step - prior steps failed."
+    unset buildcache
 fi
 
 # Collect output from generating binary packages here.
