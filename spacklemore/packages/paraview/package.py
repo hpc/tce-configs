@@ -232,6 +232,9 @@ class Paraview(CMakePackage, CudaPackage):
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7591
     patch('xlc-compilation-pv590.patch', when='@5.9.0%xl_r')
 
+    # With some setups, paraview has trouble finding netcdf
+    patch('find-netcdf.patch', when='@5.10.1')
+
     @property
     def generator(self):
         # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
