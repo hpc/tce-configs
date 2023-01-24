@@ -1,6 +1,5 @@
 spack:
   definitions:
-    # Compilers
     - base-compiler:
       - gcc@11.2.0
     - toolchain-compiler-constraints:
@@ -102,8 +101,7 @@ spack:
         - [$mpi-packages]
         - ['%gcc@11.2.0']
         - [$gcc-10-mpi-constraints]
-        exclude:
-        - hpctoolkit ^mvapich2
+        exclude: []
 
     # Build the above with intel hybrid (oneapi with old fortran compiler)
     - toolchain-mpi-intel:
@@ -168,7 +166,6 @@ spack:
     all:
       # Unless otherwise specified, build with gcc
       compiler: [gcc@11.2.0]
-      target: ['x86_64_v3']
 
       # Virtual packages and which specs provide that functionality.
       providers:
@@ -390,13 +387,6 @@ spack:
       # version: ['19.1.3']
     intel-oneapi-compilers:
       version: [2022.2.1]
-    # intel-parallel-studio: # DEBUG
-    #   variants: ~tbb+mpi+ilp64+newdtags
-    #   version: [cluster.2020.4]
-    #   externals:
-    #     - spec: intel-parallel-studio@cluster.2020.4
-    #       prefix: /usr
-    #   buildable: false
     intel-mkl:
       version: ['2020.4.304']
       variants: threads=openmp
@@ -595,10 +585,6 @@ spack:
         - spec: cray-mpich@8.1.21%cce os=sles15
           prefix: /opt/cray/pe/mpich/8.1.21/ofi/cray/10.0
       buildable: false
-    mvapich2:
-      variants: +debug fabrics=psm2 file_systems=lustre,nfs,ufs process_managers=slurm
-        threads=multiple ch3_rank_bits=32 ~regcache ~wrapperrpath
-      version: [2.3.7]
     nasm:
       version: ['2.15.05']
     ncurses:
@@ -618,11 +604,11 @@ spack:
       variants: +pic
       version: ['4.9.0']
       externals:
-        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %gcc
+        - spec: netcdf-cxx4@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %gcc
           prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
-        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %intel
+        - spec: netcdf-cxx4@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %intel
           prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
-        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %oneapi@2022.2.1
+        - spec: netcdf-cxx4@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %oneapi@2022.2.1
           prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
       buildable: false
     netcdf-fortran:
@@ -646,10 +632,6 @@ spack:
     openjdk:
       require: '%gcc'
       version: [11.0.15_10]
-    openmpi:
-      variants: +legacylaunchers +pmi +thread_multiple +gpfs
-        fabrics=cma,psm,psm2,verbs schedulers=slurm
-      version: [4.1.3]
     pango:
       variants: +X
       version: [1.42.4]
@@ -964,11 +946,6 @@ spack:
         - py-mpi4py
         - survey
       projections:
-        hdf5~mpi: hdf5/hdf5-serial-{version}-{compiler.name}-{compiler.version}
-        hdf5+mpi: hdf5/hdf5-parallel-{version}-{compiler.name}-{compiler.version}-{^mpi.name}-{^mpi.version}
-        intel-parallel-studio+mpi: intel-mpi/intel-mpi-{version}
-        intel-parallel-studio+mkl: mkl/mkl-{version}
-        intel-parallel-studio+vtune: intel-tools/intel-tools-{version}
         # All of the 'core' software should be built once per version and not need qualification
         arm-forge: '{name}/{name}-{version}'
         charliecloud: '{name}/{name}-{version}'
@@ -1028,8 +1005,6 @@ spack:
           - intel-oneapi-dal
           - intel-oneapi-tbb
           - intel-oneapi-mpi
-          - intel-parallel-studio~mpi
-          - java
           - julia_binary
           - libyogrt
           - llvm
@@ -1045,7 +1020,7 @@ spack:
           - tmux
           - totalview
         core_compilers:
-          - gcc@11.2.0
+          # - gcc@11.2.0
         core_specs:
           - arm-forge
           - charliecloud
@@ -1061,8 +1036,6 @@ spack:
           - intel-oneapi-dal
           - intel-oneapi-tbb
           - intel-oneapi-mpi
-          - intel-parallel-studio~mpi
-          - java
           - julia_binary
           - libyogrt
           - llvm
@@ -1078,8 +1051,6 @@ spack:
           - tmux
           - totalview 
         projections:
-          intel-parallel-studio+mkl: 'mkl/{version}'
-          intel-parallel-studio+vtune: 'intel-tools/{version}'
           julia_binary: 'julia/{version}'
           py-pint: 'pint/{version}'
           all: '{name}/{version}'
@@ -1116,33 +1087,18 @@ spack:
           - platform=cray
           - platform=linux
         whitelist:
-          - gcc
-          - hdf5
           - intel-oneapi-compilers
-          - intel-parallel-studio+mpi
           - libquo
           - llvm
-          - mvapich2
           - netcdf-c
-          - netcdf-cxx4
-          - netcdf-fortran
-          - openmpi
-          - parallel-netcdf
           - valgrind
         core_compilers:
-          - gcc
+          # - gcc
         core_specs:
-          - gcc
           - intel-oneapi-compilers
           - llvm
         projections:
-          gcc: '{name}/{version}'
-          hdf5~mpi: '{name}-serial/{version}'
-          hdf5+mpi: '{name}-parallel/{version}'
-          ^hdf5~mpi: '{name}-serial/{version}'
-          ^hdf5+mpi: '{name}-parallel/{version}'
           intel-oneapi-compilers: 'intel/{version}'
-          intel-parallel-studio+mpi: 'intel-mpi/{version}'
           llvm: 'clang/{version}'
           all: '{name}/{version}'
         llvm:
@@ -1161,18 +1117,11 @@ spack:
               LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/lib64
             set:
               GCC: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5
-        intel-parallel-studio+mpi:
           environment:
             prepend_path:
               PATH: /usr/tce/packages/intel-mpi/intel-mpi-cluster.2020.4/compilers_and_libraries_2020.4.304/linux/mpi/intel64/bin
             set:
               MANPATH: /usr/tce/packages/intel-mpi/intel-mpi-cluster.2020.4/compilers_and_libraries_2020.4.304/linux/mpi/man
-        openmpi:
-          environment:
-            set:
-              SLURM_MPI_TYPE: pmix_v3
-              HWLOC_ROOT: '{^hwloc.prefix}'
-              HWLOC_HOME: '{^hwloc.prefix}'
     # modules that use the root installation rather than pointing to the view
     toolchains-root:
       roots:
@@ -1192,7 +1141,7 @@ spack:
           - py-mpi4py
           - survey
         core_compilers:
-          - gcc
+          # - gcc
         projections:
           py-mpi4py: 'mpi4py/{version}'
           all: '{name}/{version}'
