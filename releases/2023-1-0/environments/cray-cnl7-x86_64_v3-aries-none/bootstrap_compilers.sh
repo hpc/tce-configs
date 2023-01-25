@@ -30,8 +30,8 @@ if ! grep 'intel@2022.0.2.classic' $compilers_yaml; then
 fi
 
 if ! grep 'oneapi@2022.0.2' $compilers_yaml; then
-    $fix_compiler "$compilers_yaml"  oneapi@2022.0.0 sles15 x86_64 edit --rename oneapi@2022.0.2
-    $fix_compiler "$compilers_yaml"  oneapi@2022.0.2 sles15 x86_64 edit --modules PrgEnv-intel \
+    $fix_compiler "$compilers_yaml"  intel@2022.0.2 cnl7 any copy oneapi@2022.0.2
+    $fix_compiler "$compilers_yaml"  oneapi@2022.0.2 cnl7 any edit --modules PrgEnv-intel \
         --modules intel-oneapi@2022.0.2
 fi
 
