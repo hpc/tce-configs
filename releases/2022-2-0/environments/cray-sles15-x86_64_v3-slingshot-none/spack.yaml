@@ -615,11 +615,11 @@ spack:
       variants: +pic
       version: ['4.9.0']
       externals:
-        - spec: netcdf-cxx4@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %gcc
+        - spec: netcdf-cxx4@4.9.0 +pic+shared %gcc
           prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
-        - spec: netcdf-cxx4@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %intel
+        - spec: netcdf-cxx4@4.9.0 +pic+shared %intel
           prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
-        - spec: netcdf-cxx4@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %oneapi@2022.2.1
+        - spec: netcdf-cxx4@4.9.0 +pic+shared %oneapi@2022.2.1
           prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
       buildable: false
     netcdf-fortran:
@@ -1031,7 +1031,7 @@ spack:
           - tmux
           - totalview
         core_compilers:
-          # - gcc@11.2.0
+          - gcc@11.2.0
         core_specs:
           - arm-forge
           - charliecloud
@@ -1104,7 +1104,7 @@ spack:
           - netcdf-c
           - valgrind
         core_compilers:
-          # - gcc
+          - gcc
         core_specs:
           - intel-oneapi-compilers
           - llvm
@@ -1152,7 +1152,7 @@ spack:
           - py-mpi4py
           - survey
         core_compilers:
-          # - gcc
+          - gcc
         projections:
           py-mpi4py: 'mpi4py/{version}'
           all: '{name}/{version}'
