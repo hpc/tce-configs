@@ -160,4 +160,14 @@ toss-ofi:linux-omni-none:build:2022-2-0:
     TCE_RELEASE: '2022-2-0'
     TCE_ENVIRONMENT: linux-rhel7-x86_64_v3-omnipath-none
   tags:
-    - toss-ofi
+
+cray-ofi:cray-sles15-sl:2022-2-0:
+  extends: .build_environment
+  stage: build_first
+  variables:
+    TCE_FACILITY: lanl
+    TCE_RELEASE: '2022-2-0'
+    TCE_ENVIRONMENT: cray-sles15-x86_64_v3-slingshot-none
+  tags:
+    - sles15-slingshot
+
