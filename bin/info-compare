@@ -8,9 +8,10 @@ import re
 import string
 import subprocess
 
+
 # Spacks we compare.
-new_spack  = '/tmp/jogas/tce/linux-rhel7-x86_64_v3-omnipath-none/spack/bin/spack' # Your upstream develop spack
-old_spack  = '/usr/projects/hpcsoft/tce/linux-rhel7-x86_64_v3-omnipath-none/spack/bin/spack' # Your current production snap.
+new_spack  = sys.argv[0]
+old_spack = sys.argv[1]
 
 # Your package list
 pkg_list = '/users/jogas/scratch/packagelist.txt'
