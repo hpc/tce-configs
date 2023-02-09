@@ -169,5 +169,5 @@ cray-ofi:cray-sles15-sl:2022-2-0:
     TCE_RELEASE: '2022-2-0'
     TCE_ENVIRONMENT: cray-sles15-x86_64_v3-slingshot-none
   tags:
-    - sles15-slingshot
+    - ex
 
