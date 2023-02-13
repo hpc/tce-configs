@@ -40,7 +40,7 @@ spack:
       - charliecloud ^python@3.10.6%gcc
       - cmake
       # We need to specify non-default mesa
-      - emacs ^mesa+glx
+      - emacs +X ^mesa+glx
       - git
       - gnuplot ^cmake@3.23.1%gcc ^python@3.10.6%gcc
       - hpcviewer
@@ -781,6 +781,7 @@ spack:
       require: '%gcc' 
       version: [8.14.0]
     py-mpi4py:
+      require: '%gcc' 
       version: [3.1.2]
     py-numpy:
       require: '%gcc'
@@ -970,7 +971,7 @@ spack:
         idl: '{name}/{name}-{version}'
         julia_binary: 'julia/julia-{version}'
         libyogrt: '{name}/{name}-{version}'
-        llvm: 'clang/clang-{version}'
+        # llvm: 'clang/clang-{version}'
         mercurial: '{name}/{name}-{version}'
         numactl: '{name}/{name}-{version}'
         openjdk: '{name}/{name}-{version}'
@@ -1018,7 +1019,7 @@ spack:
           - intel-oneapi-mpi
           - julia_binary
           - libyogrt
-          - llvm
+          # - llvm
           - mercurial
           - numactl
           - openjdk
@@ -1049,7 +1050,7 @@ spack:
           - intel-oneapi-mpi
           - julia_binary
           - libyogrt
-          - llvm
+          # - llvm
           - mercurial
           - numactl
           - openjdk
@@ -1063,7 +1064,6 @@ spack:
           - totalview 
         projections:
           julia_binary: 'julia/{version}'
-          py-pint: 'pint/{version}'
           all: '{name}/{version}'
         arm-forge:
           environment:
@@ -1100,26 +1100,16 @@ spack:
         whitelist:
           - intel-oneapi-compilers
           - libquo
-          - llvm
-          - netcdf-c
           - valgrind
         core_compilers:
           - gcc
         core_specs:
           - intel-oneapi-compilers
-          - llvm
+          # - llvm
         projections:
           intel-oneapi-compilers: 'intel/{version}'
-          llvm: 'clang/{version}'
+          # ^mpi: '{compiler.name}-{compiler.version}/{^mpi.name}-{^mpi.version}/{name}/{version}'
           all: '{name}/{version}'
-        llvm:
-          environment:
-            prepend_path:
-              PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/bin
-              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/lib64
-            set:
-              FC:  /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/bin/gfortran
-              F90:  /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/bin/gfortran
         intel-oneapi-compilers:
           environment:
             prepend_path:
@@ -1155,6 +1145,7 @@ spack:
           - gcc
         projections:
           py-mpi4py: 'mpi4py/{version}'
+          # ^mpi: '{compiler.name}-{compiler.version}/{^mpi.name}-{^mpi.version}/{name}/{version}'
           all: '{name}/{version}'
     prefix_inspections:
       lib:
