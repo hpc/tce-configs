@@ -5,7 +5,7 @@ install_dir=$1
 fix_compiler="${REPO_ROOT}/bin/fix_compiler" # REPO_ROOT provided by wrapper
 compilers_yaml="${install_dir}/spack/etc/spack/compilers.yaml"
 
-module switch PrgEnv-${PE_ENV,,} PrgEnv-intel
+module switch "PrgEnv-${PE_ENV,,}" PrgEnv-intel
 
 echo "Checking for compilers under PrgEnv-intel"
 spack compiler find --scope=site
@@ -15,7 +15,7 @@ IFX=$(which icx)
 ICPX=$(which icpx)
 
 #Only ever do this once.
-if ! grep 'intel@2021.7.1.classic' $compilers_yaml; then 
+if ! grep 'intel@2021.7.1.classic' "$compilers_yaml"; then 
     # The compilers are detected at the compiler version (ie, correctly) rather than the package
     # version.
     # The intel-classic compiler is detected as intel (hybrid)
