@@ -15,11 +15,11 @@ config:
   # Default directory layout
   # Locations where different types of modules should be installed.
   modules:
-    tcl: 
-      roots: 
+    tcl:
+      roots:
         - $spack/share/spack/modules
-    lmod: 
-      roots: 
+    lmod:
+      roots:
         - $spack/share/spack/lmod
 
 

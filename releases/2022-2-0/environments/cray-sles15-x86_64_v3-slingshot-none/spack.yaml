@@ -8,7 +8,7 @@ spack:
       - '%intel@2022.2.1'
       - '%intel@2021.7.1.classic'
       - '%oneapi@2022.2.1'
-      - '%cce@15.0.0' 
+      - '%cce@15.0.0'
 
     - target:
       - target=x86_64_v3
@@ -30,7 +30,7 @@ spack:
 
     - oneapi-mpi-constraints:
       - ^cray-mpich@8.1.21%oneapi os=sles15
-      
+
     # Note that we don't build anything for clang/mpi combos, so a clang specific
     # section isn't needed currently.
 
@@ -97,8 +97,8 @@ spack:
       - valgrind
       - survey
       - paraview@5.10.1 ~adios2 ^mesa ^bzip2%gcc@11.2.0 ^double-conversion%gcc@11.2.0 ^cmake@3.23.1%gcc
-        ^py-matplotlib@3.5.3%gcc ^eigen%gcc@11.2.0 ^expat%gcc@11.2.0 ^freetype%gcc@11.2.0 
-        ^libtiff%gcc@11.2.0 ^lz4%gcc@11.2.0 
+        ^py-matplotlib@3.5.3%gcc ^eigen%gcc@11.2.0 ^expat%gcc@11.2.0 ^freetype%gcc@11.2.0
+        ^libtiff%gcc@11.2.0 ^lz4%gcc@11.2.0
 
     # Build the above with gcc and all gcc relevant MPI's
     - toolchain-mpi-gcc-10:
@@ -310,7 +310,7 @@ spack:
       version: ['2.6.3']
     font-util:
       version: ['1.3.2']
-    fontconfig: 
+    fontconfig:
       version: ['2.13.94']
     fontsproto:
       version: ['2.1.3']
@@ -509,7 +509,7 @@ spack:
     libx11:
       version: [1.7.0]
     libxfont:
-      version: ['1.5.2'] 
+      version: ['1.5.2']
     libxau:
       version: [1.0.8]
     libxaw:
@@ -661,7 +661,7 @@ spack:
       buildable: false
     paraview:
       variants: +eyedomelighting +fortran +hdf5 +osmesai +mpi +shared
-                +pagosa +python3 ~vtkm cuda_arch=none 
+                +pagosa +python3 ~vtkm cuda_arch=none
       version: [5.10.1]
     patchelf:
       require: '%gcc'
@@ -778,7 +778,7 @@ spack:
       require: '%gcc'
       version: [3.5.3]
     py-more-itertools:
-      require: '%gcc' 
+      require: '%gcc'
       version: [8.14.0]
     py-mpi4py:
       version: [3.1.2]
@@ -864,7 +864,7 @@ spack:
       version: ['1.60.0']
     scons:
       version: ['4.3.0']
-    scorep: 
+    scorep:
       version: ['7.0']
       variants: +pdt
     serf:
@@ -1057,10 +1057,10 @@ spack:
           - patchelf
           - py-pint
           - python
-          - qt 
+          - qt
           - subversion
           - tmux
-          - totalview 
+          - totalview
         projections:
           julia_binary: 'julia/{version}'
           py-pint: 'pint/{version}'
@@ -1128,11 +1128,6 @@ spack:
               LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/lib64
             set:
               GCC: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5
-          environment:
-            prepend_path:
-              PATH: /usr/tce/packages/intel-mpi/intel-mpi-cluster.2020.4/compilers_and_libraries_2020.4.304/linux/mpi/intel64/bin
-            set:
-              MANPATH: /usr/tce/packages/intel-mpi/intel-mpi-cluster.2020.4/compilers_and_libraries_2020.4.304/linux/mpi/man
     # modules that use the root installation rather than pointing to the view
     toolchains-root:
       roots:
