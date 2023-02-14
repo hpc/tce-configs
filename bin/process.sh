@@ -332,7 +332,7 @@ function make_ticket() {
 function take_ticket() {
     # Take a ticket. If there are no tickets, wait for one to be available.
     while true; do
-        for ticket in "$TICKET_DIR/*"; do 
+        for ticket in "$TICKET_DIR"/*; do 
             rm "$TICKET_DIR/$ticket"
             return 
         done
@@ -691,8 +691,8 @@ facility=${facility:-${TCE_FACILITY}}
 # Check that facility is specified, as this is required.
 if [[ -z $facility ]]; then
     echo "Available facilities:"
-    for file in $config_repo_root/facilities/*; do 
-        file="$(basename $file)"
+    for file in "$config_repo_root"/facilities/*; do 
+        file=$(basename "$file")
         echo "  $file";
     done
     error_exit "A facility must be specified.  This can be done with the
@@ -744,8 +744,8 @@ install_dir=${install_dir:-${TCE_INSTALL_DIR}}
 # Now, deal with the rest of the required arguments.
 if [[ -z $release_name ]]; then
     echo "Available Releases"
-    for file in "$config_repo_root/releases/*"; do 
-        file=$(basename $file)
+    for file in "$config_repo_root"/releases/*; do 
+        file=$(basename "$file")
         echo "  $file";
     done
     error_exit "A release must be specified.  This can be done with the
@@ -753,8 +753,8 @@ environment variable TCE_RELEASE or with the --release command line option."
 fi
 
 if [[ -z $environment_name ]]; then
-    echo "Available Environemnts"
-    for file in "$release/environments/*"; do 
+    echo "Available Environments"
+    for file in "$release"/environments/*; do 
         file=$(basename "$file")
         echo "  $file";
     done
@@ -1316,7 +1316,7 @@ mkdir "${BUILDCACHE_OUTFILES}"
 function dump_buildcache_outfiles() {
     # Dump the buildcache outfiles to the log and screen.
     local outfile
-    for outfile in "${BUILDCACHE_OUTFILES}/*"; do
+    for outfile in "${BUILDCACHE_OUTFILES}"/*; do
         cat "${BUILDCACHE_OUTFILES}/$outfile"
         cat "${BUILDCACHE_OUTFILES}/$outfile" > "${buildcache_log}"
         rm -f "${BUILDCACHE_OUTFILES}/$outfile"
