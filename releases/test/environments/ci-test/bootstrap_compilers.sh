@@ -1,7 +1,5 @@
 #!/bin/bash
 
-sys_os=$(/usr/projects/hpcsoft/utilities/bin/sys_os)
-
 install_dir="$1"
 compilers_yaml="$install_dir/spack/etc/spack/compilers.yaml"
 fix_compiler="$REPO_ROOT/bin/fix_compiler"
