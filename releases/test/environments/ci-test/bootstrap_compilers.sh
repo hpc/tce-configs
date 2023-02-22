@@ -1,12 +1,10 @@
 #!/bin/bash
 
-sys_os=$(/usr/projects/hpcsoft/utilities/bin/sys_os)
-
 install_dir="$1"
 compilers_yaml="$install_dir/spack/etc/spack/compilers.yaml"
 fix_compiler="$REPO_ROOT/bin/fix_compiler"
 
-if [[ ${sys_os} == "toss3" ]]; then
+if grep -q 'release-3' /etc/toss-release; then
     echo "Adding gcc@10.2.0 to the spack env."
     spack "${SPACK_VERBOSE[@]}" add "${SPACK_NO_CACHE}" gcc@10.2.0 ^binutils+ld+gold~nls+gas 
 
@@ -26,7 +24,7 @@ if [[ ${sys_os} == "toss3" ]]; then
     ${fix_compiler} "$compilers_yaml" edit gcc@10.2.0 rhel7 x86_64 --env="PATH+=${binutils_path}"
     spack unload -a 
 
-elif [[ ${sys_os} == "cos2" ]]; then
+elif grep -q 'SLES' /etc/os-release; then
 	module switch PrgEnv-${PE_ENV,,} PrgEnv-intel
 
 	echo "Checking for compilers under PrgEnv-intel"

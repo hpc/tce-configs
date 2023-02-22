@@ -326,14 +326,14 @@ TICKET_DIR=$(mktemp -d)
 TICKET_COUNT=10
 function make_ticket() {
     # Create a ticket. Tickets are essentially an empty file in the ticket directory.
-    touch $TICKET_DIR/$(uuidgen -r)
+    touch "$TICKET_DIR/$(uuidgen -r)"
 }
 
 function take_ticket() {
     # Take a ticket. If there are no tickets, wait for one to be available.
     while true; do
-        for ticket in $(ls -1 $TICKET_DIR); do 
-            rm $TICKET_DIR/$ticket
+        for ticket in "$TICKET_DIR"/*; do 
+            rm "$TICKET_DIR/$ticket"
             return 
         done
         sleep 0.5
@@ -343,12 +343,14 @@ function take_ticket() {
 function wait_tickets() {
     # Wait for all tickets to be returned
 
+    # shellcheck disable=SC2034
     for i in $(seq $TICKET_COUNT); do
         take_ticket
     done
 }
 
 # Setup all the initial tickets
+# shellcheck disable=SC2034
 for i in $(seq $TICKET_COUNT); do
     make_ticket
 done
@@ -689,8 +691,8 @@ facility=${facility:-${TCE_FACILITY}}
 # Check that facility is specified, as this is required.
 if [[ -z $facility ]]; then
     echo "Available facilities:"
-    for file in $config_repo_root/facilities/*; do 
-        file=$(basename $file)
+    for file in "$config_repo_root"/facilities/*; do 
+        file=$(basename "$file")
         echo "  $file";
     done
     error_exit "A facility must be specified.  This can be done with the
@@ -742,8 +744,8 @@ install_dir=${install_dir:-${TCE_INSTALL_DIR}}
 # Now, deal with the rest of the required arguments.
 if [[ -z $release_name ]]; then
     echo "Available Releases"
-    for file in $config_repo_root/releases/*; do 
-        file=$(basename $file)
+    for file in "$config_repo_root"/releases/*; do 
+        file=$(basename "$file")
         echo "  $file";
     done
     error_exit "A release must be specified.  This can be done with the
@@ -751,9 +753,9 @@ environment variable TCE_RELEASE or with the --release command line option."
 fi
 
 if [[ -z $environment_name ]]; then
-    echo "Available Environemnts"
-    for file in $release/environments/*; do 
-        file=$(basename $file)
+    echo "Available Environments"
+    for file in "$release"/environments/*; do 
+        file=$(basename "$file")
         echo "  $file";
     done
     error_exit "An environment must be specified.  This can be done with the
@@ -990,8 +992,8 @@ else
     if [[ -n "${spack_checkout}" ]]; then
         status "Checking out Spack git reference $spack_checkout"
         pushd "${spack_root}" &>/dev/null
-        echo ${spack_root}
-        git config --global --add safe.directory ${spack_root}
+        echo "${spack_root}"
+        git config --global --add safe.directory "${spack_root}"
         if ! repo_checkout "$spack_checkout" &>> "${spack_repo_log}"; then
             error_exit "Error checking out $spack_checkout in ${spack_root}. See ${spack_repo_log}"
         fi
@@ -1146,7 +1148,7 @@ NOT_DONE="Not Done"
 SUCCESSFUL="Successful"
 FAILED="Failed"
 SKIPPED="Skipped"
-valid_statuses=( $NOT_DONE $SUCCESSFUL $FAILED $SKIPPED )
+valid_statuses=( "$NOT_DONE" "$SUCCESSFUL" "$FAILED" "$SKIPPED" )
 # Variables to track the status of the stages
 bootstrap_stat=$NOT_DONE
 reindex_stat=$NOT_DONE
@@ -1308,16 +1310,16 @@ fi
 
 # Collect output from generating binary packages here.
 BUILDCACHE_OUTFILES=/tmp/$USER/buildcache_out
-rm -rf ${BUILDCACHE_OUTFILES}
-mkdir ${BUILDCACHE_OUTFILES}
+rm -rf "${BUILDCACHE_OUTFILES}"
+mkdir "${BUILDCACHE_OUTFILES}"
 
 function dump_buildcache_outfiles() {
     # Dump the buildcache outfiles to the log and screen.
     local outfile
-    for outfile in $(ls -1 ${BUILDCACHE_OUTFILES}); do
-        cat ${BUILDCACHE_OUTFILES}/$outfile
-        cat ${BUILDCACHE_OUTFILES}/$outfile > ${buildcache_log}
-        rm -f ${BUILDCACHE_OUTFILES}/$outfile
+    for outfile in "${BUILDCACHE_OUTFILES}"/*; do
+        cat "${BUILDCACHE_OUTFILES}/$outfile"
+        cat "${BUILDCACHE_OUTFILES}/$outfile" > "${buildcache_log}"
+        rm -f "${BUILDCACHE_OUTFILES}/$outfile"
     done
 }
 
@@ -1326,16 +1328,18 @@ function create_package() {
     # Args:
     #   1 - Hash of package to create binary package of
     
-    local tmpfile=$(mktemp)
+    local tmpfile
+    tmpfile=$(mktemp)
     local package=$1
+    export buildcache_stat
 
-    spack find -lv "/$package" > $tmpfile 2>&1
+    spack find -lv "/$package" > "$tmpfile" 2>&1
     if ! spack "${SPACK_VERBOSE[@]}" buildcache create -m buildcache \
-        --only package -a "/$package" > $tmpfile 2>&1 ; then
+        --only package -a "/$package" > "$tmpfile" 2>&1 ; then
         error "Binary cache creation failed for $package. See $buildcache_log."
         buildcache_stat=${valid_statuses[2]}
     fi
-    mv $tmpfile $BUILDCACHE_OUTFILES
+    mv "$tmpfile" "$BUILDCACHE_OUTFILES"
     make_ticket
 }
 
@@ -1370,7 +1374,7 @@ if [[ -n $build_cache ]]; then
     status "Generating build cache."
     for buildhash in $(spack find -lv | grep -vE '^==|^--|^ *$' | cut -c -7 | sort | uniq); do
         take_ticket
-        create_package $buildhash &
+        create_package "$buildhash" &
         dump_buildcache_outfiles
     done
 
@@ -1379,7 +1383,7 @@ if [[ -n $build_cache ]]; then
 
     if [[ $prod_buildcache = true ]]; then
         status "Moving development buildcache to production buildcache"
-        mv $build_cache/build_cache $build_cache/build_cache-prod
+        mv "$build_cache/build_cache" "$build_cache/build_cache-prod"
     fi
 
     if [[ $buildcache_upload = false ]]; then
@@ -1389,7 +1393,7 @@ if [[ -n $build_cache ]]; then
         status "Uploading buildcache to pe-serve."
         upload_tree=${config_repo_root}/bin/upload_tree.sh
 
-        if ! "${upload_tree}" $cert_store $build_cache |& tee "$buildcache_log"; then
+        if ! "${upload_tree}" "$cert_store" "$build_cache" |& tee "$buildcache_log"; then
             upload_buildcache_stat=$FAILED
             error "Failed to upload buildcache changes to pe-serve. See $buildcache_log."
         else 
