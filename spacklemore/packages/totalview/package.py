@@ -138,3 +138,13 @@ class Totalview(Package):
 
             install_cmd.exe.extend(arg_list)
             install_cmd()
+
+        # If a license file was created, link to FNE_license or FNP_license
+        symlink(
+            join_path(self.prefix, "licenses", "license.dat"),
+            join_path(self.prefix, "toolworks", "FNE_license", "tv_license_file"),
+        )
+        symlink(
+            join_path(self.prefix, "licenses", "license.dat"),
+            join_path(self.prefix, "toolworks", "FNP_license", "license.dat"),
+        )
