@@ -50,7 +50,6 @@ bash-syntax:
     - docker
   before_script:
     - apk add shellcheck
-    - apk add ping
   script:
     - source tests/syntax.sh
 
