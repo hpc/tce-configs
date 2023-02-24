@@ -48,10 +48,10 @@ bash-syntax:
     syntax_and_style
   tags:
     - untagged
-  script:
-    - echo $http_proxy
-    - ping -c 2 w2.lanl.gov
+  before_script: 
     - apk add shellcheck
+    - apk add ping
+  script:
     - source tests/syntax.sh
 
 .build_environment:

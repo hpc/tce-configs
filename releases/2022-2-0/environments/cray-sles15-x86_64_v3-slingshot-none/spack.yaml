@@ -33,7 +33,7 @@ spack:
 
     - cce-mpi-constraints:
       - ^cray-mpich@8.1.21%cce os=sles15
-      
+
     # Note that we don't build anything for clang/mpi combos, so a clang specific
     # section isn't needed currently.
 
