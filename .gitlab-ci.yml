@@ -91,8 +91,7 @@ bash-syntax:
     - ./bin/process.sh
       -f $TCE_FACILITY -r $TCE_RELEASE -e $TCE_ENVIRONMENT
       -i $(pwd)/builds__ -b $(pwd)/buildcache
-      --secret $CERT_STORE/secring.gpg
-      --public-key $CERT_STORE/pubring.gpg
+      --cert-store $CERT_STORE
   after_script:
     - ./bin/upload_tree.sh $CERT_STORE $(pwd)/buildcache
 
