@@ -47,8 +47,8 @@ bash-syntax:
   stage:
     syntax_and_style
   tags:
-    - untagged
-  before_script: 
+    - docker
+  before_script:
     - apk add shellcheck
     - apk add ping
   script:
