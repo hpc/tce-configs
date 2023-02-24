@@ -14,6 +14,7 @@ class JuliaBinary(Package):
     maintainers = ['dmageeLANL']
 
     version('1.5.3', sha256='f190c938dd6fed97021953240523c9db448ec0a6760b574afd4e9924ab5615f1')
+    version('1.8.2', sha256='671cf3a450b63a717e1eedd7f69087e3856f015b2e146cb54928f19a3c05e796')
 
     def install(self, spec, prefix):
         # Unpack and copy

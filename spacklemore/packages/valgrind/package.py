@@ -19,9 +19,6 @@ class Valgrind(BuiltinValgrind):
         options = super(Valgrind, self).configure_args()
         spec = self.spec
 
-        if self.spec.platform == 'cray':
-            env['SPACK_CC'] = "/opt/gcc/9.3.0/bin/gcc"
-
         if spec.satisfies('+lto'):
             options.append('--enable-lto')
 
@@ -29,7 +26,7 @@ class Valgrind(BuiltinValgrind):
             if self.spec.platform != 'cray':
                 options.append('--with-mpicc={0}'.format(self.spec['mpi'].mpicc))
             else:
-                options.append("--with-mpicc=env['CC']")
+                options.append("--with-mpicc=cc")
 
         if sys.platform == 'darwin':
             options.append('--build=amd64-darwin')

@@ -18,6 +18,7 @@ yaml-lint:
     - pip install --upgrade pip
     - pip install yamllint
     - ./tests/lint_yaml.sh
+    - echo "Oh noes2"
 
 # LANL installs in an /hpcsoft directory. Any reference to that
 # in an environment is forbidden.
@@ -153,4 +154,23 @@ xc40:cray-cnl7-x86_64:build:
   tags:
     - toss-mlx
 
+
+toss-ofi:linux-omni-none:build:2022-2-0:
+  extends: .build_environment
+  stage: build_first
+  variables:
+    TCE_FACILITY: lanl
+    TCE_RELEASE: '2022-2-0'
+    TCE_ENVIRONMENT: linux-rhel7-x86_64_v3-omnipath-none
+  tags:
+
+cray-ofi:cray-sles15-sl:2022-2-0:
+  extends: .build_environment
+  stage: build_first
+  variables:
+    TCE_FACILITY: lanl
+    TCE_RELEASE: '2022-2-0'
+    TCE_ENVIRONMENT: cray-sles15-x86_64_v3-slingshot-none
+  tags:
+    - ex
 

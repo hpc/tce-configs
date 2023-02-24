@@ -9,6 +9,10 @@
 #   hostname: hostname of the system if 'hostname' in an executable in user path
 #
 spack:
+  upstreams:
+    tce-2022-1-0:
+      install_tree: $spack/../../../tce-sandbox-2022-1-0/cray-cnl7-x86_64_v3-aries-none
+
   definitions:
 # ASC compilers
 # Using double of each compiler and MPI to accommodate differences across an
@@ -813,7 +817,6 @@ spack:
       compiler: []
       modules: {}
       providers: {}
-  upstreams: {}
   mirrors: {}
   repos: []
   view:

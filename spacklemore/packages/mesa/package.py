@@ -26,11 +26,12 @@ import os
 
 from spack import *
 from spack.pkg.builtin.mesa import Mesa as BuiltinMesa
+from spack.pkg.builtin.mesa import MesonBuilder
 
 
 class Mesa(BuiltinMesa):
     """LANL-specific installation for the Mesa package."""
-    patch('inlinegcc10.patch', when='%gcc@10:')
+    patch('inlinegcc10.patch', when='@:20.1.0 %gcc@10:')
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies('%intel'):
