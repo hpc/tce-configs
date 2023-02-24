@@ -21,7 +21,7 @@ if grep -q 'release-3' /etc/toss-release; then
 
     echo "Setting binutils_path "
     binutils_path=$(spack find --loaded --long -p | grep binutils | awk '{ print $3 }')/bin
-    ${fix_compiler} "$compilers_yaml" edit gcc@10.2.0 rhel7 x86_64 --env="PATH+=${binutils_path}"
+    ${fix_compiler} "$compilers_yaml" gcc@10.2.0 rhel7 x86_64 edit --env="PATH+=${binutils_path}"
     spack unload -a 
 
 elif grep -q 'SLES' /etc/os-release; then
