@@ -92,8 +92,6 @@ bash-syntax:
       -i $(pwd)/builds -b $(pwd)/buildcache
       --secret $CERT_STORE/secring.gpg
       --public-key $CERT_STORE/pubring.gpg
-  after_script:
-    - ./bin/upload_tree.sh $CERT_STORE $(pwd)/buildcache
 
 ci-test:toss-ofi-build:
   extends: .build_environment

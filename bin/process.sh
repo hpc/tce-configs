@@ -26,7 +26,7 @@ no_stage_def=false # Don't skip over the stage step
 mangle_prefix_path=false # Mangle the install directory name to fit ci path length requirements.
 force_bootstrap_def=false # Don't force the use of the bootstrap script if it has already been run
 prod_buildcache_def=false # Don't upload binarycache to production. Defaults to development.
-buildcache_upload_def=true # Upload buildcache to pe-serve.
+no_buildcache_upload_def=false # Upload buildcache to pe-serve.
 cert_store_def="" # Path to certificates.
 ignorecache_def=false # Allow buildcache to be used.
 install_path_len_def='74' # This is the length of the CI path that we have configured
@@ -113,7 +113,7 @@ usage () {
     echo ""
     echo "  --no-buildcache-upload"
     echo "      Disables buildcache upload to pe-serve"
-    echo "      Default: $buildcache_upload_def"
+    echo "      Default: $no_buildcache_upload_def"
     echo ""
     echo "  --skip-buildcache-on-failure"
     echo "      On install or other failure, skip buildcache generation."
@@ -333,7 +333,7 @@ function take_ticket() {
     # Take a ticket. If there are no tickets, wait for one to be available.
     while true; do
         for ticket in "$TICKET_DIR"/*; do 
-            rm "$TICKET_DIR/$ticket"
+            rm "$ticket"
             return 
         done
         sleep 0.5
@@ -569,7 +569,7 @@ case $key in
         ;;
     --no-buildcache-upload)
         shift
-        buildcache_upload=false
+        no_buildcache_upload=true
         echo "Disabling buildcache upload to pe-serve"
         ;;
     --skip-buildcache-on-failure)
@@ -808,7 +808,7 @@ stage=${stage:=${stage_def}}
 force_bootstrap=${force_bootstrap:-${force_bootstrap_def}}
 prod_buildcache=${prod_buildcache:-${prod_buildcache_def}}
 cert_store=${cert_store:-${TCE_CERT_STORE:-${cert_store_def}}}
-buildcache_upload=${buildcache_upload:-${buildcache_upload_def}}
+no_buildcache_upload=${no_buildcache_upload:-${buildcache_upload_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
 build_cache=${build_cache:-${TCE_BUILDCACHE}}
 shared_group=${shared_group:-${TCE_SHARED_GROUP:-${shared_group_def}}}
@@ -1386,7 +1386,7 @@ if [[ -n $build_cache ]]; then
         mv "$build_cache/build_cache" "$build_cache/build_cache-prod"
     fi
 
-    if [[ $buildcache_upload = false ]]; then
+    if [[ $no_buildcache_upload = true ]]; then
         status "Skipping buildcache upload to pe-serve."
         upload_buildcache_stat=$SKIPPED
     else
