@@ -332,8 +332,10 @@ function take_ticket() {
     # Take a ticket. If there are no tickets, wait for one to be available.
     while true; do
         for ticket in "$TICKET_DIR"/*; do 
-            rm "$ticket"
-            return 
+            if [[ -e "${ticket}"]]; then
+                rm "$ticket"
+                return 
+            fi
         done
         sleep 0.5
     done
@@ -1315,6 +1317,9 @@ function dump_buildcache_outfiles() {
     # Dump the buildcache outfiles to the log and screen.
     local outfile
     for outfile in "${BUILDCACHE_OUTFILES}"/*; do
+        if ! [[ -e "$outfile" ]]; then 
+            break;
+        fi
         cat "$outfile"
         cat "$outfile" > "${buildcache_log}"
         rm -f "$outfile"
