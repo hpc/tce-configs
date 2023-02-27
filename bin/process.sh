@@ -332,7 +332,7 @@ function take_ticket() {
     # Take a ticket. If there are no tickets, wait for one to be available.
     while true; do
         for ticket in "$TICKET_DIR"/*; do 
-            if [[ -e "${ticket}"]]; then
+            if [[ -e "${ticket}" ]]; then
                 rm "$ticket"
                 return 
             fi
