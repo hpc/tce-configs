@@ -1,6 +1,5 @@
 #!/bin/bash
 set -o pipefail
-set -e
 
 # Set umask so that groups have read/write access
 umask 0002
@@ -1317,9 +1316,9 @@ function dump_buildcache_outfiles() {
     # Dump the buildcache outfiles to the log and screen.
     local outfile
     for outfile in "${BUILDCACHE_OUTFILES}"/*; do
-        cat "${BUILDCACHE_OUTFILES}/$outfile"
-        cat "${BUILDCACHE_OUTFILES}/$outfile" > "${buildcache_log}"
-        rm -f "${BUILDCACHE_OUTFILES}/$outfile"
+        cat "$outfile"
+        cat "$outfile" > "${buildcache_log}"
+        rm -f "$outfile"
     done
 }
 
