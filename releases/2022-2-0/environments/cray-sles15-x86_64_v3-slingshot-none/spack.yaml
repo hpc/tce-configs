@@ -252,7 +252,7 @@ spack:
     arm-forge:
       require: '%gcc'
       variants: +accept-eula
-      version: ['21.0']
+      version: ['22.1.1']
     at-spi2-atk:
       variants: default_library=shared
       version: [2.38.0]
@@ -1088,12 +1088,12 @@ spack:
                # is expected to be addressed in later Forge versions
                ALLINEA_DEBUG_SRUN_ARGS: '%jobid% --mem-per-cpu=0 -I -W0 -G 0 --overlap'
                ALLINEA_NO_TIMEOUT: '1'
-        # idl:
-        #   environment:
-        #     prepend_path:
-        #       PATH: /usr/tce/packages/idl/idl-8.7/idl87/bin
-        #     set:
-        #       IDL_DIR: /usr/tce/packages/idl/idl-8.7/idl87
+        idl:
+          environment:
+            prepend_path:
+              PATH: /usr/tce/packages/idl/idl-8.8/idl88/bin
+            set:
+              IDL_DIR: /usr/tce/packages/idl/idl-8.8/idl88
         libyogrt:
           environment:
             set:
