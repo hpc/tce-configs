@@ -958,7 +958,7 @@ spacklemore_root=${install_dir}/spacklemore
 if [[ "$nostage" = true ]]; then
     status "No-stage was specified, therefore will not clone, fetch or checkout Spack's Repo"
     # if there's no Spack repo in $spack_root, fail
-    if ! pushd "${spack_root}" &>/dev/null
+    if ! pushd "${spack_root}" &>/dev/null; then 
         error "Spack root $spack_root doesn't exist!"
         exit
     fi
