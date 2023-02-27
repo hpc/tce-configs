@@ -21,11 +21,11 @@ if grep -q 'release-3' /etc/toss-release; then
 
     echo "Setting binutils_path "
     binutils_path=$(spack find --loaded --long -p | grep binutils | awk '{ print $3 }')/bin
-    ${fix_compiler} "$compilers_yaml" edit gcc@10.2.0 rhel7 x86_64 --env="PATH+=${binutils_path}"
+    ${fix_compiler} "$compilers_yaml" gcc@10.2.0 rhel7 x86_64 edit --env="PATH+=${binutils_path}"
     spack unload -a 
 
 elif grep -q 'SLES' /etc/os-release; then
-	module switch PrgEnv-${PE_ENV,,} PrgEnv-intel
+	module switch PrgEnv-"${PE_ENV,,}" PrgEnv-intel
 
 	echo "Checking for compilers under PrgEnv-intel"
 	spack compiler find --scope=site
@@ -35,19 +35,7 @@ elif grep -q 'SLES' /etc/os-release; then
 	ICPX=$(which icpx)
 
 	#Only ever do this once.
-	if ! grep 'intel@2021.7.1.classic' $compilers_yaml; then
-		# The compilers are detected at the compiler version (ie, correctly) rather than the package
-		# version.
-		# The intel-classic compiler is detected as intel (hybrid)
-		# Spack doesn't recognize a compiler named intel-classic, so we just add a 'c' to the version.
-		if ! $fix_compiler "$compilers_yaml"  intel@2021.7.1 sles15 x86_64 copy intel@2022.2.1; then
-            continue
-        else
-            if $fix_compiler "$compilers_yaml"  intel@2021.7.1 sles15 x86_64 edit --rename intel@2021.7.1.classic; then
-                continue
-            fi
-        fi
-
+	if ! grep 'intel@2021.7.1.classic' "$compilers_yaml"; then
             # The intel compiler is just like the classic one, except different.
         if ! $fix_compiler "$compilers_yaml"  intel@2022.2.1 sles15 x86_64 edit --cc="$IFX" --cxx="$ICPX"; then
             echo "No compiler matching spec intel@2022.2.1 sles15 x86_64"
