@@ -958,17 +958,16 @@ spacklemore_root=${install_dir}/spacklemore
 if [[ "$nostage" = true ]]; then
     status "No-stage was specified, therefore will not clone, fetch or checkout Spack's Repo"
     # if there's no Spack repo in $spack_root, fail
-    if [[ ! -d "${spack_root}" ]]; then
+    if ! pushd "${spack_root}" &>/dev/null
         error "Spack root $spack_root doesn't exist!"
-    else
-        pushd "${spack_root}" &>/dev/null
+        exit
     fi
     if false ; then # -n ${spack_checkout} ]] ; then
         status "Validating Spack git reference ${spack_checkout} against ${spack_root}"
         if ! repo_validate "$spack_checkout" &>> "${spack_repo_log}"; then
             error_exit "Error validating ${spack_checkout} in ${spack_root}. See ${spack_repo_log}"
         fi
-        popd &>/dev/null
+        popd &>/dev/null || exit
     fi
     rm "${spack_repo_log}"
 
@@ -990,13 +989,13 @@ else
     # If a reference has been passed to checkout in the spack repo, now is the time to do it.
     if [[ -n "${spack_checkout}" ]]; then
         status "Checking out Spack git reference $spack_checkout"
-        pushd "${spack_root}" &>/dev/null
+        pushd "${spack_root}" &>/dev/null || exit
         echo "${spack_root}"
         git config --global --add safe.directory "${spack_root}"
         if ! repo_checkout "$spack_checkout" &>> "${spack_repo_log}"; then
             error_exit "Error checking out $spack_checkout in ${spack_root}. See ${spack_repo_log}"
         fi
-        popd &>/dev/null
+        popd &>/dev/null || exit
     fi
 
     status "Setting up spacklemore repo in install directory"
@@ -1015,7 +1014,7 @@ echo "Release_env $release_env"
 echo "Copying $environment to $release_env"
 backup_copy "$environment" "$release_env"
 
-pushd "$facility" &>/dev/null
+pushd "$facility" &>/dev/null || exit
 # Copy in the appropriate configs for Spack.
 for file in  *.yaml; do
     backup_copy "$file" "$spack_root/etc/spack/$file"
@@ -1039,7 +1038,7 @@ if [[ -z "$license_dir" ]]; then
 
     if [[ -d licenses ]]; then
         status "Copying license files"
-        pushd "licenses" &>/dev/null
+        pushd "licenses" &>/dev/null || exit
         # Copy in the appropriate licenses for packages that require them.
         for dir in *; do
             mkdir -p "${license_dest}/${dir}"
@@ -1047,7 +1046,7 @@ if [[ -z "$license_dir" ]]; then
                 backup_copy "$file" "${license_dest}/${file}"
             done
         done
-        popd &>/dev/null # Out of licenses
+        popd &>/dev/null || exit
     fi
 else
     status "Symlinking to specified license dir."
@@ -1059,7 +1058,7 @@ else
     # Replace the existing symlink
     ln -s -f  "${license_dir}" "${license_dest}"
 fi
-popd &>/dev/null # Out of facility
+popd &>/dev/null || exit # Out of facility
 
 status "Set up Spack"
 
