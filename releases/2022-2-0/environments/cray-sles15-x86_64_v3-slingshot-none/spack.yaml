@@ -680,7 +680,7 @@ spack:
       buildable: false
     paraview:
       require: +eyedomelighting +fortran +hdf5 +osmesa +mpi +shared
-               +pagosa +python3 ~vtkm cuda_arch=none +visitbridge
+               +pagosa +python3 ~vtkm ~cuda +visitbridge
       version: [5.10.1]
     patchelf:
       require: '%gcc'
