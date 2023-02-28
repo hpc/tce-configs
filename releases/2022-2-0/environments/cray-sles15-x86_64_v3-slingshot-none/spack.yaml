@@ -33,7 +33,7 @@ spack:
 
     - cce-mpi-constraints:
       - ^cray-mpich@8.1.21%cce os=sles15
-      
+
     # Note that we don't build anything for clang/mpi combos, so a clang specific
     # section isn't needed currently.
 
@@ -679,8 +679,8 @@ spack:
           prefix: /opt/cray/pe/parallel-netcdf/1.12.3.1/crayclang/14.0/
       buildable: false
     paraview:
-      variants: +eyedomelighting +fortran +hdf5 +osmesai +mpi +shared
-                +pagosa +python3 ~vtkm cuda_arch=none
+      require: +eyedomelighting +fortran +hdf5 +osmesa +mpi +shared
+               +pagosa +python3 ~vtkm cuda_arch=none +visitbridge
       version: [5.10.1]
     patchelf:
       require: '%gcc'

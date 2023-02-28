@@ -58,6 +58,7 @@ class Paraview(CMakePackage, CudaPackage):
     variant('vtkm', default=True, description='Enable VTKm support')
     variant('examples', default=False, description="Build examples")
     variant('hdf5', default=False, description="Use external HDF5")
+    variant('visitbridge', default=False, description='Enable VisitBridge utilities.')
     variant('shared', default=True,
             description='Builds a shared version of the library')
     variant('kits', default=True,
@@ -155,6 +156,8 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('gl@1.2:', when='~opengl2')
     depends_on('libxt', when='~osmesa platform=linux')
     conflicts('+qt', when='+osmesa')
+
+    depends_on('boost', when='+visitbridge')
 
     depends_on('bzip2')
     depends_on('double-conversion')
@@ -410,6 +413,9 @@ class Paraview(CMakePackage, CudaPackage):
             cmake_args.extend([
                 '-DPARAVIEW_ENABLE_ADIOS2:BOOL=ON'
             ])
+
+        if '+visitbridge' in spec:
+            cmake_args.append('-DPARAVIEW_ENABLE_VISITBRIDGE:BOOL=ON')
 
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),
         # so explicitly specify which QT major version is actually being used

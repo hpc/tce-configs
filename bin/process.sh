@@ -1,6 +1,5 @@
 #!/bin/bash
 set -o pipefail
-set -e
 
 # Set umask so that groups have read/write access
 umask 0002
@@ -26,7 +25,7 @@ no_stage_def=false # Don't skip over the stage step
 mangle_prefix_path=false # Mangle the install directory name to fit ci path length requirements.
 force_bootstrap_def=false # Don't force the use of the bootstrap script if it has already been run
 prod_buildcache_def=false # Don't upload binarycache to production. Defaults to development.
-buildcache_upload_def=true # Upload buildcache to pe-serve.
+no_buildcache_upload_def=false # Upload buildcache to pe-serve.
 cert_store_def="" # Path to certificates.
 ignorecache_def=false # Allow buildcache to be used.
 install_path_len_def='74' # This is the length of the CI path that we have configured
@@ -113,7 +112,7 @@ usage () {
     echo ""
     echo "  --no-buildcache-upload"
     echo "      Disables buildcache upload to pe-serve"
-    echo "      Default: $buildcache_upload_def"
+    echo "      Default: $no_buildcache_upload_def"
     echo ""
     echo "  --skip-buildcache-on-failure"
     echo "      On install or other failure, skip buildcache generation."
@@ -333,8 +332,10 @@ function take_ticket() {
     # Take a ticket. If there are no tickets, wait for one to be available.
     while true; do
         for ticket in "$TICKET_DIR"/*; do 
-            rm "$TICKET_DIR/$ticket"
-            return 
+            if [[ -e "${ticket}" ]]; then
+                rm "$ticket"
+                return 
+            fi
         done
         sleep 0.5
     done
@@ -569,7 +570,7 @@ case $key in
         ;;
     --no-buildcache-upload)
         shift
-        buildcache_upload=false
+        no_buildcache_upload=true
         echo "Disabling buildcache upload to pe-serve"
         ;;
     --skip-buildcache-on-failure)
@@ -808,7 +809,7 @@ stage=${stage:=${stage_def}}
 force_bootstrap=${force_bootstrap:-${force_bootstrap_def}}
 prod_buildcache=${prod_buildcache:-${prod_buildcache_def}}
 cert_store=${cert_store:-${TCE_CERT_STORE:-${cert_store_def}}}
-buildcache_upload=${buildcache_upload:-${buildcache_upload_def}}
+no_buildcache_upload=${no_buildcache_upload:-${buildcache_upload_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
 build_cache=${build_cache:-${TCE_BUILDCACHE}}
 shared_group=${shared_group:-${TCE_SHARED_GROUP:-${shared_group_def}}}
@@ -959,17 +960,16 @@ spacklemore_root=${install_dir}/spacklemore
 if [[ "$nostage" = true ]]; then
     status "No-stage was specified, therefore will not clone, fetch or checkout Spack's Repo"
     # if there's no Spack repo in $spack_root, fail
-    if [[ ! -d "${spack_root}" ]]; then
+    if ! pushd "${spack_root}" &>/dev/null; then 
         error "Spack root $spack_root doesn't exist!"
-    else
-        pushd "${spack_root}" &>/dev/null
+        exit
     fi
     if false ; then # -n ${spack_checkout} ]] ; then
         status "Validating Spack git reference ${spack_checkout} against ${spack_root}"
         if ! repo_validate "$spack_checkout" &>> "${spack_repo_log}"; then
             error_exit "Error validating ${spack_checkout} in ${spack_root}. See ${spack_repo_log}"
         fi
-        popd &>/dev/null
+        popd &>/dev/null || exit
     fi
     rm "${spack_repo_log}"
 
@@ -991,13 +991,13 @@ else
     # If a reference has been passed to checkout in the spack repo, now is the time to do it.
     if [[ -n "${spack_checkout}" ]]; then
         status "Checking out Spack git reference $spack_checkout"
-        pushd "${spack_root}" &>/dev/null
+        pushd "${spack_root}" &>/dev/null || exit
         echo "${spack_root}"
         git config --global --add safe.directory "${spack_root}"
         if ! repo_checkout "$spack_checkout" &>> "${spack_repo_log}"; then
             error_exit "Error checking out $spack_checkout in ${spack_root}. See ${spack_repo_log}"
         fi
-        popd &>/dev/null
+        popd &>/dev/null || exit
     fi
 
     status "Setting up spacklemore repo in install directory"
@@ -1016,7 +1016,7 @@ echo "Release_env $release_env"
 echo "Copying $environment to $release_env"
 backup_copy "$environment" "$release_env"
 
-pushd "$facility" &>/dev/null
+pushd "$facility" &>/dev/null || exit
 # Copy in the appropriate configs for Spack.
 for file in  *.yaml; do
     backup_copy "$file" "$spack_root/etc/spack/$file"
@@ -1040,7 +1040,7 @@ if [[ -z "$license_dir" ]]; then
 
     if [[ -d licenses ]]; then
         status "Copying license files"
-        pushd "licenses" &>/dev/null
+        pushd "licenses" &>/dev/null || exit
         # Copy in the appropriate licenses for packages that require them.
         for dir in *; do
             mkdir -p "${license_dest}/${dir}"
@@ -1048,7 +1048,7 @@ if [[ -z "$license_dir" ]]; then
                 backup_copy "$file" "${license_dest}/${file}"
             done
         done
-        popd &>/dev/null # Out of licenses
+        popd &>/dev/null || exit
     fi
 else
     status "Symlinking to specified license dir."
@@ -1060,7 +1060,7 @@ else
     # Replace the existing symlink
     ln -s -f  "${license_dir}" "${license_dest}"
 fi
-popd &>/dev/null # Out of facility
+popd &>/dev/null || exit # Out of facility
 
 status "Set up Spack"
 
@@ -1317,9 +1317,12 @@ function dump_buildcache_outfiles() {
     # Dump the buildcache outfiles to the log and screen.
     local outfile
     for outfile in "${BUILDCACHE_OUTFILES}"/*; do
-        cat "${BUILDCACHE_OUTFILES}/$outfile"
-        cat "${BUILDCACHE_OUTFILES}/$outfile" > "${buildcache_log}"
-        rm -f "${BUILDCACHE_OUTFILES}/$outfile"
+        if ! [[ -e "$outfile" ]]; then 
+            break;
+        fi
+        cat "$outfile"
+        cat "$outfile" > "${buildcache_log}"
+        rm -f "$outfile"
     done
 }
 
@@ -1386,7 +1389,7 @@ if [[ -n $build_cache ]]; then
         mv "$build_cache/build_cache" "$build_cache/build_cache-prod"
     fi
 
-    if [[ $buildcache_upload = false ]]; then
+    if [[ $no_buildcache_upload = true ]]; then
         status "Skipping buildcache upload to pe-serve."
         upload_buildcache_stat=$SKIPPED
     else

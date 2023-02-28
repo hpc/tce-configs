@@ -47,9 +47,10 @@ bash-syntax:
   stage:
     syntax_and_style
   tags:
-    - untagged
-  script:
+    - docker
+  before_script:
     - apk add shellcheck
+  script:
     - source tests/syntax.sh
 
 .build_environment:
@@ -58,7 +59,7 @@ bash-syntax:
       artifacts: false
   artifacts:
     paths:
-        - builds/*/logs/*
+        - builds__/*/logs/*
     expire_in: 1 week
   dependencies: [] # Don't download previous stage artifacts
   variables:
@@ -85,15 +86,12 @@ bash-syntax:
     - echo "$(uname -m)-$(uname -r)-$(uname -s)"
     - env
     - export HOME=$(pwd)
-    - mkdir -p builds
+    - mkdir -p builds__
     - mkdir -p buildcache
     - ./bin/process.sh
       -f $TCE_FACILITY -r $TCE_RELEASE -e $TCE_ENVIRONMENT
-      -i $(pwd)/builds -b $(pwd)/buildcache
-      --secret $CERT_STORE/secring.gpg
-      --public-key $CERT_STORE/pubring.gpg
-  after_script:
-    - ./bin/upload_tree.sh $CERT_STORE $(pwd)/buildcache
+      -i $(pwd)/builds__ -b $(pwd)/buildcache
+      --cert-store $CERT_STORE
 
 ci-test:toss-ofi-build:
   extends: .build_environment
@@ -141,7 +139,7 @@ xc40:cray-cnl7-x86_64:build:
   tags:
     - xc40
 
-toss-mlx:linux-mlx-nv6:build:
+.toss-mlx:linux-mlx-nv6:build:
   extends: .build_environment
   stage: build_first
   variables:
