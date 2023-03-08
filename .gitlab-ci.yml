@@ -67,6 +67,7 @@ bash-syntax:
     TCE_FACILITY: <override me>
     TCE_ENVIRONMENT: <override me>
     TCE_RELEASE: <override me>
+    FACILITIES_BRANCH: master
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push"'
       changes:
@@ -79,6 +80,9 @@ bash-syntax:
       allow_failure: true
   before_script:
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.hpc.lanl.gov/hpcsoft/lanl-tce-facility.git
+    - pushd lanl-tce-facility
+    - git checkout $FACILITIES_BRANCH
+    - popd
     - pushd facilities
     - ln -s ../lanl-tce-facility/lanl lanl
     - popd
@@ -166,6 +170,7 @@ cray-ofi:cray-sles15-sl:2022-2-0:
     TCE_FACILITY: lanl
     TCE_RELEASE: '2022-2-0'
     TCE_ENVIRONMENT: cray-sles15-x86_64_v3-slingshot-none
+    FACILITIES_BRANCH: chicoma
   tags:
     - ex
 
