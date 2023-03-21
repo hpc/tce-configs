@@ -42,7 +42,7 @@ spack:
       - arm-forge
       - charliecloud ^python@3.10.6%gcc
       - cmake
-      # We need to specify non-default mesa
+      # We need to specify non-default mesa, or else.
       - emacs +X ^mesa+glx
       - git
       - gnuplot ^cmake@3.23.1%gcc ^python@3.10.6%gcc
