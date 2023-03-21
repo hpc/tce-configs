@@ -829,6 +829,16 @@ time_limit=${time_limit:-${TCE_TIME_LIMIT:-${time_limit_def}}}
 # the trailing slash is removed.
 install_dir=${install_dir%/}
 
+if [[ -n $cert_store ]]; then
+    if [[ -z $public_key_path ]]; then
+        public_key_path=$cert_store/pubring.gpg
+    fi
+
+    if ! [[ -e ${public_key_path} ]]; then
+        error_exit "Public key does not exist at '${public_key_path}'"
+    fi
+
+fi
 
 # There are a few things to check when doing a buildcache
 if [[ -n $build_cache ]]; then
@@ -846,10 +856,6 @@ if [[ -n $build_cache ]]; then
         secret_path=$cert_store/secring.gpg
     fi
 
-    if [[ -z $public_key_path ]]; then
-        public_key_path=$cert_store/pubring.gpg
-    fi
-
     # Make sure all cert paths exist.
     if ! [[ -e ${cert_store} ]]; then 
         error_exit "Specified cert_store does not exist at given path '${cert_store}'"
@@ -859,10 +865,6 @@ if [[ -n $build_cache ]]; then
         error_exit "Secret key does not exist at '${secret_path}'"
     fi
     
-    if ! [[ -e ${public_key_path} ]]; then
-        error_exit "Public key does not exist at '${public_key_path}'"
-    fi
-
     # Check for the proper path length so that the created buildcaches are
     # usable in production.
     if ! [[ ${#install_dir} -eq ${install_path_len} ]]; then
