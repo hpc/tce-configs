@@ -60,6 +60,7 @@ bash-syntax:
   artifacts:
     paths:
         - builds__/*/logs/*
+        - builds__/*/spack/var/spack/environments/$TCE_RELEASE/spack.lock
     expire_in: 1 week
   dependencies: [] # Don't download previous stage artifacts
   variables:
