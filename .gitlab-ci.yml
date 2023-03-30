@@ -175,3 +175,13 @@ cray-ofi:cray-sles15-sl:2022-2-0:
   tags:
     - ex
 
+cray-ofi:cray-sles15p4-sl:2023-1-1:
+  extends: .build_environment
+  stage: build_first
+  variables:
+    TCE_FACILITY: lanl
+    TCE_RELEASE: '2023-1-1'
+    TCE_ENVIRONMENT: cray-sles15-x86_64_v3-slingshot-none
+    FACILITIES_BRANCH: chicoma
+  tags:
+    - ex-SP4

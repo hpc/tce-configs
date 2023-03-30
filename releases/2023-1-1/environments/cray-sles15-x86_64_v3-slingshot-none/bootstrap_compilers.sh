@@ -34,11 +34,11 @@ if ! grep 'intel@2021.8.0.classic' "$compilers_yaml"; then
 fi
 
 
-#if ! grep 'intel@19.1.3' "$compilers_yaml"; then
-#    module switch intel intel/19.1.3
-#    spack compiler find --scope=site
-#    $fix_compiler "$compilers_yaml"  intel@19.1.3.304 sles15 x86_64 edit --rename intel@19.1.3
-#fi
+if ! grep 'intel@19.1.3' "$compilers_yaml"; then
+    module switch intel intel/19.1.3
+    spack compiler find --scope=site
+    $fix_compiler "$compilers_yaml"  intel@19.1.3.304 sles15 x86_64 edit --rename intel@19.1.3
+fi
 
 echo "Checking for compilers under PrgEnv-cray"
 module switch PrgEnv-intel PrgEnv-cray

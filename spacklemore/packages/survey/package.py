@@ -60,7 +60,7 @@ class Survey(CMakePackage):
     depends_on("libmonitor@2021.11.08+commrank", type=("build", "link", "run"), when="@1.0.3:")
 
     depends_on("papi@5:", type=("build", "link", "run"))
-    depends_on("gotcha@master", type=("build", "link", "run"))
+    depends_on("gotcha@1.0.3", type=("build", "link", "run"))
     depends_on("llvm-openmp@9.0.0", type=("build", "link", "run"), when="@:1.0.2")
     depends_on("llvm-openmp@12.0.1", type=("build", "link", "run"), when="@1.0.3:")
 
@@ -100,6 +100,9 @@ class Survey(CMakePackage):
 
         # Add in paths for finding package config files that tell us
         # where to find these packages
+        print('survey spec', spec)
+        print('survey pkg', __file__)
+
         cmake_args = [
             "-DCMAKE_VERBOSE_MAKEFILE=ON",
             "-DTLS_MODEL=%s" % spack_tls_model,
