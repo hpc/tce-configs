@@ -14,6 +14,9 @@ spack compiler find --scope=site
 IFX=$(which icx)
 ICPX=$(which icpx)
 
+module list
+echo "modulepath: $MODULEPATH"
+
 #Only ever do this once.
 if ! grep 'intel@2021.8.0.classic' "$compilers_yaml"; then 
     # The compilers are detected at the compiler version (ie, correctly) rather than the package
