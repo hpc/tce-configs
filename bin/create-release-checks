@@ -42,6 +42,8 @@ def main():
                       .format(release, env))
                 continue
 
+            tag = ci_config['tags']
+
             variables = {
                 'TCE_FACILITY': 'lanl',
                 'TCE_RELEASE': release,
@@ -50,13 +52,13 @@ def main():
             if 'variables' in ci_config: 
                 variables.update(ci_config['variables'])
 
-            base_yaml['{}-{}-check_concr'.format(release, env)] = {
+            base_yaml['{}-{}-concr'.format(tag, release)] = {
                 'extends': '.check_concretization',
                 'tags': ci_config['tags'],
                 'variables': dict(variables),
             }
 
-            base_yaml['{}:{}:build'.format(release, env)] = {
+            base_yaml['{}-{}-build'.format(tag, release)] = {
                 'extends': '.build_environment',
                 'tags': ci_config['tags'],
                 'variables': dict(variables),
