@@ -1,8 +1,15 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import io
-import yaml
 from pathlib import Path
+import yaml
+
+# Big Fat Note: 
+# Why am I not using python yaml libraries? 
+# Because while the output is YAML compatible, gitlab CI is not, and 
+# tries to do wonky things with strictly written YAML. The Python libraries
+# don't give the flexibility to get around this cleanly (ruamel.yaml does ok, 
+# but it's still a mess).
 
 def main():
 
@@ -11,12 +18,12 @@ def main():
     facility = 'lanl'
 
     release_envs = {}
+    outfile = io.StringIO()
 
-    base_yaml = {
-        'stages': ['concr_checks', 'build'],
-        # Include the base test configurations that the others will inherit from.
-        'include': '.ci-base.yaml',
-    }
+    outfile.write("stages: ['concr_checks', 'build']\n")
+    # Include the base test configurations that the others will inherit from.
+    outfile.write('include: .ci-base.yml\n')
+    outfile.write('\n')
     
     for release in (base_path/'releases').iterdir():
         # Skip non-dirs, the test release, and releases without an environments dir.
@@ -42,7 +49,10 @@ def main():
                       .format(release, env))
                 continue
 
-            tag = ci_config['tags']
+            tags = ci_config['tags']
+            if not isinstance(tags, (list, tuple)):
+                tags = [tags]
+            tag = tags[0]
 
             variables = {
                 'TCE_FACILITY': 'lanl',
@@ -52,36 +62,28 @@ def main():
             if 'variables' in ci_config: 
                 variables.update(ci_config['variables'])
 
-            base_yaml['{}-{}-concr'.format(tag, release)] = {
-                'extends': '.check_concretization',
-                'tags': ci_config['tags'],
-                'variables': dict(variables),
-            }
+            concr_check_name = '{}-{}-concr'.format(tag, release)
+            outfile.write(concr_check_name + ':\n')
+            outfile.write('  extends: .check_concretization\n')
+            outfile.write('  tags: {}\n'.format(tags))
+            outfile.write('  variables:\n')
+            for key, value in variables.items():
+                outfile.write('    {}: "{}"\n'.format(key, value))
+            outfile.write('\n')
 
-            base_yaml['{}-{}-build'.format(tag, release)] = {
-                'extends': '.build_environment',
-                'tags': ci_config['tags'],
-                'variables': dict(variables),
-            }
+            outfile.write('{}-{}-build:\n'.format(tag, release))
+            outfile.write('  extends: .build_environment\n')
+            outfile.write('  tags: {}\n'.format(tags))
+            outfile.write('  variables:\n')
+            for key, value in variables.items():
+                outfile.write('    {}: "{}"\n'.format(key, value))
+            outfile.write('\n')
 
-    # This is horrible, and because pyyaml doesn't dump lists correctly. 
-    # They need to be indented.
-    str_io = io.StringIO()
-    out_data = yaml.dump(base_yaml, str_io, sort_keys=False)
-    fixed_lines = []
-    str_io.seek(0)
-    for line in str_io:
-        if line.startswith('- '):
-            fixed_lines.append('  ' + line)
-        else:
-            fixed_lines.append(line)
+    outfile.seek(0)
 
     with open('release-checks.yml', 'w') as release_checks:
-        for line in fixed_lines:
-            release_checks.write(line)
+        release_checks.write(outfile.read())
 
 if __name__ == '__main__':
-    #main()
+    main()
 
-    import shutil
-    shutil.copy('more.yml', 'release-checks.yml')
