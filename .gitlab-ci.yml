@@ -1,6 +1,8 @@
 #image: toss3-pe:latest
 
 stages:
+  - setup
+  - triggers
   - syntax_and_style
   - test
   - concr_checks
@@ -14,7 +16,7 @@ include: .ci-base.yml
 create-release-checks:
     stage: setup
     script:
-        - python3 ./bin/ci-steps.py
+        - ./bin/create-release-checks
     artifacts:
         paths:
             - release-checks.yml
