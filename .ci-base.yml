@@ -3,9 +3,6 @@
 
 .build_environment: 
   stage: build
-  needs:
-    - job: ci-test:toss-ofi-build
-      artifacts: false
   artifacts:
     paths:
         - builds__/*/logs/*
