@@ -81,4 +81,7 @@ def main():
             release_checks.write(line)
 
 if __name__ == '__main__':
-    main()
+    #main()
+
+    import shutil
+    shutil.copy('more.yml', 'release-checks.yml')

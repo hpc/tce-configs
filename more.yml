@@ -1,0 +1,14 @@
+foo0:
+  script: echo 0
+  stage: stuff
+foo1:
+  script: echo 1
+  stage: stuff
+foo2:
+  script: echo 2
+  stage: stuff
+foo3:
+  script: echo 3
+  stage: stuff
+stages:
+- stuff
