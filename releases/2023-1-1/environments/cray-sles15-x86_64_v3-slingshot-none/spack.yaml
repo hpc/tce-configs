@@ -134,8 +134,6 @@ spack:
         - [$target]
         exclude:
         - hpctoolkit
-        # - paraview
-        # - valgrind %intel
 
     # Build the above with oneapi
     - toolchain-mpi-oneapi:
@@ -159,7 +157,6 @@ spack:
         exclude:
         - hpctoolkit
         - paraview
-        # - valgrind %intel
 
     # Build the above with cce
     - toolchain-mpi-cce:

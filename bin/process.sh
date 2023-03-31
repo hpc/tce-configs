@@ -1307,7 +1307,13 @@ echo "BUILDCACHE? $build_continue $skip_buildcache_on_failure"
 # Skip the buildcache step
 if [[ $build_continue = false ]] && [[ $skip_buildcache_on_failure = true ]]; then
     echo "Disabling build cache step - prior steps failed."
-    unset buildcache
+    unset build_cache
+fi
+
+# Skip buildcache step if we didn't install at all.
+if [[ $skip_install = true ]] && [[ $skip_buildcache_on_failure = true ]]; then
+    echo "Disabling build cache step - no install occured."
+    unset build_cache
 fi
 
 # Collect output from generating binary packages here.

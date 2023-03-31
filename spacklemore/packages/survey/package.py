@@ -34,7 +34,8 @@ class Survey(CMakePackage):
     maintainers = ["jgalarowicz, smehta"]
 
     version("master", branch="master")
-    version("1.0.6", branch="1.0.6")
+    version("1.0.6.2", tag="1.0.6.2")
+    version("1.0.6", tag="1.0.6")
     version("1.0.5", tag="1.0.5")
     version("1.0.4", tag="1.0.4")
     version("1.0.3", tag="1.0.3")
@@ -102,6 +103,7 @@ class Survey(CMakePackage):
         # where to find these packages
         print('survey spec', spec)
         print('survey pkg', __file__)
+        print('version', self.version, self.version > Version('1.0.3'))
 
         cmake_args = [
             "-DCMAKE_VERBOSE_MAKEFILE=ON",
