@@ -25,7 +25,7 @@ trigger-sub-jobs:
     trigger:
         include:
             - artifact: release-checks.yml
-              job: create-release-checks.yml
+              job: create-release-checks
 
 # Perform linting on all yaml files.
 yaml-lint:
@@ -103,64 +103,3 @@ ci-test:toss-ofi-build:
     - if: '$CI_PIPELINE_SOURCE == "push"'
       when: manual
 
-toss-ofi:linux-omni-none:build:
-  extends: .build_environment
-  stage: build_first
-  variables:
-    TCE_FACILITY: lanl
-    TCE_RELEASE: '2022-1-0'
-    TCE_ENVIRONMENT: linux-rhel7-x86_64_v3-omnipath-none
-  tags:
-    - toss-ofi
-
-toss-ofi:linux-omni-none:check_concr:
-  extends: .check_concretization
-  stage: concr_checks
-  variables:
-    TCE_FACILITY: lanl
-    TCE_RELEASE: '2022-1-0'
-    TCE_ENVIRONMENT: linux-rhel7-x86_64_v3-omnipath-none
-  tags:
-    - toss-ofi
-
-xc40:cray-cnl7-x86_64:build:
-  extends: .build_environment
-  stage: build_first
-  variables:
-    TCE_FACILITY: lanl
-    TCE_RELEASE: '2022-1-0'
-    TCE_ENVIRONMENT: cray-cnl7-x86_64_v3-aries-none
-  tags:
-    - xc40
-
-xc40:cray-cnl7-x86_64:check_concr:
-  extends: .check_concretization
-  stage: concr_checks
-  variables:
-    TCE_FACILITY: lanl
-    TCE_RELEASE: '2022-1-0'
-    TCE_ENVIRONMENT: cray-cnl7-x86_64_v3-aries-none
-  tags:
-    - xc40
-
-cray-ofi:cray-sles15-sl:2022-2-0:
-  extends: .build_environment
-  stage: build_first
-  variables:
-    TCE_FACILITY: lanl
-    TCE_RELEASE: '2022-2-0'
-    TCE_ENVIRONMENT: cray-sles15-x86_64_v3-slingshot-none
-    FACILITIES_BRANCH: chicoma
-  tags:
-    - ex
-
-cray-ofi:cray-sles15p4-sl:2023-1-1:
-  extends: .build_environment
-  stage: build_first
-  variables:
-    TCE_FACILITY: lanl
-    TCE_RELEASE: '2023-1-1'
-    TCE_ENVIRONMENT: cray-sles15-x86_64_v3-slingshot-none
-    FACILITIES_BRANCH: chicoma
-  tags:
-    - ex-SP4
