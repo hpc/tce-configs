@@ -50,7 +50,7 @@ def main():
             if 'variables' in ci_config: 
                 variables.update(ci_config['variables'])
 
-            base_yaml['{}:{}:check_concr'.format(release, env)] = {
+            base_yaml['{}-{}-check_concr'.format(release, env)] = {
                 'extends': '.check_concretization',
                 'tags': ci_config['tags'],
                 'variables': dict(variables),
