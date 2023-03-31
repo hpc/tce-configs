@@ -1,7 +1,8 @@
 # This file is imported by both .gitlab-ci.yml and it's generated child scripts 
 # to define the basis for common runs.
 
-.build_environment:
+.build_environment: 
+  stage: build
   needs:
     - job: ci-test:toss-ofi-build
       artifacts: false
@@ -47,6 +48,7 @@
       --cert-store $CERT_STORE
 
 .check_concretization:
+    stage: concr_checks
     script: 
     - ./bin/process.sh
       -f $TCE_FACILITY -r $TCE_RELEASE -e $TCE_ENVIRONMENT

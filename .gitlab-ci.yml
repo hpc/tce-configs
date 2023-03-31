@@ -6,7 +6,7 @@ stages:
   - syntax_and_style
   - test
   - concr_checks
-  - build_first
+  - build
 
 # Include base definitions
 include: .ci-base.yml
