@@ -43,41 +43,41 @@ def main():
                 print("Skipping {}/{}: ci-config.yaml does not exist."
                       .format(release.name, env.name))
 
-        for (release, env), ci_config in release_envs.items():
-            if 'tags' not in ci_config:
-                print("Skipping {}/{} - no tags defined in ci-config.yaml"
-                      .format(release, env))
-                continue
+    for (release, env), ci_config in release_envs.items():
+        if 'tags' not in ci_config:
+            print("Skipping {}/{} - no tags defined in ci-config.yaml"
+                  .format(release, env))
+            continue
 
-            tags = ci_config['tags']
-            if not isinstance(tags, (list, tuple)):
-                tags = [tags]
-            tag = tags[0]
+        tags = ci_config['tags']
+        if not isinstance(tags, (list, tuple)):
+            tags = [tags]
+        tag = tags[0]
 
-            variables = {
-                'TCE_FACILITY': 'lanl',
-                'TCE_RELEASE': release,
-                'TCE_ENVIRONMENT': env,
-            }
-            if 'variables' in ci_config: 
-                variables.update(ci_config['variables'])
+        variables = {
+            'TCE_FACILITY': 'lanl',
+            'TCE_RELEASE': release,
+            'TCE_ENVIRONMENT': env,
+        }
+        if 'variables' in ci_config: 
+            variables.update(ci_config['variables'])
 
-            concr_check_name = '{}-{}-concr'.format(tag, release)
-            outfile.write(concr_check_name + ':\n')
-            outfile.write('  extends: .check_concretization\n')
-            outfile.write('  tags: {}\n'.format(tags))
-            outfile.write('  variables:\n')
-            for key, value in variables.items():
-                outfile.write('    {}: "{}"\n'.format(key, value))
-            outfile.write('\n')
+        concr_check_name = '{}-{}-concr'.format(tag, release)
+        outfile.write(concr_check_name + ':\n')
+        outfile.write('  extends: .check_concretization\n')
+        outfile.write('  tags: {}\n'.format(tags))
+        outfile.write('  variables:\n')
+        for key, value in variables.items():
+            outfile.write('    {}: "{}"\n'.format(key, value))
+        outfile.write('\n')
 
-            outfile.write('{}-{}-build:\n'.format(tag, release))
-            outfile.write('  extends: .build_environment\n')
-            outfile.write('  tags: {}\n'.format(tags))
-            outfile.write('  variables:\n')
-            for key, value in variables.items():
-                outfile.write('    {}: "{}"\n'.format(key, value))
-            outfile.write('\n')
+        outfile.write('{}-{}-build:\n'.format(tag, release))
+        outfile.write('  extends: .build_environment\n')
+        outfile.write('  tags: {}\n'.format(tags))
+        outfile.write('  variables:\n')
+        for key, value in variables.items():
+            outfile.write('    {}: "{}"\n'.format(key, value))
+        outfile.write('\n')
 
     outfile.seek(0)
 

@@ -1,7 +1,7 @@
-# This file is imported by both .gitlab-ci.yml and it's generated child scripts 
+# This file is imported by both .gitlab-ci.yml and it's generated child scripts
 # to define the basis for common runs.
 
-.build_environment: 
+.build_environment:
   stage: build
   artifacts:
     paths:
@@ -46,12 +46,12 @@
 
 .check_concretization:
     stage: concr_checks
-    script: 
+    script:
     - ./bin/process.sh
       -f $TCE_FACILITY -r $TCE_RELEASE -e $TCE_ENVIRONMENT
-      -i $(pwd)/builds__ -s -c 
+      -i $(pwd)/builds__ -s -c
       --skip-buildcache-on-failure --no-buildcache-upload
     - BUILD_DIR="builds__/$(echo "$TCE_ENVIRONMENT" | head -c 9)"
     - . ${BUILD_DIR}/spack/share/spack/setup-env.sh
-    # Run the concretization checker. 
+    # Run the concretization checker.
     - ./bin/concr_checker --all -c ${BUILD_DIR}
