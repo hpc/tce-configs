@@ -113,6 +113,8 @@ def main():
             print("{:7s} {:25s} @{:15s} %{}"
                   .format(spec.shash, spec.pkg, spec.version, spec.compiler))
         print('{} uniq specs concretized'.format(len(specs)))
+
+    return exit_code
                   
 
 def find_log(install_path, log_name):
@@ -501,4 +503,4 @@ def get_spack_preferred_version(spec):
                     return lines[i+1].strip().split()[0]
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

@@ -1,0 +1,68 @@
+#!/usr/bin/python3
+
+import yaml
+from pathlib import Path
+
+def main():
+
+    base_path = Path(__file__).parents[1]
+
+    facility = 'lanl'
+
+    release_envs = {}
+
+    base_yaml = {
+        'stages': ['concr_checks', 'build'],
+        # Include the base test configurations that the others will inherit from.
+        'include': '.ci-base.yaml',
+    }
+    
+    for release in (base_path/'releases').iterdir():
+        # Skip non-dirs, the test release, and releases without an environments dir.
+        if ((not release.is_dir()) or 
+                release.name == 'test' or 
+                (not (release/'environments').is_dir())):
+            continue
+
+        for env in (release/'environments').iterdir():
+            # Skip environments marked as legacy.
+            if (env/'ci-config.yaml').exists():
+                with (env/'ci-config.yaml').open() as ci_config_file:
+                    ci_config = yaml.load(ci_config_file, Loader=yaml.SafeLoader)
+            
+                release_envs[(release.name, env.name)] = ci_config
+            else:
+                print("Skipping {}/{}: ci-config.yaml does not exist."
+                      .format(release.name, env.name))
+
+        for (release, env), ci_config in release_envs.items():
+            if 'tags' not in ci_config:
+                print("Skipping {}/{} - no tags defined in ci-config.yaml"
+                      .format(release, env))
+                continue
+
+            variables = {
+                'TCE_FACILITY': 'lanl',
+                'TCE_RELEASE': release,
+                'TCE_ENVIRONMENT': env,
+            }
+            if 'variables' in ci_config: 
+                variables.update(ci_config['variables'])
+
+            base_yaml['{}:{}:check_concr'.format(release, env)] = {
+                'extends': '.check_concretization',
+                'tags': ci_config['tags'],
+                'variables': dict(variables),
+            }
+
+            base_yaml['{}:{}:build'.format(release, env)] = {
+                'extends': '.build_environment',
+                'tags': ci_config['tags'],
+                'variables': dict(variables),
+            }
+
+    with open('release-checks.yml', 'w') as release_checks:
+        yaml.dump(base_yaml, release_checks)
+
+if __name__ == '__main__':
+    main()
