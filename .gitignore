@@ -1,4 +1,5 @@
 spack-cc-*
+release-checks.yml
 current
 inst*
 conc*

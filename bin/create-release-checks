@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import io
 import yaml
 from pathlib import Path
 
@@ -61,8 +62,21 @@ def main():
                 'variables': dict(variables),
             }
 
+    # This is horrible, and because pyyaml doesn't dump lists correctly. 
+    # They need to be indented.
+    str_io = io.StringIO()
+    out_data = yaml.dump(base_yaml, str_io, sort_keys=False)
+    fixed_lines = []
+    str_io.seek(0)
+    for line in str_io:
+        if line.startswith('- '):
+            fixed_lines.append('  ' + line)
+        else:
+            fixed_lines.append(line)
+
     with open('release-checks.yml', 'w') as release_checks:
-        yaml.dump(base_yaml, release_checks)
+        for line in fixed_lines:
+            release_checks.write(line)
 
 if __name__ == '__main__':
     main()
