@@ -46,6 +46,7 @@
 
 .check_concretization:
     stage: concr_checks
+    extends: .build_environment
     script:
     - ./bin/process.sh
       -f $TCE_FACILITY -r $TCE_RELEASE -e $TCE_ENVIRONMENT
