@@ -1,0 +1,28 @@
+From f05eadeefc63f64f3fefaa5ca568aec76482df3d Mon Sep 17 00:00:00 2001
+From: Howard Pritchard <hppritcha@gmail.com>
+Date: Wed, 4 Oct 2017 05:17:27 -0600
+Subject: [PATCH] quick and dirty fix for pmix --enable-static issue
+
+when using srun
+
+Signed-off-by: Howard Pritchard <hppritcha@gmail.com>
+
+diff --git a/opal/mca/pmix/pmix112/pmix/src/client/pmi2.c b/opal/mca/pmix/pmix112/pmix/src/client/pmi2.c
+index 2b0bcfba..0fcaa466 100644
+--- a/opal/mca/pmix/pmix112/pmix/src/client/pmi2.c
++++ b/opal/mca/pmix/pmix112/pmix/src/client/pmi2.c
+@@ -52,6 +52,7 @@ static pmix_proc_t myproc;
+ static int pmi2_init = 0;
+ static bool commit_reqd = false;
+ 
++#if 0
+ PMIX_EXPORT int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
+ {
+     pmix_status_t rc = PMIX_SUCCESS;
+@@ -793,3 +794,4 @@ static int convert_err(pmix_status_t rc)
+         return PMI2_FAIL;
+     }
+ }
++#endif
+-- 
+1.8.3.1

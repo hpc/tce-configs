@@ -26,6 +26,8 @@ trigger-sub-jobs:
         include:
             - artifact: release-checks.yml
               job: create-release-checks
+        strategy: depend
+
 
 # Perform linting on all yaml files.
 yaml-lint:

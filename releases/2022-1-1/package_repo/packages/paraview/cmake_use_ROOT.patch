@@ -1,0 +1,11 @@
+diff -urN ParaView-v5.8.1-orig/CMakeLists.txt ParaView-v5.8.1/CMakeLists.txt
+--- ParaView-v5.8.1-orig/CMakeLists.txt	2021-09-09 08:38:28.806578397 -0600
++++ ParaView-v5.8.1/CMakeLists.txt	2021-09-09 08:42:47.827360311 -0600
+@@ -32,6 +32,7 @@
+ project(ParaView)
+ 
+ foreach (policy IN ITEMS
++    CMP0074 # CMake 3.12
+     CMP0083 # CMake 3.14
+     CMP0077 # CMake 3.16
+     )
