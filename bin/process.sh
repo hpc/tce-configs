@@ -1110,7 +1110,7 @@ status "Updating and activating the spack environment release ${release_name}"
 spack --stacktrace env update -y "${release_name}"
 
 # Copy the repos.yaml for this release.
-repos_config=$(readlink -f ${release}/repos.yaml)
+repos_config=$(readlink -f "${release}/repos.yaml")
 if [[ -f ${repos_config} ]]; then
     cp "${repos_config}" "${spack_root}/etc/spack/repos.yaml"
 else
