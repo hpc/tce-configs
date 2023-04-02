@@ -12,7 +12,7 @@ readonly TRAP_SIGNALS=(SIGHUP SIGINT SIGQUIT SIGILL SIGTRAP SIGABRT SIGSEGV SIGS
 arg_set="$0 $*"
 config_repo_root=$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")
 releases=${config_repo_root}/releases
-spacklemore=${config_repo_root}/spacklemore
+package_repos=${config_repo_root}/package_repos
 
 # Default settings for optional parameters
 skip_buildcache_on_failure=false
@@ -162,7 +162,7 @@ usage () {
     echo "      Default: $stage_def"
     echo ""
     echo "  --no-stage"
-    echo "      Skip over stage step, this assumes that the Spacklemore and Spack"
+    echo "      Skip over stage step, this assumes that Spack and the package "
     echo "      repos are already in place by another means (i.e., --stage, then sync) before"
     echo "      concretization, installation, and/or module generation."
     echo "      Default: $no_stage_def"
@@ -956,7 +956,7 @@ backup_copy "${BASH_SOURCE[0]}" "${hist_script}"
 spack_root="${install_dir}/spack"
 #TODO tgoetsch: should the repo log belong in the user's home directory?
 spack_repo_log=$(mktemp ~/.process.spack_log.XXXXXXXX)
-spacklemore_root=${install_dir}/spacklemore
+package_repos_root=${install_dir}/package_repos
 
 # test for nostage, and either validate or clone/checkout ref
 if [[ "$nostage" = true ]]; then
@@ -975,9 +975,9 @@ if [[ "$nostage" = true ]]; then
     fi
     rm "${spack_repo_log}"
 
-    status "No-stage was specified, therefore will not clone, fetch or checkout Spacklemore's Repo"
-    if [[ ! -d ${spacklemore_root} ]]; then
-        error "Spacklemore root ${spacklemore_root} doesn't exist!"
+    status "No-stage was specified, therefore we won't grab the package repos."
+    if [[ ! -d ${package_repos_root} ]]; then
+        error "Package Repos root ${package_repos_root} doesn't exist!"
     fi
 else
     status "Setting up Spack repo in install directory"
@@ -1002,11 +1002,11 @@ else
         popd &>/dev/null || exit
     fi
 
-    status "Setting up spacklemore repo in install directory"
-    rm -rf "${spacklemore_root}"
-    mkdir -p "${spacklemore_root}"
+    status "Setting up TCE package repos in install directory"
+    rm -rf "${package_repos_root}"
+    mkdir -p "${package_repos_root}"
     #TODO tgoetsch: add check that copy works
-    cp -R "${spacklemore}" "${install_dir}"
+    cp -R "${package_repos}" "${install_dir}"
 fi
 
 # Move the environment/release into the spack environments directory.
@@ -1109,9 +1109,12 @@ fi
 status "Updating and activating the spack environment release ${release_name}"
 spack --stacktrace env update -y "${release_name}"
 
-# Add the spacklemore repo for this deployment.
-if [[ ! -f "${spack_root}/etc/spack/repos.yaml" ]]; then
-    spack repo add --scope=site "${spacklemore_root}"
+# Copy the repos.yaml for this release.
+repos_config=$(readlink -f ${release}/repos.yaml)
+if [[ -f ${repos_config} ]]; then
+    cp "${repos_config}" "${spack_root}/etc/spack/repos.yaml"
+else
+    error_exit "Release ${release} does not have a repos.yaml file defined."
 fi
 
 status "Finding compilers"

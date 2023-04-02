@@ -1,0 +1,4 @@
+repos:
+  - $spack/../../package_repos/tce-2022-1
+  - $spack/var/spack/repos/builtin
+  - $spack/../../package_repos/tce-2023-1
