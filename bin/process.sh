@@ -1333,7 +1333,7 @@ function dump_buildcache_outfiles() {
         if ! [[ -e "$outfile" ]]; then 
             break;
         fi
-        if ! cat "$outfile" | grep -q "-f"; then 
+        if ! cat "$outfile" | grep -q "Warning"; then 
             cat "$outfile"
         fi
         cat "$outfile" >> "${buildcache_log}"
