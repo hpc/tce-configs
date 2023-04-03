@@ -1113,6 +1113,7 @@ repos_config=$(readlink -f "${release}/repos.yaml")
 if [[ -f ${repos_config} ]]; then
     cp "${repos_config}" "${spack_root}/etc/spack/repos.yaml"
     # Replace `$spack` instances in the paths with the path to spack.
+    # shellcheck disable=SC2016
     "${config_repo_root}/bin/line_edit" -i "${spack_config}" -o "${spack_config}" \
         '\$spack' "${spack_root}"
 else
@@ -1333,7 +1334,7 @@ function dump_buildcache_outfiles() {
         if ! [[ -e "$outfile" ]]; then 
             break;
         fi
-        if ! cat "$outfile" | grep -q "Warning"; then 
+        if ! grep -q "Warning" < "$outfile"; then 
             cat "$outfile"
         fi
         cat "$outfile" >> "${buildcache_log}"
