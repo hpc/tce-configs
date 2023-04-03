@@ -1004,7 +1004,6 @@ else
 
     status "Setting up TCE package repos in install directory"
     rm -rf "${package_repos_root}"
-    mkdir -p "${package_repos_root}"
     #TODO tgoetsch: add check that copy works
     cp -R "${package_repos}" "${install_dir}"
 fi
@@ -1113,6 +1112,9 @@ spack --stacktrace env update -y "${release_name}"
 repos_config=$(readlink -f "${release}/repos.yaml")
 if [[ -f ${repos_config} ]]; then
     cp "${repos_config}" "${spack_root}/etc/spack/repos.yaml"
+    # Replace `$spack` instances in the paths with the path to spack.
+    "${config_repo_root}/bin/line_edit" -i "${spack_config}" -o "${spack_config}" \
+        '\$spack' "${spack_root}"
 else
     error_exit "Release ${release} does not have a repos.yaml file defined."
 fi
@@ -1331,8 +1333,10 @@ function dump_buildcache_outfiles() {
         if ! [[ -e "$outfile" ]]; then 
             break;
         fi
-        cat "$outfile"
-        cat "$outfile" > "${buildcache_log}"
+        if ! cat "$outfile" | grep -q "-f"; then 
+            cat "$outfile"
+        fi
+        cat "$outfile" >> "${buildcache_log}"
         rm -f "$outfile"
     done
 }
@@ -1407,7 +1411,7 @@ if [[ -n $build_cache ]]; then
         status "Uploading buildcache to pe-serve."
         upload_tree=${config_repo_root}/bin/upload_tree.sh
 
-        if ! "${upload_tree}" "$cert_store" "$build_cache" |& tee "$buildcache_log"; then
+        if ! "${upload_tree}" "$cert_store" "$build_cache" |& tee -a "$buildcache_log"; then
             upload_buildcache_stat=$FAILED
             error "Failed to upload buildcache changes to pe-serve. See $buildcache_log."
         else 

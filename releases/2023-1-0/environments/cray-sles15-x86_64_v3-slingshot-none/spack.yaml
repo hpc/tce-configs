@@ -282,9 +282,13 @@ spack:
       require: '%gcc'
       version: ['0.29']
       variants: ~docs
+    cli11:
+      version: ['1.9.1']
     cmake:
       require: '%gcc'
       version: ['3.23.1']
+    cpio:
+      version: ['2.13']
     curl:
       version: [7.83.0]
     dbus:
@@ -556,6 +560,8 @@ spack:
       version: ['1.1.5']
     libxtst:
       version: [1.2.2]
+    libyaml:
+      version: ['0.2.5']
     libyogrt:
       require: '%gcc'
       variants: scheduler=slurm ~static
@@ -662,6 +668,8 @@ spack:
     openjdk:
       require: '%gcc'
       version: [11.0.15_10]
+    osmesa:
+      version: ['11.2.0']
     pango:
       variants: +X
       version: [1.42.4]
@@ -698,7 +706,7 @@ spack:
         - spec: perl@5.26.1%gcc
           prefix: /usr
       buildable: false
-      version: [5.16.3]
+      version: [5.26.1]
     perl-alien-svn:
       version: [1.8.11.0]
     perl-data-dumper:
@@ -765,6 +773,8 @@ spack:
       version: ["3.18.0"]
     pugixml:
       version: [1.11.4]
+    py-bottleneck:
+      version: ['1.3.5']
     py-certifi:
       version: [2021.10.8]
     py-chardet:
@@ -776,9 +786,11 @@ spack:
     py-cycler:
       version: [0.11.0]
     py-cython:
-      version: ['0.29.30']
+      version: ['0.29.32']
     py-docutils:
       version: ['0.18.1']
+    py-flit-core:
+      version: ['3.7.1']
     py-fonttools:
       version: ['4.31.2']
     py-idna:
@@ -803,6 +815,8 @@ spack:
       version: [8.14.0]
     py-mpi4py:
       version: [3.1.2]
+    py-numexpr:
+      version: ['2.8.3']
     py-numpy:
       require: '%gcc ^intel-mkl'
       version: [1.22.4]
@@ -829,6 +843,8 @@ spack:
     py-python-dateutil:
       require: '%gcc'
       version: [2.8.2]
+    py-pytz:
+      version: ['2.8.3']
     py-pyyaml:
       require: '%gcc'
       version: ['6.0']
