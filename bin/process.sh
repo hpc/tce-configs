@@ -83,9 +83,9 @@ usage () {
     echo "      appended to this path."
     echo "      Environment Variable: TCE_INSTALL_DIR"
     echo ""
-    echo "  -b|--buildcache <build_cache_path>"
+    echo "  -b|--buildcache <buildcache_path>"
     echo "      When given, create binary buildcache of the environment in"
-    echo "      the directory specified by <build_cache_path>. "
+    echo "      the directory specified by <buildcache_path>. "
     echo "      Environment Variable: TCE_BUILDCACHE"
     echo ""
     echo "  --cert-store <cert_store path>"
@@ -106,9 +106,17 @@ usage () {
     echo "      Defaults to <cert_store>/pubring.gpg"
     echo "      environment variable: TCE_PUBLIC_KEY"
     echo ""
-    echo "  --prod-buildcache"
+    echo "  --use-prod-buildcache"
     echo "      Uploades the binary cache to the production buildcache"
     echo "      Default: $prod_buildcache_def"
+    echo ""
+    echo "  --dev-buildcache-url"
+    echo "      Set the URL for the dev buildcache."
+    echo "      Environment Variable: TCE_DEV_BUILDCACHE_URL"
+    echo ""
+    echo "  --prod-buildcache-url"
+    echo "      Set the URL for the prod buildcache."
+    echo "      Environment Variable: TCE_PROD_BUILDCACHE_URL"
     echo ""
     echo "  --no-buildcache-upload"
     echo "      Disables buildcache upload to pe-serve"
@@ -553,14 +561,26 @@ case $key in
         ;;
     -b|--buildcache)
         shift
-        build_cache="$1"
-        echo "Build cache=${build_cache}"
+        buildcache="$1"
+        echo "Build cache=${buildcache}"
         shift
         ;;
-    --prod-buildcache)
+    --use-prod-buildcache)
         shift
         prod_buildcache=true
         echo "Uploading buildcache to production buildcache"
+        ;;
+    --prod-buildcache)
+        shift
+        prod_buildcache_url="$1"
+        echo "Prod buildcache path=${prod_buildcache_url}"
+        shift
+        ;;
+    --dev-buildcache)
+        shift
+        dev_buildcache_url="$1"
+        echo "Dev buildcache path=${dev_buildcache_url}"
+        shift
         ;;
     --cert-store)
         shift
@@ -808,10 +828,12 @@ module=${module:=${module_def}}
 stage=${stage:=${stage_def}}
 force_bootstrap=${force_bootstrap:-${force_bootstrap_def}}
 prod_buildcache=${prod_buildcache:-${prod_buildcache_def}}
+prod_buildcache_url=${prod_buildcache_url:-${TCE_PROD_BUILDCACHE_URL}}
+dev_buildcache_url=${dev_buildcache_url:-${TCE_DEV_BUILDCACHE_URL}}
 cert_store=${cert_store:-${TCE_CERT_STORE:-${cert_store_def}}}
 no_buildcache_upload=${no_buildcache_upload:-${buildcache_upload_def}}
 ignorecache=${ignorecache:-${ignorecache_def}}
-build_cache=${build_cache:-${TCE_BUILDCACHE}}
+buildcache=${buildcache:-${TCE_BUILDCACHE}}
 shared_group=${shared_group:-${TCE_SHARED_GROUP:-${shared_group_def}}}
 secret_path=${secret_path:-${TCE_SECRET}}
 public_key_path=${public_key_path:-${TCE_PUBLIC_KEY}}
@@ -841,7 +863,7 @@ if [[ -n $cert_store ]]; then
 fi
 
 # There are a few things to check when doing a buildcache
-if [[ -n $build_cache ]]; then
+if [[ -n $buildcache ]]; then
     # Set install_root appropriately if not set already
     if [[ -z "${install_root}" ]]; then
         install_root="\$spack/.."
@@ -917,7 +939,7 @@ fi
 #               length. If the buildcache path is too long without any padding.
 #               .... IDK
 
-if [[ -n $build_cache || ($mangle_prefix_path == true) ]]; then
+if [[ -n $buildcache || ($mangle_prefix_path == true) ]]; then
     # When generating the build cache, the prefix must be the same
     # length to ensure binary cached builds will always be relocatable.
     inst_env_name=$(echo "${environment_name}__________" | cut -c -9)
@@ -1098,6 +1120,24 @@ if [ "$cacheonly" = true ]; then
     SPACK_CACHING=--cache-only
 fi
 
+# Add either the production or dev buildcache to the list of mirrors
+# Clear out previously defined buildcache
+status "Updating buildcache urls."
+if spack mirror list 2>/dev/null | grep -q buildcache; then
+    spack mirror rm --scope=site buildcache
+fi
+if [[ $prod_buildcache = true ]]; then
+    buildcache_url="$prod_buildcache_url"
+else
+    buildcache_url="$dev_buildcache_url"
+fi
+if [[ -n $buildcache ]] && [[ -z $buildcache_url ]]; then
+    error_exit "No buildcache url given. Set either the dev buildcache url or the prod buildcache "\
+               "url (if using --use-prod-buildcache)."
+fi
+echo "$buildcache $buildcache_url"
+spack mirror add --scope=site buildcache $buildcache_url
+
 # no matter what SPACK_CACHING is set to, export it.
 export SPACK_CACHING
 
@@ -1162,7 +1202,7 @@ bootstrap_stat=$NOT_DONE
 reindex_stat=$NOT_DONE
 concretize_stat=$NOT_DONE
 install_stat=$NOT_DONE
-build_cache_stat=$NOT_DONE
+buildcache_stat=$NOT_DONE
 upload_buildcache_stat=$NOT_DONE
 module_stat=$NOT_DONE
 # Variable to track whether or not to continue doing each stage. This will
@@ -1313,13 +1353,13 @@ echo "BUILDCACHE? $build_continue $skip_buildcache_on_failure"
 # Skip the buildcache step
 if [[ $build_continue = false ]] && [[ $skip_buildcache_on_failure = true ]]; then
     echo "Disabling build cache step - prior steps failed."
-    unset build_cache
+    unset buildcache
 fi
 
 # Skip buildcache step if we didn't install at all.
 if [[ $skip_install = true ]] && [[ $skip_buildcache_on_failure = true ]]; then
     echo "Disabling build cache step - no install occured."
-    unset build_cache
+    unset buildcache
 fi
 
 # Collect output from generating binary packages here.
@@ -1365,11 +1405,11 @@ function create_package() {
 # Generate the build cache. Doing this doesn't depend on past stages being
 # attempted or being successful. This could be building a buildcache of a
 # previous run.
-if [[ -n $build_cache ]]; then
-    make_log "$log_dir" build_cache
+if [[ -n $buildcache ]]; then
+    make_log "$log_dir" buildcache
     buildcache_log=${make_log_path}
 
-    build_cache_stat=$SUCCESSFUL
+    buildcache_stat=$SUCCESSFUL
     upload_buildcache_stat=$NOT_DONE
 
     # Initialize the signing key.
@@ -1387,8 +1427,8 @@ if [[ -n $build_cache ]]; then
         error_exit "Failed to deactivate environment."
     fi
 
-    status "Setting push url to ${build_cache}"
-    spack mirror set-url buildcache --push --scope=site "${build_cache}"
+    status "Setting push url to ${buildcache}"
+    spack mirror set-url buildcache --push --scope=site "${buildcache}"
 
     status "Generating build cache."
     for buildhash in $(spack find -lv | grep -vE '^==|^--|^ *$' | cut -c -7 | sort | uniq); do
@@ -1401,8 +1441,8 @@ if [[ -n $build_cache ]]; then
     dump_buildcache_outfiles
 
     if [[ $prod_buildcache = true ]]; then
-        status "Moving development buildcache to production buildcache"
-        mv "$build_cache/build_cache" "$build_cache/build_cache-prod"
+        status "Moving buildcache to production buildcache path"
+        mv "$buildcache/build_cache" "$buildcache/build_cache-prod"
     fi
 
     if [[ $no_buildcache_upload = true ]]; then
@@ -1412,7 +1452,7 @@ if [[ -n $build_cache ]]; then
         status "Uploading buildcache to pe-serve."
         upload_tree=${config_repo_root}/bin/upload_tree.sh
 
-        if ! "${upload_tree}" "$cert_store" "$build_cache" |& tee -a "$buildcache_log"; then
+        if ! "${upload_tree}" "$cert_store" "$buildcache" |& tee -a "$buildcache_log"; then
             upload_buildcache_stat=$FAILED
             error "Failed to upload buildcache changes to pe-serve. See $buildcache_log."
         else 
@@ -1426,7 +1466,7 @@ if [[ -n $build_cache ]]; then
     fi
 else
     status "Skipping the buildcache step"
-    build_cache_stat=$SKIPPED
+    buildcache_stat=$SKIPPED
     upload_buildcache_stat=$SKIPPED
 fi
 
@@ -1506,9 +1546,9 @@ if [[ $install_stat == "$SUCCESSFUL" || \
     $install_stat == "$FAILED" ]]; then
     echo "    See $inst_log"
 fi
-echo "  Local Buildcache Generation: $build_cache_stat"
-if [[ $build_cache_stat == "$SUCCESSFUL" || \
-    $build_cache_stat == "$FAILED" ]]; then
+echo "  Local Buildcache Generation: $buildcache_stat"
+if [[ $buildcache_stat == "$SUCCESSFUL" || \
+    $buildcache_stat == "$FAILED" ]]; then
     echo "    See $buildcache_log"
 fi
 echo "  Upload to Remote Buildcache: $upload_buildcache_stat"
