@@ -122,8 +122,6 @@ spack:
         - [$target]
         exclude:
         - hpctoolkit
-        # - paraview
-        # - valgrind %intel
 
     # Build the above with intel classic
     - toolchain-mpi-intel-classic:
@@ -263,8 +261,16 @@ spack:
       version: [2.36.0]
     autoconf:
       version: ['2.69']
+      externals:
+        - spec: autoconf@2.69
+          prefix: /usr/
+      buildable: false
     automake:
-      version: ['1.16.5']
+      version: ['1.15.1']
+      externals:
+        - spec: automake@1.15.1
+          prefix: /usr
+      buildable: false
     bdftopcf:
       version: ['1.0.5']
     binutils:
@@ -922,7 +928,7 @@ spack:
       version: [1.14.1]
     survey:
       variants: +mpi
-      version: ['1.0.5']
+      version: ['1.0.6.2']
     swig:
       version: [4.0.2]
     tau:
