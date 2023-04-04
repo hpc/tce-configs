@@ -1136,7 +1136,7 @@ if [[ -n $buildcache ]] && [[ -z $buildcache_url ]]; then
                "url (if using --use-prod-buildcache)."
 fi
 echo "$buildcache $buildcache_url"
-spack mirror add --scope=site buildcache $buildcache_url
+spack mirror add --scope=site buildcache "$buildcache_url"
 
 # no matter what SPACK_CACHING is set to, export it.
 export SPACK_CACHING
