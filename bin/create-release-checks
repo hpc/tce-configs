@@ -30,6 +30,8 @@ def main():
     outfile.write('dummy:\n')
     outfile.write('  tags: ["untagged"]\n')
     outfile.write('  stage: dummy\n')
+    outfile.write('  script:\n')
+    outfile.write('    - echo dummy test\n')
     outfile.write('\n')
 
 
