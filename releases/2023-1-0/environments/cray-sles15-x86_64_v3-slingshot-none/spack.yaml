@@ -630,6 +630,7 @@ spack:
       version: ['2.15.05']
     ncurses:
       version: ['6.2']
+      require: '%gcc'
     netcdf-c:
       variants: ~mpi~parallel-netcdf+hdf4+pic+shared
       version: ['4.9.0']
