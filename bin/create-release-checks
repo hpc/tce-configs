@@ -20,7 +20,8 @@ def main():
     release_envs = {}
     outfile = io.StringIO()
 
-    outfile.write("stages: ['dummy', 'concr_checks', 'build']\n")
+    outfile.write("stages: ['concr_checks', 'build']\n")
+    # outfile.write("stages: ['dummy', 'concr_checks', 'build']\n")
     # Include the base test configurations that the others will inherit from.
     outfile.write('include: .ci-base.yml\n')
     outfile.write('\n')
