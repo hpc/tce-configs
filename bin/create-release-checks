@@ -20,10 +20,19 @@ def main():
     release_envs = {}
     outfile = io.StringIO()
 
-    outfile.write("stages: ['concr_checks', 'build']\n")
+    outfile.write("stages: ['dummy', 'concr_checks', 'build']\n")
     # Include the base test configurations that the others will inherit from.
     outfile.write('include: .ci-base.yml\n')
     outfile.write('\n')
+
+    # A dummy check so that the trigger stage passes even if none of the other tasks 
+    # need to happen.
+    outfile.write('dummy:\n')
+    outfile.write('  tags: ["untagged"]\n')
+    outfile.write('  stage: dummy\n')
+    outfile.write('\n')
+
+
     
     for release in (base_path/'releases').iterdir():
         # Skip non-dirs, the test release, and releases without an environments dir.

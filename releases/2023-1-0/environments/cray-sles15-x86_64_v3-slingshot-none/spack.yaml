@@ -192,7 +192,7 @@ spack:
 
     all:
       # Unless otherwise specified, build with gcc
-      compiler: [gcc@11.2.0]
+      #compiler: [gcc@11.2.0]
 
       # Virtual packages and which specs provide that functionality.
       providers:
