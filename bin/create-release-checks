@@ -29,9 +29,7 @@ def main():
     # need to happen.
     outfile.write('dummy:\n')
     outfile.write('  tags: ["untagged"]\n')
-    outfile.write("  stage: ['dummy']\n")
-    outfile.write('  script:\n')
-    outfile.write('    - ls -al\n')
+    outfile.write('  stage: dummy\n')
     outfile.write('\n')
 
 
