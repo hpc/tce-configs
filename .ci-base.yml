@@ -14,11 +14,12 @@
     TCE_FACILITY: <override me>
     TCE_ENVIRONMENT: <override me>
     TCE_RELEASE: <override me>
-    FACILITIES_BRANCH: chicoma
+    FACILITIES_BRANCH: chicoma 
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push"'
       changes:
         - .gitlab-ci.yml
+        - .ci-base.yml
         - bin/*
         - releases/$TCE_RELEASE/environments/$TCE_ENVIRONMENT/*
         - facilities/$TCE_FACILITY/*
