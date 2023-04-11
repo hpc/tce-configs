@@ -41,7 +41,7 @@
     - export HOME=$(pwd)
     - ./bin/process.sh
       -f $TCE_FACILITY -r $TCE_RELEASE -e $TCE_ENVIRONMENT
-      -i $(pwd)/builds__ -b $(pwd)/buildcache
+      -i $(pwd)/builds__ -b $HOME/buildcache
       --cert-store $CERT_STORE
 
 .check_concretization:
