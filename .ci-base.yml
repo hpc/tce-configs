@@ -14,7 +14,7 @@
     TCE_FACILITY: <override me>
     TCE_ENVIRONMENT: <override me>
     TCE_RELEASE: <override me>
-    FACILITIES_BRANCH: master
+    FACILITIES_BRANCH: chicoma
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push"'
       changes:
