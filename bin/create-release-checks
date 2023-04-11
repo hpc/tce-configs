@@ -27,10 +27,10 @@ def main():
 
     # A dummy check so that the trigger stage passes even if none of the other tasks 
     # need to happen.
-    outfile.write('dummy:\n')
-    outfile.write('  tags: ["untagged"]\n')
-    outfile.write('  stages: dummy\n')
-    outfile.write('\n')
+    # outfile.write('dummy:\n')
+    # outfile.write('  tags: ["untagged"]\n')
+    # outfile.write('  stages: dummy\n')
+    # outfile.write('\n')
 
 
     
