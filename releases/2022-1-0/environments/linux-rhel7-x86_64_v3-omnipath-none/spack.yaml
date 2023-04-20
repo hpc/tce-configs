@@ -34,7 +34,7 @@ spack:
       - mvapich2@2.3.6
 # Packages built only once
     - base:
-      - arm-forge@22.0.1
+      - arm-forge@21.0
       - charliecloud@0.23
       - cmake@3.20.3
       - emacs@27.2+X ^mesa18+glx

@@ -1,7 +1,10 @@
 spack-cc-*
+release-checks.yml
+current
 inst*
 conc*
-mod*
+mod*.log
+.nfs*
 *.sw*
 *.pyc
 module*.txt

@@ -1,11 +1,35 @@
 #image: toss3-pe:latest
 
 stages:
+  - setup
   - syntax_and_style
   - test
-  - build_first
-  - build_other
+  - triggers
 
+# Include base definitions
+include: .ci-base.yml
+
+
+# Auto-generate the yaml config for the release/env tests.
+create-release-checks:
+    stage: setup
+    script:
+        - ./bin/create-release-checks
+    artifacts:
+        paths:
+            - release-checks.yml
+
+# Trigger the release/env checks.
+trigger-sub-jobs:
+    stage: triggers
+    trigger:
+        include:
+            - artifact: release-checks.yml
+              job: create-release-checks
+        strategy: depend
+
+
+# Perform linting on all yaml files.
 yaml-lint:
   image: python:3.7
   tags:
@@ -42,63 +66,21 @@ config-in-env:
   script:
     - if grep -ER ' +config:' releases/*/environments/*/spack.yaml; then exit 1; fi
 
+# Check bash syntax and style
 bash-syntax:
   image: bash
   stage:
     syntax_and_style
   tags:
-    - untagged
-  script:
-    - echo $http_proxy
-    - ping -c 2 w2.lanl.gov
+    - docker
+  before_script:
     - apk add shellcheck
+  script:
     - source tests/syntax.sh
 
-.build_environment:
-  needs:
-    - job: ci-test:toss-ofi-build
-      artifacts: false
-  artifacts:
-    paths:
-        - builds__/*/logs/*
-    expire_in: 1 week
-  dependencies: [] # Don't download previous stage artifacts
-  variables:
-    CERT_STORE: /usr/projects/hpctools/gitlab-ci/cert_store
-    TCE_FACILITY: <override me>
-    TCE_ENVIRONMENT: <override me>
-    TCE_RELEASE: <override me>
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "push"'
-      changes:
-        - .gitlab-ci.yml
-        - bin/*
-        - releases/$TCE_RELEASE/environments/$TCE_ENVIRONMENT/*
-        - facilities/$TCE_FACILITY/*
-    - if: '$CI_PIPELINE_SOURCE == "push"'
-      when: manual
-      allow_failure: true
-  before_script:
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.hpc.lanl.gov/hpcsoft/lanl-tce-facility.git
-    - pushd facilities
-    - ln -s ../lanl-tce-facility/lanl lanl
-    - popd
-  script:
-    - echo "$(uname -m)-$(uname -r)-$(uname -s)"
-    - env
-    - export HOME=$(pwd)
-    - mkdir -p builds__
-    - mkdir -p buildcache
-    - ./bin/process.sh
-      -f $TCE_FACILITY -r $TCE_RELEASE -e $TCE_ENVIRONMENT
-      -i $(pwd)/builds__ -b $(pwd)/buildcache
-      --secret $CERT_STORE/secring.gpg
-      --public-key $CERT_STORE/pubring.gpg
-  after_script:
-    - ./bin/upload_tree.sh $CERT_STORE $(pwd)/buildcache
-
+# Perform basic functionality tests on Spack and process.sh
 ci-test:toss-ofi-build:
-  extends: .build_environment
+  extends: .build_environment  # From .ci-base.yml
   needs:
     - yaml-lint
     - bash-syntax
@@ -122,35 +104,4 @@ ci-test:toss-ofi-build:
         - facilities/*/*
     - if: '$CI_PIPELINE_SOURCE == "push"'
       when: manual
-
-toss-ofi:linux-omni-none:build:
-  extends: .build_environment
-  stage: build_first
-  variables:
-    TCE_FACILITY: lanl
-    TCE_RELEASE: '2022-1-0'
-    TCE_ENVIRONMENT: linux-rhel7-x86_64_v3-omnipath-none
-  tags:
-    - toss-ofi
-
-xc40:cray-cnl7-x86_64:build:
-  extends: .build_environment
-  stage: build_first
-  variables:
-    TCE_FACILITY: lanl
-    TCE_RELEASE: '2022-1-0'
-    TCE_ENVIRONMENT: cray-cnl7-x86_64_v3-aries-none
-  tags:
-    - xc40
-
-.toss-mlx:linux-mlx-nv6:build:
-  extends: .build_environment
-  stage: build_first
-  variables:
-    TCE_FACILITY: lanl
-    TCE_RELEASE: '2022-1-0'
-    TCE_ENVIRONMENT: linux-rhel7-x86_64_v3-infiniband-nvidia_v6.0
-  tags:
-    - toss-mlx
-
 

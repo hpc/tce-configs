@@ -1,0 +1,23 @@
+From da03f106628f54e3c082c08107b861a0a54bcb78 Mon Sep 17 00:00:00 2001
+From: Howard Pritchard <howardp@lanl.gov>
+Date: Wed, 13 Sep 2017 13:34:23 -0600
+Subject: [PATCH] hwloc: squelch a knl MCDRAM related warning
+
+Signed-off-by: Howard Pritchard <howardp@lanl.gov>
+
+diff --git a/opal/mca/hwloc/hwloc1112/hwloc/src/topology-linux.c b/opal/mca/hwloc/hwloc1112/hwloc/src/topology-linux.c
+index 8e3a80af..738b901e 100644
+--- a/opal/mca/hwloc/hwloc1112/hwloc/src/topology-linux.c
++++ b/opal/mca/hwloc/hwloc1112/hwloc/src/topology-linux.c
+@@ -2779,7 +2779,9 @@ static int hwloc_linux_try_add_knl_mcdram_caches(hwloc_topology_t topology, stru
+ 
+   /* file must start with version information, only 1 accepted for now */
+   if (strncmp("version: 1\n", data_beg, strlen("version: 1\n"))) {
++#if 0
+     fprintf(stderr, "Invalid knl_memoryside_cache header, expected \"version: 1\".\n");
++#endif
+     fclose(f);
+     return -1;
+   }
+-- 
+2.7.1

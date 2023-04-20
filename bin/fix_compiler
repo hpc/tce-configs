@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
+import copy
 from pathlib import Path
 import sys
 import yaml
@@ -10,52 +11,70 @@ import shutil
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Fixs compiler information in spack "
-                                                 "compiler configs.")
+    parser = argparse.ArgumentParser(
+        description="Alter compiler settings in a Spack compilers.yaml. Duplicate entries "
+                    "with the same (spec, os, target) are replaced.")
 
     parser.add_argument(
         'config_path',
         help="Path to the config to alter.")
-    parser.add_argument(
-        'mode', choices=['add', 'edit', 'delete'], default='edit',
-        help="The action to take regarding the given compiler. "
-             "\nAdd - Add the compiler if it doesn't exist."
-             "\nEdit - Alter the compiler."
-             "\nDelete - Remove the compiler.")
+
     parser.add_argument(
         'spec', help='Compiler spec to add. Typically something like gcc@5.9.0.')
     parser.add_argument(
         'os', help='Operating system')
     parser.add_argument(
         'target', help='Target architecture')
-    parser.add_argument(
-        '--cc', help='CC compiler path')
-    parser.add_argument(
-        '--cxx', help='CXX compiler path')
-    parser.add_argument(
-        '--f77', help='Fortran 77 compiler path')
-    parser.add_argument(
-        '--fc', help='Fortran compiler path')
-    parser.add_argument(
-        '--flags', action='append',
-        help='Compiler flags, in the form "key=value"')
-    parser.add_argument(
-        '--modules', action='append',
-        help='Modules to load to access this compiler. When editing, clear with an empty value.')
-    parser.add_argument(
-        '--env', '-e', action='append', dest='environment',
-        help='Environment variables to set, in the form "key=value". An empty value will remove '
-             'the given environment variable. To add a key/value such that it prepends your value '
-             "to an existing path list, add a + to the key: 'foo+=bar'")
-    parser.add_argument(
-        '--extra-rpaths', '-r', action='append',
-        help='Additional rpaths to use with this compiler. An empty argument will clear '
-             'the paths when editing.')    
+
+    subparsers = parser.add_subparsers(dest='cmd')
+    add = subparsers.add_parser('add', help='Add a new compiler definition from scratch.')
+    edit = subparsers.add_parser('edit', help='Modify an existing compiler definition.')
+    copy = subparsers.add_parser('copy', help='Copy a compiler definition.')
+    delete = subparsers.add_parser('delete', help='Remove a compiler definition.')
+
+    for subc in add, edit:
+        subc.add_argument(
+            '--cc', help='CC compiler path')
+        subc.add_argument(
+            '--cxx', help='CXX compiler path')
+        subc.add_argument(
+            '--f77', help='Fortran 77 compiler path')
+        subc.add_argument(
+            '--fc', help='Fortran compiler path')
+        subc.add_argument(
+            '--flags', action='append',
+            help='Compiler flags, in the form "key=value"')
+        subc.add_argument(
+            '--modules', action='append',
+            help='Modules to load to access this compiler. When editing, clear with an empty value.')
+        subc.add_argument(
+            '--env', '-e', action='append', dest='environment',
+            help='Environment variables to set, in the form "key=value". An empty value will remove '
+                 'the given environment variable. To add a key/value such that it prepends your value '
+                 "to an existing path list, add a + to the key: 'foo+=bar'")
+        subc.add_argument(
+            '--extra-rpaths', '-r', action='append',
+            help='Additional rpaths to use with this compiler. An empty argument will clear '
+                 'the paths when editing.')    
+
+    edit.add_argument('--rename', action='store', 
+        help="Change the 'spec' entry to this spec.")
+
     parser.add_argument(
         '--dry-run', action='store_true',
         help="Instead of writing back to the original file, print to stdout.")
 
-    return parser.parse_args()
+    copy.add_argument('dest', action='store', 
+        help="The name of the new compiler def.")
+        
+    args = parser.parse_args()
+
+    if args.cmd is None:
+        parser.print_help()
+        print("Choose a subcommand.")
+        sys.exit(1)
+
+    return args
 
 
 def make_settings(args):
@@ -66,6 +85,8 @@ def make_settings(args):
         'operating_system': args.os,
         'target': args.target,
     }
+    if args.rename:
+        settings['spec'] = args.rename
 
     paths = {}
     for path in 'cc', 'cxx', 'f77', 'fc':
@@ -136,7 +157,7 @@ def update_with_delete(base, update):
                 update_with_delete(base[key], upd_val)
         elif isinstance(upd_val, list):
             # Wipe the list where indicated.
-            if value == ['']:
+            if upd_val == ['']:
                 base[key] = []
             else:
                 base[key] = upd_val
@@ -147,50 +168,54 @@ def fix_compiler(args):
     config_path = Path(args.config_path)
 
     if not config_path.exists():
-        error("Config file '{}' does not exist".format(config))
+        error("Config file '{}' does not exist".format(config_path))
 
     try:
         with config_path.open() as config_file:
-            data = yaml.load(config_file)
+            data = yaml.load(config_file, Loader=yaml.SafeLoader)
     except OSError as err:
         error("Could not read config file '{}'.".format(config_path))
 
     if 'compilers' not in data:
         error("Missing top level 'compilers' key.")
 
-    comp_settings = make_settings(args)
 
-    found = None
-    found_idx = None
-    for i in range(len(data['compilers'])):
-        entry = data['compilers'][i]
-        compiler = entry.get('compiler', {})
-        if (compiler.get('spec') == args.spec 
-                and compiler.get('operating_system') == args.os
-                and compiler.get('target') == args.target):
-            found = compiler 
-            found_idx = i
-            break
-
-    if args.mode == 'add':
-        comp_settings = {'compiler': comp_settings}
-        if found is not None:
-            data['compilers'][found_idx] = comp_settings
-        else:
+    if args.cmd == 'add':
+        base_compiler, base_compiler_idx = find_compiler(data['compilers'], args.spec, args.os,
+                                                         args.target, required=False)
+        comp_settings = make_settings(args)
+        if base_compiler:
             data['compilers'].append(comp_settings)
-    elif args.mode == 'edit': 
-        if not found:
-            error('Could not find compiler matching {a.spec}, {a.os}, {a.target}'
-                  .format(a=args))
-        update_with_delete(found, comp_settings)
-    elif args.mode == 'delete':
-        if found:
-            del data['compilers'][found_idx]
+        else:
+            data['compilers'][base_compiler_idx] = comp_settings
+
+
+    elif args.cmd == 'edit':
+        base_compiler, _ = find_compiler(data['compilers'], args.spec, args.os, args.target)
+        comp_settings = make_settings(args)
+        update_with_delete(base_compiler, comp_settings)
+    elif args.cmd == 'copy':
+        base_compiler, _ =  find_compiler(data['compilers'], args.spec, args.os, args.target)
+        _, dest_idx = find_compiler(data['compilers'], args.dest, args.os, args.target, required=False)
+
+        copy_compiler = copy.deepcopy(base_compiler)
+        copy_compiler['spec'] = args.dest 
+        copy_compiler = {'compiler': copy_compiler}
+
+        if dest_idx is not None:
+            data['compilers'][dest_idx] = copy_compiler
+        else:
+            data['compilers'].append(copy_compiler)
+    elif args.cmd == 'delete':
+        _, comp_idx = find_compiler(data['compilers'], args.dest, args.os, args.target, required=False)
+        
+        if comp_idx is not None:
+            del data['compilers'][comp_idx]
         else:
             error('Could not find compiler matching {a.spec}, {a.os}, {a.target}'
                   .format(a=args))
     else:
-        error("Invalid mode '{}'".format(args.mode))
+        error("Invalid sub command '{}'".format(args.cmd))
 
     if args.dry_run:
         pprint.pprint(data)
@@ -210,6 +235,35 @@ def fix_compiler(args):
 
         except OSError as err:
             error("Could not write to config file '{}': {}".format(config_path, err))
+
+def find_compiler(compilers, spec, comp_os, target, required=True):
+    """Find the compiler given it's spec, os, and target arch.  When required is True, 
+    throw an error if no such """
+
+    found = None
+    found_idx = None
+    for i in range(len(compilers)):
+        entry = compilers[i]
+        compiler = entry.get('compiler', {})
+        if (compiler.get('spec') == spec
+                and compiler.get('operating_system') == comp_os
+                and compiler.get('target') == target):
+
+            return compiler, i
+
+    if not required:
+        return None, None
+
+    print("No compiler matching spec: '{}', os: '{}', target: '{}' found."
+          .format(spec, comp_os, target))
+    print("Options are:")
+    for compiler in compilers:
+        compiler = compiler.get('compiler', {})
+        if not compiler:
+            continue
+        print(' ', compiler.get('spec'), compiler.get('operating_system'), 
+              compiler.get('target'))
+    sys.exit(1)
 
 
 if __name__ == '__main__':

@@ -3,12 +3,6 @@ packages:
     permissions:
       write: group
       group: hpcsoft
-  mpich:
-    buildable: false
-    externals:
-    - spec: mpich@7.7.18 os=cnl7
-      modules:
-      - cray-mpich/7.7.18
   openssh:
     buildable: false
     externals:

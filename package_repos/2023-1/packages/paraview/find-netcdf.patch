@@ -1,0 +1,17 @@
+Submodule VTK contains modified content
+diff --git a/VTK/CMake/FindNetCDF.cmake b/VTK/CMake/FindNetCDF.cmake
+index 194b1a0d32..e29580923e 100644
+--- a/VTK/CMake/FindNetCDF.cmake
++++ b/VTK/CMake/FindNetCDF.cmake
+@@ -80,7 +80,10 @@ if (PkgConfig_FOUND)
+         INTERFACE_LINK_LIBRARIES "PkgConfig::_NetCDF")
+     endif ()
+ 
+-    FindNetCDF_get_is_parallel_aware("${_NetCDF_INCLUDEDIR}")
++    foreach(_NetCDF_INCLUDEDIR IN LISTS _NetCDF_INCLUDE_DIRS) 
++        FindNetCDF_get_is_parallel_aware("${_NetCDF_INCLUDEDIR}")
++        break()
++    endforeach()
+     # Skip the rest of the logic in this file.
+     return ()
+   endif ()

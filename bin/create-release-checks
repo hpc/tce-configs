@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+
+import io
+from pathlib import Path
+import yaml
+
+# Big Fat Note: 
+# Why am I not using python yaml libraries? 
+# Because while the output is YAML compatible, gitlab CI is not, and 
+# tries to do wonky things with strictly written YAML. The Python libraries
+# don't give the flexibility to get around this cleanly (ruamel.yaml does ok, 
+# but it's still a mess).
+
+def main():
+
+    base_path = Path(__file__).parents[1]
+
+    facility = 'lanl'
+
+    release_envs = {}
+    outfile = io.StringIO()
+
+    outfile.write("stages: ['dummy', 'concr_checks', 'build']\n")
+    # Include the base test configurations that the others will inherit from.
+    outfile.write('include: .ci-base.yml\n')
+    outfile.write('\n')
+
+    # A dummy check so that the trigger stage passes even if none of the other tasks 
+    # need to happen.
+    outfile.write('dummy:\n')
+    outfile.write('  tags: ["untagged"]\n')
+    outfile.write('  stage: dummy\n')
+    outfile.write('  script:\n')
+    outfile.write('    - echo dummy test\n')
+    outfile.write('\n')
+
+
+    
+    for release in (base_path/'releases').iterdir():
+        # Skip non-dirs, the test release, and releases without an environments dir.
+        if ((not release.is_dir()) or 
+                release.name == 'test' or 
+                (not (release/'environments').is_dir())):
+            continue
+
+        for env in (release/'environments').iterdir():
+            # Skip environments marked as legacy.
+            if (env/'ci-config.yaml').exists():
+                with (env/'ci-config.yaml').open() as ci_config_file:
+                    ci_config = yaml.load(ci_config_file, Loader=yaml.SafeLoader)
+            
+                release_envs[(release.name, env.name)] = ci_config
+            else:
+                print("Skipping {}/{}: ci-config.yaml does not exist."
+                      .format(release.name, env.name))
+
+    for (release, env), ci_config in release_envs.items():
+        if 'tags' not in ci_config:
+            print("Skipping {}/{} - no tags defined in ci-config.yaml"
+                  .format(release, env))
+            continue
+
+        tags = ci_config['tags']
+        if not isinstance(tags, (list, tuple)):
+            tags = [tags]
+        tag = tags[0]
+
+        variables = {
+            'TCE_FACILITY': 'lanl',
+            'TCE_RELEASE': release,
+            'TCE_ENVIRONMENT': env,
+        }
+        if 'variables' in ci_config: 
+            variables.update(ci_config['variables'])
+
+        concr_check_name = '{}-{}-concr'.format(tag, release)
+        outfile.write(concr_check_name + ':\n')
+        outfile.write('  extends: .check_concretization\n')
+        outfile.write('  tags: {}\n'.format(tags))
+        outfile.write('  variables:\n')
+        for key, value in variables.items():
+            outfile.write('    {}: "{}"\n'.format(key, value))
+        outfile.write('\n')
+
+        outfile.write('{}-{}-build:\n'.format(tag, release))
+        outfile.write('  extends: .build_environment\n')
+        outfile.write('  tags: {}\n'.format(tags))
+        outfile.write('  variables:\n')
+        for key, value in variables.items():
+            outfile.write('    {}: "{}"\n'.format(key, value))
+        outfile.write('\n')
+
+    outfile.seek(0)
+
+    with open('release-checks.yml', 'w') as release_checks:
+        release_checks.write(outfile.read())
+
+if __name__ == '__main__':
+    main()
+

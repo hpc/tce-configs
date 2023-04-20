@@ -1,0 +1,1187 @@
+spack:
+  definitions:
+    - base-compiler:
+      - gcc@11.2.0
+    - toolchain-compiler-constraints:
+      - $%base-compiler
+      - '%intel@19.1.3'
+      - '%intel@2022.2.1'
+      - '%intel@2021.8.0.classic'
+      - '%oneapi@2023.0.0'
+      - '%cce@15.0.0'
+
+    - target:
+      - target=x86_64_v3
+
+    # The same as above, except as a dependency and compiled against a specific compiler
+    # A 'feature' of the new concretizer' is that dependencies don't have to use the
+    # compiler of the parent, but these (and many other packages) have fortran libs
+    # that will break if that happens. So we have to force the builds of some software
+    # to use an mpi built against the matching compiler.
+    - gcc-10-mpi-constraints:
+      - ^cray-mpich@8.1.23%gcc@11.2.0 os=sles15
+
+    # The same, for intel.
+    - intel-mpi-constraints:
+      - ^cray-mpich@8.1.23%intel@2022.2.1 os=sles15
+
+    - intel-classic-mpi-constraints:
+      - ^cray-mpich@8.1.23%intel@2021.8.0.classic os=sles15
+
+    - oneapi-mpi-constraints:
+      - ^cray-mpich@8.1.23%oneapi os=sles15
+
+    - cce-mpi-constraints:
+      - ^cray-mpich@8.1.23%cce os=sles15
+
+    # Note that we don't build anything for clang/mpi combos, so a clang specific
+    # section isn't needed currently.
+
+    # Packages built with the default compiler only.
+    - base:
+      - arm-forge
+      - charliecloud ^python@3.10.6%gcc
+      - cmake
+      # We need to specify non-default mesa, or else.
+      - emacs +X ^mesa+glx
+      - git
+      - gnuplot ^cmake@3.23.1%gcc ^python@3.10.6%gcc
+      - hpcviewer
+      - htop ^python@3.10.6%gcc
+      - idl
+      - intel-mkl
+      - julia_binary
+      - libyogrt
+      - mercurial ^python@3.10.6%gcc
+      - numactl
+      - openjdk
+      - papi
+      - patchelf
+      - python %gcc
+      - py-matplotlib
+      - py-pint
+      - qt ^cmake@3.23.1%gcc
+      - subversion ^cmake@3.23.1%gcc
+      - tmux
+      - totalview
+    - base_matrix:
+      - exclude: []
+        matrix:
+        - [$base]
+        - [$%base-compiler]
+        - [$target]
+
+    # Packages built out against each compiler
+    - compiler-packages:
+      - mesa ^expat%gcc ^glproto%gcc ^libx11%gcc ^libxcb%gcc ^libxml2%gcc@11.2.0
+        ^ncurses%gcc ^zlib%gcc ^python@3.10.6%gcc
+
+    #
+    - install-comp:
+      #- intel-oneapi-compilers@2022.2.1
+      - llvm@14.0.2 ^swig@4.0.2 ^cmake@3.23.1%gcc ^python@3.10.6%gcc
+
+      - matrix:
+        - [$compiler-packages]
+        - [$toolchain-compiler-constraints]
+        - [$target]
+
+        exclude:
+        - intel-mkl@gcc
+        - mesa%cce
+        - mesa%oneapi
+        - mesa%intel@2022.2.1
+
+    # Packages to build against all compiler/mpi combinations
+    - mpi-packages:
+      - hpctoolkit ^cmake@3.23.1%gcc ^python@3.10.6%gcc
+      - libquo
+      - valgrind
+      - survey
+      - paraview@5.10.1 ~adios2 ^mesa ^bzip2%gcc@11.2.0 ^double-conversion%gcc@11.2.0 ^cmake@3.23.1%gcc
+        ^py-matplotlib@3.5.3%gcc ^eigen%gcc@11.2.0 ^expat%gcc@11.2.0 ^freetype%gcc@11.2.0
+        ^libtiff%gcc@11.2.0 ^lz4%gcc@11.2.0
+      - py-mpi4py
+
+    # Build the above with gcc and all gcc relevant MPI's
+    - toolchain-mpi-gcc-10:
+      - matrix:
+        - [$mpi-packages]
+        - ['%gcc@11.2.0']
+        - [$gcc-10-mpi-constraints]
+        - [$target]
+        exclude: []
+
+    # Build the above with intel hybrid (oneapi with old fortran compiler)
+    - toolchain-mpi-intel:
+      - matrix:
+        - [$mpi-packages]
+        - ['%intel@2022.2.1']
+        - [$intel-mpi-constraints]
+        - [$target]
+        exclude:
+        - hpctoolkit
+        - paraview  # openmp function pointer
+        - survey    # openmp function pointer
+        # - valgrind %intel
+
+    # Build the above with intel classic
+    - toolchain-mpi-intel-classic:
+      - matrix:
+        - [$mpi-packages]
+        - ['%intel@2021.8.0.classic']
+        - [$intel-classic-mpi-constraints]
+        - [$target]
+        exclude:
+        - hpctoolkit
+
+    # Build the above with oneapi
+    - toolchain-mpi-oneapi:
+      - matrix:
+        - [$mpi-packages]
+        - ['%oneapi@2023.0.0']
+        - [$oneapi-mpi-constraints]
+        - [$target]
+        exclude:
+        - hpctoolkit
+        - paraview  # openmp function pointer
+        - survey    # openmp function pointer
+
+    # Build the above with intel 19.1.3
+    - toolchain-mpi-intel19:
+      - matrix:
+        - [$mpi-packages]
+        - ['%intel@19.1.3']
+        - [$intel-classic-mpi-constraints]
+        - [$target]
+        exclude:
+        - hpctoolkit
+        - paraview
+
+    # Build the above with cce
+    - toolchain-mpi-cce:
+      - matrix:
+        - [$mpi-packages]
+        - ['%cce@15.0.0']
+        - [$cce-mpi-constraints]
+        - [$target]
+        exclude:
+        - hpctoolkit
+        - paraview
+        - survey  # openmp function pointer
+        - valgrind %cce
+
+    # This defines the actual packages to get installed
+    - install:
+      - $base_matrix
+      - $install-comp
+      - $toolchain-mpi-gcc-10
+      - $toolchain-mpi-intel
+      - $toolchain-mpi-intel-classic
+      - $toolchain-mpi-oneapi
+      - $toolchain-mpi-intel19
+      - $toolchain-mpi-cce
+
+# Final definition
+  specs:
+  - $install
+
+  # This defines the default settings for each package. The definitions above
+  # can be sparse because we define most settings here.
+  packages:
+
+    all:
+      # Unless otherwise specified, build with gcc
+      compiler: [gcc@11.2.0]
+
+      # Virtual packages and which specs provide that functionality.
+      providers:
+        gl: [mesa]
+        osmesa: [mesa+osmesa swr=avx,avx2]
+        pkgconfig: [pkg-config]
+        tbb: [intel-tbb+shared]
+        uuid: [libuuid]
+
+    # The following crypto libraries should not be built. If needed, they should
+    # be pulled from system space.
+    botan:
+      buildable: false
+    cryptopp:
+      buildable: false
+    gnutls:
+      buildable: false
+    libsodium:
+      buildable: false
+    mbedtls:
+      buildable: false
+    nettle:
+      buildable: false
+    nss:
+      buildable: false
+    # opa-psm2: #DEBUG
+    #   externals:
+    #     - spec: opa-psm2@11.2.78%gcc@11.2.0
+    #       prefix: /usr
+    #   buildable: false
+    openssh:
+      version: [8.4p1]
+      externals:
+        - spec: openssh@8.4p1%gcc@11.2.0
+          prefix: /usr
+      buildable: false
+    openssl:
+      version: ['1.1.1d-rhel']
+      externals:
+        - spec: openssl@1.1.1d-rhel%gcc@11.2.0~docs+systemcerts
+          prefix: /usr
+      buildable: false
+
+    # General Package Defaults
+    # Version - Each package should have a single default version specified.
+    # Variants - If variants are needed, they should be specified here. If we
+    #   build multiple conflicting variants (`+foo+bar+baz` and `+foo~bar+baz`)
+    #   specify the intersection of those (`+foo+baz`). You can then specify the package
+    #   with only those variants that differ above.
+    # Compiler - Should not be set.
+    apr:
+      version: [1.6.2]
+    apr-util:
+      version: [1.6.1]
+    arm-forge:
+      require: '%gcc'
+      variants: +accept-eula
+      version: ['22.1.1']
+    at-spi2-atk:
+      variants: default_library=shared
+      version: [2.38.0]
+    at-spi2-core:
+      variants: default_library=shared
+      version: [2.40.1]
+    atk:
+      version: [2.36.0]
+    autoconf:
+      version: ['2.69']
+      externals:
+        - spec: autoconf@2.69
+          prefix: /usr/
+      buildable: false
+    automake:
+      version: ['1.15.1']
+      externals:
+        - spec: automake@1.15.1
+          prefix: /usr
+      buildable: false
+    bdftopcf:
+      version: ['1.0.5']
+    binutils:
+      version: ['2.38']
+      variants: +gold+libiberty~nls+ld+gas
+    bison:
+      version: ['3.8.2']
+    boost:
+      version: ['1.79.0']
+    bzip2:
+      version: ['1.0.8']
+    cairo:
+      version: ['1.16.0']
+    charliecloud:  # check variants
+      require: '%gcc'
+      version: ['0.29']
+      variants: ~docs
+    cli11:
+      version: ['1.9.1']
+    cmake:
+      require: '%gcc'
+      version: ['3.23.1']
+    cpio:
+      version: ['2.13']
+    cray-mpich:
+      # Provided by system
+      version: ['8.1.23']
+      variants: '+wrappers'
+      # These have to be specified compiler by compiler, or Spack will get confused.
+      externals:
+        - spec: cray-mpich@8.1.23%gcc os=sles15
+          prefix: /opt/cray/pe/mpich/8.1.23/ofi/gnu/9.1
+        - spec: cray-mpich@8.1.23%intel os=sles15
+          prefix: /opt/cray/pe/mpich/8.1.23/ofi/intel/19.0
+        - spec: cray-mpich@8.1.23%oneapi os=sles15
+          prefix: /opt/cray/pe/mpich/8.1.23/ofi/intel/19.0
+        - spec: cray-mpich@8.1.23%cce os=sles15
+          prefix: /opt/cray/pe/mpich/8.1.23/ofi/cray/10.0
+      buildable: false
+    curl:
+      version: [7.83.0]
+    dbus:
+      version: [1.12.8]
+    diffutils:
+      version: ['3.8']
+    docbook-xml:
+      version: ['4.4']
+    docbook-xsl:
+      version: ['1.79.2']
+    double-conversion:
+      version: ['3.1.5']
+    dyninst:
+      version: [12.1.0]
+    doxygen:
+      version: ['1.9.3']
+    eigen:
+      version: ['3.4.0']
+    elfutils:
+      variants: +bzip2 +xz ~nls
+      version: ['0.186']
+    emacs:
+      require: '%gcc'
+      variants: +X
+      version: ['28.1']
+    expat:
+      version: ['2.4.8']
+    findutils:
+      version: ['4.9.0']
+    fixesproto:
+      version: ['5.0']
+    flex:
+      version: ['2.6.3']
+    font-util:
+      version: ['1.3.2']
+    fontconfig:
+      version: ['2.13.94']
+    fontsproto:
+      version: ['2.1.3']
+    freetype:
+      version: ['2.10.1']
+    fribidi:
+      version: ['1.0.12']
+    gcc:
+      variants: +binutils+cxa_atexit+piclibs+strip+nvptx+profiledbootstrap-lean languages=c,c++,fortran,lto
+      version: [11.2.0]
+    gdbm:
+      version: ['1.23']
+    gdk-pixbuf:
+      version: ['2.42.6']
+    gettext:
+      variants: +bzip2+curses+git~libunistring~libxml2+tar+xz
+      version: ["0.21"]
+    giflib:
+      version: [5.2.1]
+    git:
+      require: '%gcc'
+      variants: +subtree+svn
+      version: ['2.38.1']
+    glib:
+      variants: tracing=none
+      version: [2.72.1]
+    glproto:
+      version: [1.4.17]
+    glx:
+      version: ['1.4']
+    gmake:
+      version: ['4.3']
+    gmp:
+      version: [6.2.1]
+    gnuplot:
+      require: '%gcc'
+      variants: +X ~cairo
+      version: [5.4.3]
+    gobject-introspection:
+      version: [1.72.0]
+    gotcha:
+      require: '%gcc'
+      version: [1.0.3]
+    gperf:
+      version: ['3.1']
+    gtkplus:
+      variants: default_library=shared ~cups
+      version: [3.24.29]
+    harfbuzz:
+      version: [4.2.1]
+    hdf:
+      version: [4.2.15]
+    hdf5:
+      variants: +cxx+fortran+hl~mpic+shared+threadsafe api=v18
+      version: ['1.12.2']
+      externals:
+        - spec: hdf5@1.12.2 %gcc +cxx +fortran +hl +mpi +shared +threadsafe api=v18
+          prefix: /opt/cray/pe/hdf5/1.12.2.1/gnu/9.1/
+        - spec: hdf5@1.12.2 %intel +cxx +fortran +hl +mpi +shared +threadsafe api=v18
+          prefix: /opt/cray/pe/hdf5/1.12.2.1/intel/19.0/
+        - spec: hdf5@1.12.2 %oneapi +cxx +fortran +hl +mpi +shared +threadsafe api=v18
+          prefix: /opt/cray/pe/hdf5/1.12.2.1/intel/19.0/
+        - spec: hdf5@1.12.2 %cce +cxx +fortran +hl +mpi +shared +threadsafe api=v18
+          prefix: /opt/cray/pe/hdf5/1.12.2.1/crayclang/14.0/
+      buildable: false
+    hpctoolkit:
+      version:  ['2022.05.15']
+      variants: +mpi+papi
+    hpcviewer:
+      require: '%gcc'
+      version: ['2022.10']
+    htop:
+      require: '%gcc'
+      version: [3.2.0]
+    hwloc:
+      version: [2.8.0]
+    icu4c:
+      version: ['67.1']
+    idl:
+      require: '%gcc'
+      version: ['8.8.3']
+    inputproto:
+      version: ['2.3.2']
+    intel:
+      variants: +open
+      buildable: false
+      # version: ['19.1.3']
+    intel-oneapi-compilers:
+      version: [2022.2.1]
+    intel-mkl:
+      version: ['2020.4.304']
+      variants: threads=openmp
+    intel-tbb:
+      version: ['2020.3']
+    intel-xed:
+      version: [12.0.1]
+    intltool:
+      version: ['0.51.0']
+    isl:
+      version: ['0.24']
+    jsoncpp:
+      version: [1.9.4]
+    julia_binary:
+      require: '%gcc'
+      version: [1.8.2]
+    kbproto:
+      version: [1.0.7]
+    krb5:
+      version: [1.19.3]
+    lcms:
+      version: [2.13.1]
+    libbsd:
+      version: [0.11.5]
+    libcerf:
+      version: ['1.3']
+    libcroco:
+      version: [0.6.13]
+    libdwarf:
+      version: ['20180129']
+    libedit:
+      version: [3.1-20210216]
+    libepoxy:
+      version: [1.4.3]
+    libevent:
+      version: [2.1.12]
+    libfabric:
+      version: [1.15.2.0]
+      externals:
+        - spec: libfabric@1.15.2.0
+          modules:
+            - libfabric/1.15.2.0
+    libffi:
+      version: ['3.4.2']
+    libfontenc:
+      version: ['1.1.3']
+    libgcrypt:
+      externals:
+        - spec: libgcrypt20@1.9.4%gcc@11.2.0
+          prefix: /usr
+      buildable: false
+    libgd:
+      version: [2.2.4]
+    libgit2:
+      version: ['1.3.1']
+    libiberty:
+      variants: +pic
+      version: ['2.37']
+    libice:
+      version: [1.0.9]
+    libiconv:
+      version: ['1.16']
+    libidn2:
+      version: [2.3.0]
+    libjpeg-turbo:
+      version: [2.1.3]
+    libmd:
+      version: [1.0.4]
+    libmng:
+      version: [2.0.3]
+    libmonitor:
+      require: '%gcc'
+      variants: +hpctoolkit ~dlopen
+      version: [2021.11.08]
+    libogg:
+      version: [1.3.5]
+    libpciaccess:
+      version: ['0.16']
+    libpng:
+      version: [1.6.37]
+    libpthread-stubs:
+      version: ['0.4']
+    libquo:
+      version: [1.3.1]
+    librsvg:
+      version: [2.51.0]
+    libsigsegv:
+      version: ['2.13']
+    libssh2:
+      version: ['1.10.0']
+    libsm:
+      version: [1.2.3]
+    libtheora:
+      version: [1.1.1]
+    libtiff:
+      version: [4.3.0]
+    libtirpc:
+      version: [1.2.6]
+    libtool:
+      version: [2.4.7]
+    libunistring:
+      version: [0.9.10]
+    libunwind:
+      variants: +pic +xz
+      version: [1.6.2]
+    libuuid:
+      version: [1.0.3]
+    libx11:
+      version: [1.7.0]
+    libxfont:
+      version: ['1.5.2']
+    libxau:
+      version: [1.0.8]
+    libxaw:
+      version: ['1.0.13']
+    libxcb:
+      version: ['1.14']
+    libxdmcp:
+      version: [1.1.2]
+    libxext:
+      version: [1.3.3]
+    libxfixes:
+      version: [5.0.2]
+    libxft:
+      version: [2.3.2]
+    libxi:
+      version: [1.7.6]
+    libxkbcommon:
+      version: [1.4.0]
+    libxkbfile:
+      version: ['1.0.9']
+    libxml2:
+      variants: +python
+      version: [2.9.13]
+    libxmu:
+      version: ['1.1.2']
+    libxpm:
+      version: [3.5.12]
+    libxrandr:
+      version: [1.5.0]
+    libxrender:
+      version: [0.9.10]
+    libxt:
+      version: ['1.1.5']
+    libxtst:
+      version: [1.2.2]
+    libyaml:
+      version: ['0.2.5']
+    libyogrt:
+      require: '%gcc'
+      variants: scheduler=slurm ~static
+      version: ['1.24']
+    llvm:
+      variants: +clang+compiler-rt+omp_tsan+python+lldb+gold+libcxx+polly+internal_unwind
+        targets=all
+      version: [14.0.2]
+    llvm-openmp:
+      require: '%gcc'
+      version: [12.0.1]
+    lz4:
+      variants: libs=shared,static
+      version: [1.9.3]
+    lzma:
+      version: [4.32.7]
+    m4:
+      version: [1.4.19]
+    memkind:
+      version: [1.13.0]
+    mercurial:
+      require: '%gcc'
+      version: ['5.8']
+    mesa:
+      variants: +osmesa swr=avx,avx2
+      version: [22.1.2]
+    meson:
+      require: '%gcc'
+      version: ['0.62.1']
+    mkfontdir:
+      version: ['1.0.7']
+    mkfontscale:
+      version: ['1.1.2']
+    mpc:
+      version: [1.2.1]
+    mpfr:
+      version: [4.1.0]
+    nasm:
+      version: ['2.15.05']
+    ncurses:
+      version: ['6.2']
+    netcdf-c:
+      variants: ~mpi~parallel-netcdf+hdf4+pic+shared
+      version: ['4.9.0']
+      externals:
+        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %gcc
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
+        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %intel
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
+        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %oneapi
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
+        - spec: netcdf-c@4.9.0 ~mpi~parallel-netcdf+hdf4+pic+shared %cce
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/crayclang/14.0/
+      buildable: false
+    netcdf-cxx4:
+      variants: +pic
+      version: ['4.9.0']
+      externals:
+        - spec: netcdf-cxx4@4.9.0 +pic+shared %gcc
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
+        - spec: netcdf-cxx4@4.9.0 +pic+shared %intel
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
+        - spec: netcdf-cxx4@4.9.0 +pic+shared %oneapi
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
+        - spec: netcdf-cxx4@4.9.0 +pic+shared %cce
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/crayclang/14.0/
+      buildable: false
+    netcdf-fortran:
+      variants: +pic
+      version: ['4.9.0']
+      externals:
+        - spec: netcdf-fortran@4.9.0 +pic %gcc
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/gnu/9.1/
+        - spec: netcdf-fortran@4.9.0 +pic %intel
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
+        - spec: netcdf-fortran@4.9.0 +pic %oneapi
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/intel/19.0/
+        - spec: netcdf-fortran@4.9.0 +pic %cce
+          prefix: /opt/cray/pe/netcdf/4.9.0.1/crayclang/14.0/
+      buildable: false
+    ninja:
+      require: '%gcc'
+      version: ['1.10.2']
+    numactl:
+      require: '%gcc'
+      version: [2.0.14]
+    openblas:
+      version: [0.3.20]
+    openjdk:
+      require: '%gcc'
+      version: [11.0.15_10]
+    osmesa:
+      version: ['11.2.0']
+    pango:
+      variants: +X
+      version: [1.42.4]
+    papi:
+      require: '%gcc'
+      version: [6.0.0.1]
+    parallel-netcdf:
+      version: ['1.12.3']
+      externals:
+        - spec: parallel-netcdf@1.12.3 %gcc
+          prefix: /opt/cray/pe/parallel-netcdf/1.12.3.1/gnu/9.1/
+        - spec: parallel-netcdf@1.12.3 %intel
+          prefix: /opt/cray/pe/parallel-netcdf/1.12.3.1/intel/19.0/
+        - spec: parallel-netcdf@1.12.3 %oneapi
+          prefix: /opt/cray/pe/parallel-netcdf/1.12.3.1/intel/19.0/
+        - spec: parallel-netcdf@1.12.3 %cce
+          prefix: /opt/cray/pe/parallel-netcdf/1.12.3.1/crayclang/14.0/
+      buildable: false
+    paraview:
+      require: +eyedomelighting +fortran +hdf5 +osmesa +mpi +shared
+               +pagosa +python3 ~vtkm ~cuda +visitbridge
+      version: [5.10.1]
+    patchelf:
+      require: '%gcc'
+      version: ['0.15.0']
+    pcre:
+      version: ['8.45']
+    pcre2:
+      version: ['10.39']
+    pegtl:
+      version: [3.2.0]
+    perl:
+      externals:
+        - spec: perl@5.26.1%gcc
+          prefix: /usr
+      buildable: false
+      version: [5.26.1]
+    perl-alien-svn:
+      version: [1.8.11.0]
+    perl-data-dumper:
+      version: ['2.173']
+    perl-encode-locale:
+      version: ['1.05']
+    perl-extutils-config:
+      version: ['0.008']
+    perl-extutils-helpers:
+      version: ['0.026']
+    perl-extutils-installpaths:
+      version: ['0.012']
+    perl-file-listing:
+      version: ['6.04']
+    perl-html-parser:
+      version: ['3.72']
+    perl-html-tagset:
+      version: ['3.20']
+    perl-http-cookies:
+      version: ['6.04']
+    perl-http-daemon:
+      version: ['6.01']
+    perl-http-date:
+      version: ['6.02']
+    perl-http-message:
+      version: ['6.13']
+    perl-http-negotiate:
+      version: ['6.01']
+    perl-io-html:
+      version: ['1.001']
+    perl-libwww-perl:
+      version: ['6.33']
+    perl-lwp-mediatypes:
+      version: ['6.02']
+    perl-module-build:
+      version: ['0.4224']
+    perl-module-build-tiny:
+      version: ['0.039']
+    perl-net-http:
+      version: ['6.17']
+    perl-test-needs:
+      version: ['0.002005']
+    perl-try-tiny:
+      version: ['0.28']
+    perl-uri:
+      version: ['1.72']
+    perl-termreadkey:
+      version: ['2.38']
+    perl-www-robotrules:
+      version: ['6.02']
+    perl-xml-parser:
+      version: ['2.44']
+    pigz:
+      version: ['2.7']
+    pixman:
+      version: [0.40.0]
+    pkg-config:
+      version: ['0.29.2']
+      externals:
+        - spec: pkg-config@0.29.2%gcc
+          prefix: /usr
+      buildable: false
+    protobuf:
+      version: ["3.18.0"]
+    pugixml:
+      version: [1.11.4]
+    py-bottleneck:
+      version: ['1.3.5']
+    py-certifi:
+      version: [2021.10.8]
+    py-chardet:
+      version: [4.0.0]
+    py-charset-normalizer:
+      version: ['2.0.12']
+    py-cppy:
+      version: ['1.1.0']
+    py-cycler:
+      version: [0.11.0]
+    py-cython:
+      version: ['0.29.32']
+    py-docutils:
+      version: ['0.18.1']
+    py-flit-core:
+      version: ['3.7.1']
+    py-fonttools:
+      version: ['4.31.2']
+    py-idna:
+      version: ['3.3']
+    py-jinja2:
+      require: '%gcc'
+      version: [3.1.2]
+    py-kiwisolver:
+      version: [1.1.0]
+    # Changed name from py-lark-parser to py-lark
+    py-lark:
+      version: [0.1.2]
+    py-mako:
+      version: ['1.1.6']
+    py-markupsafe:
+      version: ['2.0.1']
+    py-matplotlib:
+      require: '%gcc'
+      version: [3.5.3]
+    py-more-itertools:
+      require: '%gcc'
+      version: [8.14.0]
+    py-mpi4py:
+      version: [3.1.2]
+    py-numexpr:
+      version: ['2.8.3']
+    py-numpy:
+      require: '%gcc ^intel-mkl'
+      version: [1.22.4]
+    py-packaging:
+      version: ['21.3']
+    py-pandas:
+      require: '%gcc'
+      version: [1.5.1]
+    py-pillow:
+      version: [9.2.0]
+    py-pint:
+      require: '%gcc'
+      version: ['0.17']
+    py-pip:
+      require: '%gcc'
+      version: ['21.3.1']
+    py-psutil:
+      require: '%gcc'
+      version: [5.9.2]
+    py-pygments:
+      version: [2.10.0]
+    py-pyparsing:
+      version: [3.0.6]
+    py-python-dateutil:
+      require: '%gcc'
+      version: [2.8.2]
+    py-pytz:
+      version: ['2022.2.1']
+    py-pyyaml:
+      require: '%gcc'
+      version: ['6.0']
+    py-requests:
+      version: [2.26.0]
+    py-seaborn:
+      require: '%gcc'
+      version: [0.12.0]
+    py-setuptools:
+      require: '%gcc'
+      version: [58.2.0]
+    py-setuptools-scm:
+      version: ['6.3.2']
+    py-setuptools-scm-git-archive:
+      version: ['1.1']
+    py-six:
+      version: [1.16.0]
+    py-sqlalchemy:
+      require: '%gcc'
+      version: [1.3.19]
+    py-tomli:
+      version: ['1.2.2']
+    py-urllib3:
+      version: [1.26.6]
+    py-versioneer:
+      require: '%gcc'
+      version: ['0.26']
+    py-wheel:
+      version: ['0.37.0']
+    python:
+      require: '%gcc'
+      variants: ~uuid~libxml2
+      version: [3.10.6]
+    qhull:
+      version: ['2020.2']
+    qt:
+      require: '%gcc'
+      variants: ~ssl
+      version: [5.15.5]
+    randrproto:
+      version: [1.5.0]
+    rdma-core:
+      externals:
+        - spec: rdma-core@38.1%gcc@11.2.0
+          prefix: /usr
+      buildable: false
+    readline:
+      version: ['8.1.2']
+    recordproto:
+      version: [1.14.2]
+    renderproto:
+      version: [0.11.1]
+    rust:
+      version: ['1.60.0']
+    scons:
+      version: ['4.3.0']
+    scorep:
+      version: ['7.0']
+      variants: +pdt
+    serf:
+      version: [1.3.9]
+    shared-mime-info:
+      version: ['1.9']
+    slurm:
+      version: ['23.02.0']
+      externals:
+        - spec: slurm@23.02.0%gcc@11.2.0
+          prefix: /usr
+      buildable: false
+    sqlite:
+      version: [3.38.5]
+    subversion:
+      require: '%gcc'
+      variants: +lz4_internal +perl +utf8proc_internal ~apxs
+      version: [1.14.1]
+    survey:
+      variants: +mpi
+      version: ['1.0.6.2']
+    swig:
+      version: [4.0.2]
+    tau:
+      variants: +comm+mpi+ompt+python+scorep+shmem+x86_64
+      version: [2.31.1]
+    tar:
+      version: ['1.34']
+    texinfo:
+      version: ['6.5']
+    tmux:
+      require: '%gcc'
+      version: [3.2a]
+    totalview:
+      require: '%gcc'
+      version: ['2022.2.13']
+    utf8proc:
+      version: [2.6.1]
+    util-macros:
+      version: [1.19.3]
+    valgrind:
+      variants: +lto~ubsan
+      version: [3.18.1]
+    xcb-proto:
+      version: [1.14.1]
+    xcb-util:
+      version: [0.4.0]
+    xcb-util-image:
+      version: [0.4.0]
+    xcb-util-keysyms:
+      version: [0.4.0]
+    xcb-util-renderutil:
+      version: [0.3.9]
+    xcb-util-wm:
+      version: [0.4.1]
+    xerces-c:
+      variants: transcoder=iconv
+      version: [3.2.3]
+    xextproto:
+      version: [7.3.0]
+    xkbcomp:
+      version: ['1.4.4']
+    xkbdata:
+      version: [1.0.1]
+    xproto:
+      version: [7.0.31]
+    xrandr:
+      version: [1.5.0]
+    xtrans:
+      version: [1.3.5]
+    xz:
+      variants: +pic libs=shared,static
+      version: [5.2.5]
+    z3:
+      version: [4.8.16]
+    zlib:
+      version: [1.2.13]
+    zstd:
+      version: ['1.5.2']
+
+  upstreams: {}
+  mirrors: {}
+  repos: []
+  view:
+    tce:
+      root: $spack/../packages
+      link: roots
+      exclude:
+        - paraview
+        - py-mpi4py
+        - survey
+      projections:
+        # All of the 'core' software should be built once per version and not need qualification
+        arm-forge: '{name}/{name}-{version}'
+        charliecloud: '{name}/{name}-{version}'
+        cmake: '{name}/{name}-{version}'
+        emacs: '{name}/{name}-{version}'
+        git: '{name}/{name}-{version}'
+        gnuplot: '{name}/{name}-{version}'
+        hpctoolkit: '{name}/{name}-{version}'
+        hpcviewer: '{name}/{name}-{version}'
+        htop: '{name}/{name}-{version}'
+        idl: '{name}/{name}-{version}'
+        julia_binary: 'julia/julia-{version}'
+        libyogrt: '{name}/{name}-{version}'
+        mercurial: '{name}/{name}-{version}'
+        numactl: '{name}/{name}-{version}'
+        openjdk: '{name}/{name}-{version}'
+        papi: '{name}/{name}-{version}'
+        patchelf: '{name}/{name}-{version}'
+        python: '{name}/{name}-{version}'
+        py-pint: '{name}/{name}-{version}'
+        qt: '{name}/{name}-{version}'
+        subversion: '{name}/{name}-{version}'
+        tmux: '{name}/{name}-{version}'
+        totalview: '{name}/{name}-{version}'
+        ^mpi: '{name}/{name}-{version}-{compiler.name}-{compiler.version}-{^mpi.name}-{^mpi.version}'
+        all: '{name}/{name}-{version}-{compiler.name}-{compiler.version}'
+  modules:
+    'default:':
+      enable: []
+    utils:
+      roots:
+        lmod: $spack/../modulefiles
+      use_view: tce
+      enable:
+        - lmod
+      lmod:
+        hierarchy:
+          - mpi
+        hash_length: 0
+        blacklist_implicits: true
+        blacklist:
+          - platform=cray
+          - platform=linux
+        whitelist:
+          - arm-forge
+          - charliecloud
+          - cmake
+          - emacs
+          - git
+          - gnuplot
+          - hpctoolkit
+          - hpcviewer
+          - htop
+          - idl
+          - intel-oneapi-mkl
+          - intel-oneapi-dal
+          - intel-oneapi-tbb
+          - intel-oneapi-mpi
+          - julia_binary
+          - libyogrt
+          - mercurial
+          - numactl
+          - openjdk
+          - papi
+          - patchelf
+          - py-pint
+          - python
+          - qt
+          - subversion
+          - tmux
+          - totalview
+        core_compilers:
+          - gcc@11.2.0
+        core_specs:
+          - arm-forge
+          - charliecloud
+          - cmake
+          - emacs
+          - git
+          - gnuplot
+          - hpctoolkit
+          - hpcviewer
+          - htop
+          - idl
+          - intel-oneapi-mkl
+          - intel-oneapi-dal
+          - intel-oneapi-tbb
+          - intel-oneapi-mpi
+          - julia_binary
+          - libyogrt
+          - mercurial
+          - numactl
+          - openjdk
+          - papi
+          - patchelf
+          - py-pint
+          - python
+          - qt
+          - subversion
+          - tmux
+          - totalview
+        projections:
+          julia_binary: 'julia/{version}'
+          all: '{name}/{version}'
+        arm-forge:
+          environment:
+            set:
+               # In SLURM versions 20+ they changed default behavior that makes
+               # Forge require the following environment variable. This kludge
+               # is expected to be addressed in later Forge versions
+               ALLINEA_DEBUG_SRUN_ARGS: '%jobid% --mem-per-cpu=0 -I -W0 -G 0 --overlap'
+               ALLINEA_NO_TIMEOUT: '1'
+        idl:
+          environment:
+            prepend_path:
+              PATH: /usr/tce/packages/idl/idl-8.8/idl88/bin
+            set:
+              IDL_DIR: /usr/tce/packages/idl/idl-8.8/idl88
+        libyogrt:
+          environment:
+            set:
+              YOGRT: /usr/tce/packages/libyogrt/libyogrt-1.24
+    toolchains:
+      roots:
+        lmod: $spack/../modulefiles/toolchains
+      use_view: tce
+      enable:
+        - lmod
+      lmod:
+        hierarchy:
+          - mpi
+        hash_length: 0
+        blacklist_implicits: true
+        blacklist:
+          - platform=cray
+          - platform=linux
+        whitelist:
+          - intel-oneapi-compilers
+          - libquo
+          - valgrind
+        core_compilers:
+          - gcc
+        core_specs:
+          - intel-oneapi-compilers
+        projections:
+          intel-oneapi-compilers: 'intel/{version}'
+          all: '{name}/{version}'
+        intel-oneapi-compilers:
+          environment:
+            prepend_path:
+              MODULEPATH: /usr/tce/modulefiles/toolchains/linux-rhel7-x86_64/intel/2022.2.1
+              PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/bin
+              LD_LIBRARY_PATH: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5/lib64
+            set:
+              GCC: /usr/tce/packages/gcc/gcc-11.2.0-gcc-4.8.5
+    # modules that use the root installation rather than pointing to the view
+    toolchains-root:
+      roots:
+        lmod: $spack/../modulefiles/toolchains
+      enable:
+        - lmod
+      lmod:
+        hierarchy:
+          - mpi
+        hash_length: 0
+        blacklist_implicits: true
+        blacklist:
+          - platform=cray
+          - platform=linux
+        whitelist:
+          - paraview
+          - py-mpi4py
+          - survey
+        core_compilers:
+          - gcc
+        projections:
+          py-mpi4py: 'mpi4py/{version}'
+          all: '{name}/{version}'
+    prefix_inspections:
+      lib:
+      - LD_LIBRARY_PATH
+      lib64:
+      - LD_LIBRARY_PATH
+  concretizer:
+    unify: when_possible
